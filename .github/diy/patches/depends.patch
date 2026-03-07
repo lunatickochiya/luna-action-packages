@@ -1,0 +1,327 @@
+--- a/luci-app-aria2/Makefile
++++ b/luci-app-aria2/Makefile
+@@ -7,7 +7,7 @@
+ include $(TOPDIR)/rules.mk
+
+ LUCI_TITLE:=LuCI Support for Aria2
+-LUCI_DEPENDS:=+aria2
++LUCI_DEPENDS:=+aria2 +ariang
+ LUCI_PKGARCH:=all
+
+ PKG_MAINTAINER:=Xingwang Liao <kuoruan@gmail.com>
+
+--- a/fullconenat/Makefile
++++ b/fullconenat/Makefile
+@@ -36,7 +36,7 @@ define Package/ip6tables-mod-fullconenat
+   SECTION:=net
+   CATEGORY:=Network
+   TITLE:=FULLCONENAT ip6tables extension
+-  DEPENDS:=ip6tables +kmod-nf-nat6 +kmod-ipt-fullconenat +ip6tables-mod-nat
++  DEPENDS:=@IPV6 +ip6tables +kmod-nf-nat6 +ip6tables-mod-nat +kmod-ipt-fullconenat
+ endef
+
+ define KernelPackage/ipt-fullconenat
+
+--- a/luci-app-samba4/Makefile
++++ b//luci-app-samba4/Makefile
+@@ -3,7 +3,7 @@
+ include $(TOPDIR)/rules.mk
+
+ LUCI_TITLE:=Network Shares - Samba 4 SMB/CIFS fileserver
+-LUCI_DEPENDS:=+samba4-server
++LUCI_DEPENDS:=+samba4-server +autoshare-samba
+
+ include ../../luci.mk
+
+
+--- a/luci-app-ksmbd/Makefile
++++ b/luci-app-ksmbd/Makefile
+@@ -3,7 +3,7 @@
+ include $(TOPDIR)/rules.mk
+
+ LUCI_TITLE:=Network Shares - Ksmbd the SMB kernel fileserver
+-LUCI_DEPENDS:=+ksmbd-server
++LUCI_DEPENDS:=+ksmbd-server +autoshare-ksmbd
+
+ include ../../luci.mk
+
+--- a/firewall/Makefile
++++ b/firewall/Makefile
+@@ -28,9 +28,9 @@ define Package/firewall
+   SECTION:=net
+   CATEGORY:=Base system
+   TITLE:=OpenWrt C Firewall
+-  DEPENDS:=+libubox +libubus +libuci +libip4tc +IPV6:libip6tc +libiptext +IPV6:libiptext6 +libxtables +kmod-ipt-core +kmod-ipt-conntrack +IPV6:kmod-nf-conntrack6 +kmod-ipt-nat
++  DEPENDS:=+libubox +libubus +libuci +libip4tc +IPV6:libip6tc +libiptext +IPV6:libiptext6 +libxtables +kmod-ipt-core +kmod-ipt-conntrack +IPV6:kmod-nf-conntrack6 +kmod-ipt-nat +IPV6:kmod-ipt-nat6 +iptables-mod-fullconenat +kmod-ipt-offload +IPV6:ip6tables-mod-fullconenat
+   PROVIDES:=uci-firewall
+   CONFLICTS:=firewall4
+ endef
+
+ define Package/firewall/description
+
+--- a/firewall4/Makefile
++++ b/firewall4/Makefile
+@@ -25,7 +25,8 @@ define Package/firewall4
+ 	+kmod-nft-core +kmod-nft-fib +kmod-nft-offload \
+ 	+kmod-nft-nat +kmod-nft-nat6 \
+ 	+nftables-json \
+-	+ucode +ucode-mod-fs +ucode-mod-ubus +ucode-mod-uci
++	+ucode +ucode-mod-fs +ucode-mod-ubus +ucode-mod-uci \
++	+kmod-nft-fullcone +arptables-nft +ebtables-nft +xtables-nft +iptables-nft +IPV6:ip6tables-nft
+   EXTRA_DEPENDS:=ucode (>= 2022-03-22)
+   PROVIDES:=uci-firewall
+ endef
+
+--- a/msmtp/Makefile
++++ b/msmtp/Makefile
+@@ -46,7 +46,7 @@ endef
+
+ define Package/msmtp
+ $(call Package/msmtp/Default)
+-  DEPENDS+= +libgnutls +ca-bundle
++  DEPENDS+= +libgnutls +ca-bundle +libopenssl
+   TITLE+= (with SSL support)
+   VARIANT:=ssl
+   DEFAULT_VARIANT:=1
+
+ define Package/luci-app-homeassistant/conffiles
+ /etc/config/homeassistant
+
+--- a/k3screenctrl/Makefile
++++ b/k3screenctrl/Makefile
+@@ -19,7 +19,7 @@ TARGET_CFLAGS+= -D_GNU_SOURCE
+ define Package/k3screenctrl
+   SECTION:=utils
+   CATEGORY:=Utilities
+-  DEPENDS:=@TARGET_bcm53xx_generic_DEVICE_phicomm_k3 +@KERNEL_DEVMEM
++  DEPENDS:=@(TARGET_bcm53xx_generic_DEVICE_phicomm_k3||TARGET_DEVICE_bcm53xx_generic_DEVICE_phicomm_k3) +@KERNEL_DEVMEM
+   TITLE:=LCD screen controller on PHICOMM K3
+   URL:=https://github.com/updateing/k3-screen-ctrl
+ endef
+
+--- a/dockerd/Makefile
++++ b/dockerd/Makefile
+@@ -47,6 +47,8 @@ define Package/dockerd
+     +kmod-veth \
+     +tini \
+     +uci-firewall \
++    +fuse-overlayfs +cgroupfs-mount \
++    +kmod-vxlan +kmod-macvlan +kmod-dummy +kmod-crypto-gcm +kmod-crypto-seqiv +kmod-crypto-ghash +kmod-ipsec +kmod-nf-nathelper +kmod-nf-nathelper-extra +btrfs-progs \
+     @!(mips||mipsel)
+   USERID:=docker:docker
+   MENU:=1
+@@ -95,13 +96,13 @@ define Build/Prepare
+ 	$(Build/Prepare/Default)
+
+ 	# Verify dependencies are the vendored version
+-	$(call EnsureVendoredVersion,../containerd/Makefile,containerd.installer)
+-	$(call EnsureVendoredVersion,../runc/Makefile,runc.installer)
+-	$(call EnsureVendoredVersion,../tini/Makefile,tini.installer)
++	$(call EnsureVendoredVersion,../../packages/utils/containerd/Makefile,containerd.installer)
++	$(call EnsureVendoredVersion,../../packages/utils/runc/Makefile,runc.installer)
++	$(call EnsureVendoredVersion,../../packages/utils/tini/Makefile,tini.installer)
+
+ 	# Verify CLI is the same version
+ 	( \
+-		CLI_MAKEFILE="../docker/Makefile"; \
++		CLI_MAKEFILE="../../packages/utils/docker/Makefile"; \
+ 		CLI_VERSION=$$$$( grep --only-matching --perl-regexp '(?<=PKG_VERSION:=)(.*)' "$$$${CLI_MAKEFILE}" ); \
+ 		if [ "$$$${CLI_VERSION}" != "$(PKG_VERSION)" ]; then \
+ 			echo "ERROR: Expected 'PKG_VERSION:=$(PKG_VERSION)' in '$$$${CLI_MAKEFILE}', found 'PKG_VERSION:=$$$${CLI_VERSION}'"; \
+
+--- a/phtunnel/Makefile
++++ b/phtunnel/Makefile
+@@ -36,7 +36,6 @@ PKG_SOURCE:=phtunnel
+ PKG_SOURCE_URL:=https://mirrors.oray.com/orayos/packages/$(PKG_NAME)/$(PKG_ARCH_PHT)/$(PKG_VERSION)/bin
+ PKG_HASH:=skip
+
+-PKG_FLAGS:=nonshared
+ PKG_MAINTAINER:=Oray <developer@oray.com>
+
+ include $(INCLUDE_DIR)/package.mk
+
+--- a/pgyvpn/Makefile
++++ b/pgyvpn/Makefile
+@@ -36,7 +36,6 @@ PKG_SOURCE:=pgyvpnsvr
+ PKG_SOURCE_URL:=https://mirrors.oray.com/orayos/packages/$(PKG_NAME)/$(PKG_ARCH_PGYYPN)/$(PKG_VERSION)/bin
+ PKG_HASH:=skip
+
+-PKG_FLAGS:=nonshared
+ PKG_MAINTAINER:=Oray <developer@oray.com>
+
+ include $(INCLUDE_DIR)/package.mk
+
+--- a/luci-app-upnp/Makefile
++++ b/luci-app-upnp/Makefile
+@@ -7,7 +7,7 @@
+ include $(TOPDIR)/rules.mk
+
+ LUCI_TITLE:=Universal Plug & Play configuration module
+-LUCI_DEPENDS:=+miniupnpd +rpcd-mod-ucode
++LUCI_DEPENDS:=+rpcd-mod-ucode
+
+ include ../../luci.mk
+
+
+--- a/wifidog-wiwiz/Makefile
++++ b/wifidog-wiwiz/Makefile
+@@ -21,7 +21,7 @@ define Package/wifidog-wiwiz
+   SUBMENU:=Portal
+   SECTION:=net
+   CATEGORY:=Wiwiz/PinPinWiFi
+-  DEPENDS:=+iptables-mod-extra +iptables-mod-ipopt +iptables-mod-nat-extra +libpthread +curl +jsonfilter
++  DEPENDS:=+luci-app-eqos +dcc2-wiwiz-nossl +iptables-mod-extra +iptables-mod-ipopt +iptables-mod-nat-extra +libpthread +curl +jsonfilter
+   TITLE:=wifidog-wiwiz
+   URL:=http://www.wiwiz.com
+   MENU:=1
+
+--- a/luci-app-rclone/Makefile
++++ b/luci-app-rclone/Makefile
+@@ -15,7 +15,7 @@ PKG_CONFIG_DEPENDS:= \
+
+ LUCI_TITLE:=LuCI support for Rclone
+ LUCI_PKGARCH:=all
+-LUCI_DEPENDS:=+rclone-config \
++LUCI_DEPENDS:=+rclone-config +fuse-overlayfs +fuse3-utils \
+ 	+PACKAGE_$(PKG_NAME)_INCLUDE_rclone-webui:rclone-webui-react \
+ 	+PACKAGE_$(PKG_NAME)_INCLUDE_rclone-ng:rclone-ng
+
+diff --git a/autocore/Makefile b/autocore/Makefile
+index b816aed..25c743e 100644
+--- a/autocore/Makefile
++++ b/autocore/Makefile
+@@ -20,7 +20,6 @@ include $(INCLUDE_DIR)/target.mk
+ define Package/autocore
+   TITLE:=auto core loadbalance script.
+   DEPENDS:=@(aarch64||arm||i386||i686||x86_64) \
+-    +TARGET_bcm27xx:bcm27xx-utils \
+     +TARGET_bcm53xx:nvram \
+     +TARGET_x86:ethtool \
+     +TARGET_x86:lm-sensors
+diff --git a/dae/Makefile b/dae/Makefile
+index 6aeb632..60323c7 100644
+--- a/dae/Makefile
++++ b/dae/Makefile
+@@ -43,20 +43,28 @@ define Package/dae
+   TITLE:=A lightweight and high-performance transparent proxy solution
+   # You need enable KERNEL_DEBUG_INFO_BTF and KERNEL_BPF_EVENTS
+   DEPENDS:=$(GO_ARCH_DEPENDS) $(BPF_DEPENDS)  \
+-    +ca-bundle +kmod-sched-core +kmod-sched-bpf +kmod-xdp-sockets-diag \
+-    +kmod-veth
++    +ca-bundle +kmod-sched-core +kmod-sched-bpf \
++    +kmod-veth
++endef
++
++define Package/$(PKG_NAME)/config
++config PACKAGE_$(PKG_NAME)_INCLUDE_kmod-xdp-sockets-diag
++	bool "kmod-xdp-sockets-diag"
++	select PACKAGE_kmod-xdp-sockets-diag
++	depends on PACKAGE_$(PKG_NAME)
++	default y
+ endef
+
+ define Package/dae-geoip
+   $(call Package/dae/Default)
+   TITLE:=geoip for dae
+-  DEPENDS:=+dae +v2ray-geoip
++  DEPENDS:=dae +v2ray-geoip
+   PKGARCH:=all
+ endef
+
+ define Package/dae-geosite
+   $(call Package/dae/Default)
+   TITLE:=geosite for dae
+-  DEPENDS:=+dae +v2ray-geosite
++  DEPENDS:=dae +v2ray-geosite
+   PKGARCH:=all
+ endef
+
+diff --git a/daed-next/Makefile b/daed-next/Makefile
+index 702f841..3edd9ab 100644
+--- a/daed-next/Makefile
++++ b/daed-next/Makefile
+@@ -45,10 +45,18 @@ define Package/daed-next
+   TITLE:=daed-next is a backend of dae
+   # You need enable KERNEL_DEBUG_INFO_BTF and KERNEL_BPF_EVENTS
+   DEPENDS:=$(GO_ARCH_DEPENDS) $(BPF_DEPENDS) \
+-    +ca-bundle +kmod-sched-core +kmod-sched-bpf +kmod-xdp-sockets-diag +kmod-veth \
++    +ca-bundle +kmod-sched-core +kmod-sched-bpf +kmod-veth \
+     +node +v2ray-geoip +v2ray-geosite +zoneinfo-asia
+ endef
+
++define Package/$(PKG_NAME)/config
++config PACKAGE_$(PKG_NAME)_INCLUDE_kmod-xdp-sockets-diag
++	bool "kmod-xdp-sockets-diag"
++	select PACKAGE_kmod-xdp-sockets-diag
++	depends on PACKAGE_$(PKG_NAME)
++	default y
++endef
++
+ define Package/daed-next/description
+   daed-next is a backend of dae, provides a method to bundle arbitrary
+   frontend, dae and geodata into one binary.
+diff --git a/daed/Makefile b/daed/Makefile
+index f236f33..1b76704 100644
+--- a/daed/Makefile
++++ b/daed/Makefile
+@@ -48,20 +48,28 @@ define Package/daed
+   TITLE:=A Modern Dashboard For dae
+   # You need enable KERNEL_DEBUG_INFO_BTF and KERNEL_BPF_EVENTS
+   DEPENDS:=$(GO_ARCH_DEPENDS) $(BPF_DEPENDS) \
+-    +ca-bundle +kmod-sched-core +kmod-sched-bpf +kmod-xdp-sockets-diag \
+-    +kmod-veth
++    +ca-bundle +kmod-sched-core +kmod-sched-bpf \
++    +kmod-veth
++endef
++
++define Package/$(PKG_NAME)/config
++config PACKAGE_$(PKG_NAME)_INCLUDE_kmod-xdp-sockets-diag
++	bool "kmod-xdp-sockets-diag"
++	select PACKAGE_kmod-xdp-sockets-diag
++	depends on PACKAGE_$(PKG_NAME)
++	default y
+ endef
+
+ define Package/daed-geoip
+   $(call Package/daed/Default)
+   TITLE:=geoip for daed
+-  DEPENDS:=+daed +v2ray-geoip
++  DEPENDS:=daed +v2ray-geoip
+   PKGARCH:=all
+ endef
+
+ define Package/daed-geosite
+   $(call Package/daed/Default)
+   TITLE:=geosite for daed
+-  DEPENDS:=+daed +v2ray-geosite
++  DEPENDS:=daed +v2ray-geosite
+   PKGARCH:=all
+ endef
+
+
+diff --git a/luci-app-homeproxy/Makefile b/luci-app-homeproxy/Makefile
+index 2f34e39f6..f678dae8b 100644
+--- a/luci-app-homeproxy/Makefile
++++ b/luci-app-homeproxy/Makefile
+@@ -6,7 +6,6 @@ include $(TOPDIR)/rules.mk
+
+ LUCI_TITLE:=The modern ImmortalWrt proxy platform for ARM64/AMD64
+ LUCI_DEPENDS:= \
+-	+sing-box \
+ 	+firewall4 \
+ 	+kmod-nft-tproxy \
+ 	+ucode-mod-digest
+diff --git a/luci-app-kucat-config/Makefile b/luci-app-kucat-config/Makefile
+index fd49dd893..3439cdc2b 100644
+--- a/luci-app-kucat-config/Makefile
++++ b/luci-app-kucat-config/Makefile
+@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
+ NAME:=kucat
+ PKG_NAME:=luci-app-$(NAME)
+ LUCI_TITLE:=LuCI support for Kucat theme setting by sirpdboy
+-LUCI_DEPENDS:=+curl
++LUCI_DEPENDS:=+curl +luci-theme-kucat
+ LUCI_PKGARCH:=all
+
+
+
