@@ -1,5 +1,6 @@
 #!/usr/bin/lua
 
+require "luci.sys"
 local ucursor = require "luci.model.uci".cursor()
 local json = require "luci.jsonc"
 
@@ -16,9 +17,36 @@ local socks_server = ucursor:get_all("shadowsocksr", "@socks5_proxy[0]") or {}
 local xray_fragment = ucursor:get_all("shadowsocksr", "@global_xray_fragment[0]") or {}
 local xray_noise = ucursor:get_all("shadowsocksr", "@xray_noise_packets[0]") or {}
 local outbound_settings = nil
+local xray_version = nil
+local xray_version_val = 0
 
 local node_id = server_section
 local remarks = server.alias or ""
+
+-- 确保正确判断程序是否存在
+local function is_finded(e)
+	return luci.sys.exec(string.format('type -t -p "%s" 2>/dev/null', e)) ~= ""
+end
+
+-- 获取 Xray 版本号
+if is_finded("xray") then
+	local version = luci.sys.exec("xray version 2>&1")
+	if version and version ~= "" then
+		xray_version = version:match("Xray%s+([%d%.]+)")
+	end
+end
+
+-- 将 Xray 版本号转换为数字
+if xray_version and xray_version ~= "" then
+	local major, minor, patch =
+		xray_version:match("(%d+)%.?(%d*)%.?(%d*)")
+
+	major = tonumber(major) or 0
+	minor = tonumber(minor) or 0
+	patch = tonumber(patch) or 0
+
+	xray_version_val = major * 10000 + minor * 100 + patch
+end
 
 function vmess_vless()
 	outbound_settings = {
@@ -238,12 +266,28 @@ end
 						end
 					end)() or nil,
 					fingerprint = server.fingerprint,
-					allowInsecure = (server.insecure == "1" or server.insecure == true or server.insecure == "true"),
+					allowInsecure = (function()
+						if server.tls_CertSha and server.tls_CertSha ~= "" then return nil end
+						if os.date("%Y.%m.%d") < "2026.06.01" then
+							return server.insecure == "1"
+						end
+						return nil
+					end)(),
 					serverName = server.tls_host,
 					certificates = server.certificate and {
 						usage = "verify",
 						certificateFile = server.certpath
 					} or nil,
+					pinnedPeerCertSha256 = (function()
+						if xray_version_val < 260131 then return nil end
+						if not server.tls_CertSha then return "" end
+						return server.tls_CertSha
+					end)(),
+					verifyPeerCertByName = (function()
+						if xray_version_val < 260131 then return nil end
+						if not server.tls_CertByName then return "" end
+						return server.tls_CertByName
+					end)(),
 					echConfigList = (server.enable_ech == "1") and server.ech_config or nil,
 					echForceQuery = (server.enable_ech == "1") and (server.ech_ForceQuery or "none") or nil
 				} or nil,
@@ -280,9 +324,7 @@ end
 					downlinkCapacity = tonumber(server.downlink_capacity),
 					congestion = (server.congestion == "1") and true or false,
 					readBufferSize = tonumber(server.read_buffer_size),
-					writeBufferSize = tonumber(server.write_buffer_size),
-					header = {type = server.kcp_guise},
-					seed = server.seed or nil
+					writeBufferSize = tonumber(server.write_buffer_size)
 				} or nil,
 				wsSettings = (server.transport == "ws") and (server.ws_path or server.ws_host or server.tls_host) and {
 					-- ws
@@ -367,12 +409,33 @@ end
 					keepAlivePeriod = (server.flag_quicparam == "1" and server.keepaliveperiod) and tonumber(server.keepaliveperiod) or nil,
 					disablePathMTUDiscovery = (server.flag_quicparam == "1" and tostring(server.disablepathmtudiscovery) == "1") and true or nil
 				} or nil,
-				udpmasks = (server.flag_obfs == "1" and (server.v2ray_protocol == "hysteria2" and server.obfs_type and server.obfs_type ~= "")) and {
-					{
-						type = server.obfs_type,
-						settings = server.salamander and {
-							password = server.salamander
-						} or nil
+				finalmask = (server.transport == "kcp") and {
+					udp = (function()
+						local t = {}
+						local map = {none = "none", srtp = "header-srtp", utp = "header-utp", ["wechat-video"] = "header-wechat",
+							dtls = "header-dtls", wireguard = "header-wireguard", dns = "header-dns"}
+						if server.kcp_guise and server.kcp_guise ~= "none" then
+							local g = { type = map[server.kcp_guise] }
+							if server.kcp_guise == "dns" and server.kcp_domain and server.kcp_domain ~= "" then
+								g.settings = { domain = server.kcp_domain }
+							end
+							t[#t + 1] = g
+						end
+						local c = { type = (server.seed and server.seed ~= "") and "mkcp-aes128gcm" or "mkcp-original" }
+						if server.seed and server.seed ~= "" then
+							c.settings = { password = server.seed }
+						end
+						t[#t + 1] = c
+						return t
+					end)()
+				} or (server.flag_obfs == "1" and (server.v2ray_protocol == "hysteria2" and server.obfs_type and server.obfs_type ~= "")) and {
+					udp = {
+						{
+							type = server.obfs_type,
+							settings = server.salamander and {
+								password = server.salamander
+							} or nil
+						}
 					}
 				} or nil,
 				sockopt = {

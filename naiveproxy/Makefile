@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=naiveproxy
 PKG_REAL_VERSION:=140.0.7339.123-3
 PKG_VERSION:=$(subst -,.,$(PKG_REAL_VERSION))
-PKG_RELEASE:=23
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_REAL_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/klzgrad/naiveproxy/tar.gz/v$(PKG_REAL_VERSION)?

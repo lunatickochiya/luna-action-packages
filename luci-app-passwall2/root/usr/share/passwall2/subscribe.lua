@@ -17,6 +17,8 @@ local ssub, slen, schar, sbyte, sformat, sgsub = string.sub, string.len, string.
 local split = api.split
 local jsonParse, jsonStringify = luci.jsonc.parse, luci.jsonc.stringify
 local base64Decode = api.base64Decode
+local UrlEncode = api.UrlEncode
+local UrlDecode = api.UrlDecode
 local uci = api.uci
 local fs = api.fs
 local log = api.log
@@ -31,20 +33,15 @@ local has_xray = api.finded_com("xray")
 local has_hysteria2 = api.finded_com("hysteria")
 local allowInsecure_default = true
 -- Nodes should be retrieved using the core type (if not set on the node subscription page, the default type will be used automatically).
-local function get_core(field, candidates)
-	local v = uci:get(appname, "@global_subscribe[0]", field)
-	if not v or v == "" then
-		for _, c in ipairs(candidates) do
-			if c[1] then return c[2] end
-		end
-	end
-	return v
-end
-local ss_type_default = get_core("ss_type", {{has_ss,"shadowsocks-libev"},{has_ss_rust,"shadowsocks-rust"},{has_singbox,"sing-box"},{has_xray,"xray"}})
-local trojan_type_default = get_core("trojan_type", {{has_singbox,"sing-box"},{has_xray,"xray"}})
-local vmess_type_default = get_core("vmess_type", {{has_xray,"xray"},{has_singbox,"sing-box"}})
-local vless_type_default = get_core("vless_type", {{has_xray,"xray"},{has_singbox,"sing-box"}})
-local hysteria2_type_default = get_core("hysteria2_type", {{has_hysteria2,"hysteria2"},{has_singbox,"sing-box"},{has_xray,"xray"}})
+local ss_type_default = api.get_core("ss_type", {{has_ss,"shadowsocks-libev"},{has_ss_rust,"shadowsocks-rust"},{has_singbox,"sing-box"},{has_xray,"xray"}})
+local trojan_type_default = api.get_core("trojan_type", {{has_singbox,"sing-box"},{has_xray,"xray"}})
+local vmess_type_default = api.get_core("vmess_type", {{has_xray,"xray"},{has_singbox,"sing-box"}})
+local vless_type_default = api.get_core("vless_type", {{has_xray,"xray"},{has_singbox,"sing-box"}})
+local hysteria2_type_default = api.get_core("hysteria2_type", {{has_hysteria2,"hysteria2"},{has_singbox,"sing-box"},{has_xray,"xray"}})
+local core_has = {
+	["xray"] = has_xray, ["sing-box"] = has_singbox, ["shadowsocks-libev"] = has_ss,["shadowsocks-rust"] = has_ss_rust,
+	["hysteria2"] = has_hysteria2
+}
 local domain_strategy_default = uci:get(appname, "@global_subscribe[0]", "domain_strategy") or ""
 local domain_strategy_node = ""
 local preproxy_node_group, to_node_group, chain_node_type = "", "", ""
@@ -247,15 +244,10 @@ do
 				[".name"] = "default_node",
 				remarks = i18n.translatef("Default")
 			})
-			table.insert(rules, {
-				[".name"] = "main_node",
-				remarks = i18n.translatef("Default Preproxy")
-			})
 
 			for k, e in pairs(rules) do
 				local _node_id = node[e[".name"]] or nil
-				if _node_id and api.parseURL(_node_id) then
-				else
+				if _node_id and not _node_id:find("Socks_") then
 					CONFIG[#CONFIG + 1] = {
 						log = false,
 						currentNode = _node_id and uci:get_all(appname, _node_id) or nil,
@@ -350,7 +342,7 @@ do
 		else
 			-- Preproxy Node
 			local currentNode = uci:get_all(appname, node_id) or nil
-			if currentNode and currentNode.preproxy_node then
+			if currentNode and currentNode.preproxy_node and not currentNode.preproxy_node:find("Socks_") then
 				CONFIG[#CONFIG + 1] = {
 					log = true,
 					id = node_id,
@@ -367,7 +359,7 @@ do
 			end
 			-- Landing node
 			local currentNode = uci:get_all(appname, node_id) or nil
-			if currentNode and currentNode.to_node then
+			if currentNode and currentNode.to_node and not currentNode.to_node:find("Socks_") then
 				CONFIG[#CONFIG + 1] = {
 					log = true,
 					id = node_id,
@@ -401,18 +393,6 @@ do
 			end
 		end
 	end
-end
-
-local function UrlEncode(szText)
-	return szText:gsub("([^%w%-_%.%~])", function(c)
-		return string.format("%%%02X", string.byte(c))
-	end)
-end
-
-local function UrlDecode(szText)
-	return szText and szText:gsub("+", " "):gsub("%%(%x%x)", function(h)
-		return string.char(tonumber(h, 16))
-	end) or nil
 end
 
 -- Retrieve subscribe information (remaining data allowance, expiration time).
@@ -515,6 +495,8 @@ local function processData(szType, content, add_mode, group)
 		-- result.mux = 1
 		-- result.mux_concurrency = 8
 
+		info.path = (info.path and info.path ~= "") and UrlDecode(info.path) or nil
+
 		if not info.net then info.net = "tcp" end
 		info.net = string.lower(info.net)
 		if result.type == "sing-box" and info.net == "raw" then 
@@ -611,9 +593,17 @@ local function processData(szType, content, add_mode, group)
 			else
 				result.tls_allowInsecure = allowInsecure_default and "1" or "0"
 			end
+			result.tls_CertSha = info.pcs
+			result.tls_CertByName = info.vcn
 		else
 			result.tls = "0"
 		end
+
+		result.tcp_fast_open = info.tfo
+
+		info.fm = (info.fm and info.fm ~= "") and UrlDecode(info.fm) or nil
+		result.use_finalmask = (info.fm and info.fm ~= "") and "1" or nil
+		result.finalmask = (info.fm and info.fm ~= "") and api.base64Encode(info.fm) or nil
 
 		if result.type == "sing-box" and (result.transport == "mkcp" or result.transport == "xhttp") then
 			log(2, i18n.translatef("Skip node: %s. Because Sing-Box does not support the %s protocol's %s transmission method, Xray needs to be used instead.", result.remarks, szType, result.transport))
@@ -717,13 +707,19 @@ local function processData(szType, content, add_mode, group)
 
 			result.method = method
 			result.password = password
+			result.tcp_fast_open = params.tfo
+			result.use_finalmask = (params.fm and params.fm ~= "") and "1" or nil
+			result.finalmask = (params.fm and params.fm ~= "") and api.base64Encode(params.fm) or nil
 
-			if has_xray and (result.type ~= 'Xray' and  result.type ~= 'sing-box' and params.type) then
-				result.type = 'Xray'
-				result.protocol = 'shadowsocks'
-			elseif has_singbox and (result.type ~= 'Xray' and  result.type ~= 'sing-box' and params.type) then
-				result.type = 'sing-box'
-				result.protocol = 'shadowsocks'
+			local need_upgrade = (result.type ~= "Xray" and result.type ~= "sing-box")
+				and (params.type and params.type ~= "tcp")
+				and (params.headerType and params.headerType ~= "none")
+			if has_xray and (need_upgrade or params.type == "xhttp") then
+				result.type = "Xray"
+				result.protocol = "shadowsocks"
+			elseif has_singbox and need_upgrade then
+				result.type = "sing-box"
+				result.protocol = "shadowsocks"
 			end
 
 			if result.plugin then
@@ -869,6 +865,8 @@ local function processData(szType, content, add_mode, group)
 							result.ech = "1"
 							result.ech_config = params.ech
 						end
+						result.tls_CertSha = params.pcs
+						result.tls_CertByName = params.vcn
 						if params.security == "reality" then
 							result.reality = "1"
 							result.reality_publicKey = params.pbk or nil
@@ -884,7 +882,8 @@ local function processData(szType, content, add_mode, group)
 					else
 						result.tls_allowInsecure = allowInsecure_default and "1" or "0"
 					end
-				else
+					result.uot = params.udp
+				elseif (params.type ~= "tcp" and params.type ~= "raw") and (params.headerType and params.headerType ~= "none") then
 					result.error_msg = i18n.translatef("Please replace Xray or Sing-Box to support more transmission methods in Shadowsocks.")
 				end
 			end
@@ -992,6 +991,8 @@ local function processData(szType, content, add_mode, group)
 
 			result.tls = '1'
 			result.tls_serverName = peer and peer or sni
+			result.tls_CertSha = params.pcs
+			result.tls_CertByName = params.vcn
 
 			params.allowinsecure = params.allowinsecure or params.insecure
 			if params.allowinsecure then
@@ -1084,6 +1085,9 @@ local function processData(szType, content, add_mode, group)
 			end
 
 			result.alpn = params.alpn
+			result.tcp_fast_open = params.tfo
+			result.use_finalmask = (params.fm and params.fm ~= "") and "1" or nil
+			result.finalmask = (params.fm and params.fm ~= "") and api.base64Encode(params.fm) or nil
 
 			if result.type == "sing-box" and (result.transport == "mkcp" or result.transport == "xhttp") then
 				log(2, i18n.translatef("Skip node: %s. Because Sing-Box does not support the %s protocol's %s transmission method, Xray needs to be used instead.", result.remarks, szType, result.transport))
@@ -1251,6 +1255,8 @@ local function processData(szType, content, add_mode, group)
 					result.ech = "1"
 					result.ech_config = params.ech
 				end
+				result.tls_CertSha = params.pcs
+				result.tls_CertByName = params.vcn
 				if params.security == "reality" then
 					result.reality = "1"
 					result.reality_publicKey = params.pbk or nil
@@ -1269,6 +1275,10 @@ local function processData(szType, content, add_mode, group)
 			else
 				result.tls_allowInsecure = allowInsecure_default and "1" or "0"
 			end
+
+			result.tcp_fast_open = params.tfo
+			result.use_finalmask = (params.fm and params.fm ~= "") and "1" or nil
+			result.finalmask = (params.fm and params.fm ~= "") and api.base64Encode(params.fm) or nil
 
 			if result.type == "sing-box" and (result.transport == "mkcp" or result.transport == "xhttp") then
 				log(2, i18n.translatef("Skip node: %s. Because Sing-Box does not support the %s protocol's %s transmission method, Xray needs to be used instead.", result.remarks, szType, result.transport))
@@ -1366,6 +1376,8 @@ local function processData(szType, content, add_mode, group)
 			result.address = host_port
 		end
 		result.tls_serverName = params.sni
+		result.tls_CertSha = params.pcs
+		result.tls_CertByName = params.vcn
 		params.allowinsecure = params.allowinsecure or params.insecure
 		if params.allowinsecure and (params.allowinsecure == "1" or params.allowinsecure == "0") then
 			result.tls_allowInsecure = params.allowinsecure
@@ -1383,6 +1395,8 @@ local function processData(szType, content, add_mode, group)
 				result.hysteria2_obfs_type = "salamander"
 				result.hysteria2_obfs_password = params["obfs-password"] or params["obfs_password"]
 			end
+			result.use_finalmask = (params.fm and params.fm ~= "") and "1" or nil
+			result.finalmask = (params.fm and params.fm ~= "") and api.base64Encode(params.fm) or nil
 		elseif has_hysteria2 then
 			result.type = "Hysteria2"
 			if params["obfs-password"] or params["obfs_password"] then
@@ -1409,12 +1423,17 @@ local function processData(szType, content, add_mode, group)
 		end
 		result.remarks = UrlDecode(alias)
 		local Info = content
-		if content:find("@") then
+		if content:find("@", 1, true) then
 			local contents = split(content, "@")
-			if contents[1]:find(":") then
-				local userinfo = split(contents[1], ":")
-				result.uuid = UrlDecode(userinfo[1])
-				result.password = UrlDecode(userinfo[2])
+			local auth = contents[1] or ""
+			local idx = auth:find(":", 1, true)
+			if not idx then -- Fix for some links will encode the ':' between the UUID and password.
+				auth = UrlDecode(auth)
+				idx = auth:find(":", 1, true)
+			end
+			if idx then
+				result.uuid = UrlDecode(auth:sub(1, idx - 1))
+				result.password = UrlDecode(auth:sub(idx + 1))
 			end
 			Info = (contents[2] or ""):gsub("/%?", "?")
 		end
@@ -1439,6 +1458,7 @@ local function processData(szType, content, add_mode, group)
 			result.address = host_port
 		end
 		result.tls_serverName = params.sni
+		result.tls_disable_sni = params.disable_sni
 		result.tuic_alpn = params.alpn or "default"
 		result.tuic_congestion_control = params.congestion_control or "cubic"
 		result.tuic_udp_relay_mode = params.udp_relay_mode or "native"
@@ -1542,7 +1562,7 @@ end
 local function curl(url, file, ua, mode)
 	if not url or url == "" then return 404 end
 	local curl_args = {
-		"-skL", "-w %{http_code}", "--retry 3", "--connect-timeout 3"
+		"-skL", "-w %{http_code}", "--retry 3", "--connect-timeout 3", "-H 'Accept-Encoding: identity'"
 	}
 	if ua and ua ~= "" and ua ~= "curl" then
 		ua = (ua == "passwall2") and ("passwall2/" .. api.get_version()) or ua
@@ -1818,7 +1838,7 @@ local function update_node(manual)
 						uci:set(appname, cfgid, "domain_strategy", domain_strategy_node)
 					end
 					-- Subscription Group Chain Agent
-					if chain_node_type ~= "" and kkk == "type" and vvv == chain_node_type then
+					if chain_node_type ~= "" and kkk == "type" and (vvv == "Xray" or vvv == "sing-box") then
 						if preproxy_node_group ~="" then
 							uci:set(appname, cfgid, "chain_proxy", "1")
 							uci:set(appname, cfgid, "preproxy_node", preproxy_node_group)
@@ -2011,23 +2031,23 @@ local execute = function()
 				filter_keyword_discard_list_default = value.filter_discard_list or {}
 			end
 			local ss_type = value.ss_type or "global"
-			if ss_type ~= "global" then
+			if ss_type ~= "global" and core_has[ss_type] then
 				ss_type_default = ss_type
 			end
 			local trojan_type = value.trojan_type or "global"
-			if trojan_type ~= "global" then
+			if trojan_type ~= "global" and core_has[trojan_type] then
 				trojan_type_default = trojan_type
 			end
 			local vmess_type = value.vmess_type or "global"
-			if vmess_type ~= "global" then
+			if vmess_type ~= "global" and core_has[vmess_type] then
 				vmess_type_default = vmess_type
 			end
 			local vless_type = value.vless_type or "global"
-			if vless_type ~= "global" then
+			if vless_type ~= "global" and core_has[vless_type] then
 				vless_type_default = vless_type
 			end
 			local hysteria2_type = value.hysteria2_type or "global"
-			if hysteria2_type ~= "global" then
+			if hysteria2_type ~= "global" and core_has[hysteria2_type] then
 				hysteria2_type_default = hysteria2_type
 			end
 			local domain_strategy = value.domain_strategy or "global"
@@ -2083,11 +2103,21 @@ local execute = function()
 			filter_keyword_mode_default = uci:get(appname, "@global_subscribe[0]", "filter_keyword_mode") or "0"
 			filter_keyword_discard_list_default = uci:get(appname, "@global_subscribe[0]", "filter_discard_list") or {}
 			filter_keyword_keep_list_default = uci:get(appname, "@global_subscribe[0]", "filter_keep_list") or {}
-			ss_type_default = uci:get(appname, "@global_subscribe[0]", "ss_type") or "shadowsocks-libev"
-			trojan_type_default = uci:get(appname, "@global_subscribe[0]", "trojan_type") or "sing-box"
-			vmess_type_default = uci:get(appname, "@global_subscribe[0]", "vmess_type") or "xray"
-			vless_type_default = uci:get(appname, "@global_subscribe[0]", "vless_type") or "xray"
-			hysteria2_type_default = uci:get(appname, "@global_subscribe[0]", "hysteria2_type") or "hysteria2"
+			
+			ss_type = uci:get(appname, "@global_subscribe[0]", "ss_type") or ""
+			ss_type_default = core_has[ss_type] and ss_type or ss_type_default
+
+			trojan_type = uci:get(appname, "@global_subscribe[0]", "trojan_type") or ""
+			trojan_type_default = core_has[trojan_type] and trojan_type or trojan_type_default
+
+			vmess_type = uci:get(appname, "@global_subscribe[0]", "vmess_type") or ""
+			vmess_type_default = core_has[vmess_type] and vmess_type or vmess_type_default
+
+			vless_type = uci:get(appname, "@global_subscribe[0]", "vless_type") or ""
+			vless_type_default = core_has[vless_type] and vless_type or vless_type_default
+
+			hysteria2_type = uci:get(appname, "@global_subscribe[0]", "hysteria2_type") or ""
+			hysteria2_type_default = core_has[hysteria2_type] and hysteria2_type or hysteria2_type_default
 		end
 
 		if #fail_list > 0 then

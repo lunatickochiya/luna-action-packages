@@ -72,6 +72,7 @@
 #include "auth.h"
 #include "centralserver.h"
 #include "client_list.h"
+#include "util.h"
 
 extern pthread_mutex_t client_list_mutex;
 
@@ -95,7 +96,7 @@ fw_allow(const char *ip, const char *mac, int fw_connection_state)
 
     /* wiwiz starts */
     char *cmd;
-    safe_asprintf(&cmd, "/usr/local/hsbuilder/setspeed.sh set %s &", mac);
+    safe_asprintf(&cmd, "/usr/local/hsbuilder/setspeed.sh set %s %s &", mac, ip);
     /*system(cmd);*/
     execute(cmd, 0);
     /* wiwiz ends */
@@ -261,6 +262,8 @@ fw_sync_with_authserver(void)
         mac = safe_strdup(p1->mac);
         outgoing = p1->counters.outgoing;
         incoming = p1->counters.incoming;
+
+        debug(LOG_INFO, "Got client, ip: %s, mac: %s, token: %s, outgoing: %llu, incoming: %llu", ip, mac, token, outgoing, incoming);
 
         safe_asprintf(&cmd, "echo '{\"ip\":\"%s\",\"token\":\"%s\",\"mac\":\"%s\",\"og\":\"%llu\",\"ic\":\"%llu\"},'>>/tmp/wiwiz_client_data", 
             ip, token, mac, outgoing, incoming);

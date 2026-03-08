@@ -143,16 +143,23 @@
 .icon-log-out:before {
     content: "\e90f"
 }
-
+.showSide:before,
 .icon-menu:before {
+    font-size: 1.5rem ;
     content: "\e20e"
 }
 
+.icon-allmenu:before,
 .icon-menu_open:before {
+    font-size: 1.5rem;
+    color: #13bcff;
     content: "\e92f"
 }
 
+.icon-basic:before ,
 .icon-menu_open1:before {
+    font-size: 1.5rem;
+    color: #13bcff;
     content: "\e930"
 }
 
@@ -277,6 +284,9 @@ body {
     background-repeat: no-repeat
 }
 
+html, body, .main, .main-right {
+    overscroll-behavior: auto; 
+}
 .tr {
     display: table-row
 }
@@ -442,14 +452,32 @@ h5 {
     max-height: 200px;
     transition: overflow 0.3s
 }
+
+
 ::-webkit-scrollbar-track {
     box-shadow: inset 0 0 0px rgba(240, 240, 240, .5);
     background-color: rgba(var(--primary-rgbbody), var(--primary-rgbm-ts))
 }
 
+
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px
+    width: 4px;
+    height: 4px;
+    transition: width 0.2s ease, height 0.2s ease; 
+}
+
+
+:hover::-webkit-scrollbar,
+*:hover::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    transition: width 0.2s ease, height 0.2s ease; 
+}
+
+body:hover::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    transition: width 0.2s ease, height 0.2s ease; 
 }
 
 ::-webkit-scrollbar-thumb {
@@ -459,11 +487,12 @@ h5 {
     border-radius: var(--radius0);
     background-clip: content-box;
     background: rgba(var(--primary-rgbm), 0.4);
-    border: 1px solid rgba(var(--primary-rgbm), 0.8)
+    border: 1px solid rgba(var(--primary-rgbm), 0.8);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(var(--primary-rgbm), 0.9)
+    background-color: rgba(var(--primary-rgbm), 0.9);
+    border: 2px solid rgba(var(--primary-rgbm), 0.4);
 }
 
 ::selection {
@@ -532,8 +561,9 @@ footer a {
 }
 
 .footend {
-    padding-bottom: 5rem;
-    background-color: rgba(255, 255, 255, 0)
+    padding-bottom: 4rem;
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px)); 
+    background-color: rgba(255, 255, 255, 0);
 }
 
 #view {
@@ -541,7 +571,8 @@ footer a {
     flex-direction: column;
     min-width: inherit;
     overflow-x: auto;
-    overflow-y: hidden
+    overflow-y: hidden;
+    overflow-y: visible;
 }
 
 #view>p {
@@ -564,14 +595,14 @@ footer a {
 .container .cbi-map>fieldset.cbi-section:not(.cbi-button),
 #view>#content_syslog,
 #view>div>div:not(.cbi-button) {
-  padding: 0 1%;
+  padding: 0 2%;
 }
 
 .main {
     position: relative;
     top: 0;
     bottom: 0;
-    height: 100vh;
+    height: 100%;
     display: flex;
     overflow-y: auto;
     flex-direction: row;
@@ -597,9 +628,9 @@ footer a {
   flex-grow: 1;
   overflow-x: hidden;
   overflow-y: auto;
-    display: flex;
+  display: flex;
   flex-direction: column;
-    transition: all 0.2s
+  transition: all 0.2s
 }
 
 
@@ -610,6 +641,7 @@ footer a {
     flex: 1;
     display: flex;
     padding-top: 2.5rem;
+    overflow-y: visible;
     flex-direction: column
 }
 
@@ -773,18 +805,19 @@ span[data-indicator="uci-changes"]:before {
     text-decoration: none
 }
 
+.category-switch:hover,
 .pdboy-dark:hover,
 .pdboy-light:hover,
 span[data-indicator="uci-changes"]:hover,
 #indicators span[data-indicator="poll-status"]:hover,
-.pdboy-qlogout:hover,
-.showSide:hover {
+.pdboy-qlogout:hover{
     background-color: rgba(var(--primary-rgbm),0.3) !important;
     color: var(--menu-hover-color);
     border-radius: var(--radius1);
     text-decoration: none
 }
 
+.category-switch,
 .pdboy-dark,
 .pdboy-light,
 span[data-indicator="uci-changes"],
@@ -890,6 +923,7 @@ span[data-indicator="uci-changes"],
 }
 
 .main .main-left .nav>li {
+    margin: 0 2px;
     padding: 0rem
 }
 
@@ -1282,15 +1316,15 @@ input {
 }
 
 select {
-    overflow: hidden !important;
-    width: 100%;
-    min-width: 8rem;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-size: 24px 16px;
+  overflow: hidden !important;
+  width: 100%;
+  min-width: 8rem;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+    background-size: 24px 26px;
     background-repeat: no-repeat;
-    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABGCAYAAAA6hjFpAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDcuMS1jMDAwIDc5LmRhYmFjYmIsIDIwMjEvMDQvMTQtMDA6Mzk6NDQgICAgICAgICI+IDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+IDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSIiIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdFJlZj0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlUmVmIyIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOjhDNzA0QUE0NjE2QTExRUNCMjJFQkQyRkIyNURDNjE3IiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjhDNzA0QUEzNjE2QTExRUNCMjJFQkQyRkIyNURDNjE3IiB4bXA6Q3JlYXRvclRvb2w9IkFkb2JlIFBob3Rvc2hvcCAyMi41IChNYWNpbnRvc2gpIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6QzNBNTYzNTY2MTUxMTFFQ0IyMkVCRDJGQjI1REM2MTciIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6QzNBNTYzNTc2MTUxMTFFQ0IyMkVCRDJGQjI1REM2MTciLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz6YjzxlAAACsklEQVR42uyaXUsVURSG51T0U/obfUvhhYF0U0HQhZQVIWVJCAkiSUXfRRcaBFbXQVBBRCASFCJBpQQipw+RREkpCa9aG95gs0DMOp6Z7TwvvAxnzczaa6/nzDnzVTndfSVDxdE6WgAQBBCAIIAABAEEIAggAEEAQQABCAIIQBBAAIIAAhAEEAQQgCCAAAStGSAbzA/N+wvSiwPmB6or16bkoY2afLN5r+q4l2MfDpr7zetV2z7zYpmOkAHByNSE0IxDOdUSxr2rOjLVNVC2n6z77hsYmtFnbqlzHS0aN+7DouorFZBH+ibGUCrmO+YjdaqhVeNVHIxm1Ve6P/XH5ibzLwfllvn4Ko8d8t90MEIde1RXaU97n6oJCw7KNXPbKo3ZpvwxjAXV8YTrkCx7piPFQ7lsbq/xWO3K62E0qQ4uDKXn5kbzTxe/YO6o0Rgdypc5GI0anyt1p5fm3eYfLn7e3PmfuTuVJ1YYZ5fG5Up9CQ2qSfMu3m3u+secXdo/1rzGGeTWyfIaUrPmXPycuWeFuXq0X6w55R8q4NwLe3PxlXmn+buLnzX3/mWOXm0fK+RrUP4MICvTG/MO86yLnzFfWmbfi9ou1qzyvS7wnAt/+31YTZxx8ZPmq+709c/pcoifcvEZ5Rku+HyTeB4yYt5unnbxE+YbEZSwvK54rGntP5LAXJN5QPXWvNX8zcWPmm9rHmF5zK0P22/T/hlAaqv35i3mKRc/bB7VMtaUIL5LaI7JPcIdVZMnXXyT+zyp7T4kNr8kn6mPqdlfllj/VevHEpxbsi85fNTP1ycX/2zerPUZQOqrcUGp6nNVMMYTnlPyrwFNCMILDScSn0++r7zUSFVdZ6wJ8aIcQBBAAIIAAhAEEIAggAAEAQQBBCAIIABBAAEIAghAEEAQQJLQbwEGAK/reX2gh5gQAAAAAElFTkSuQmCC);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23888'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
     background-position: right center
 }
 
@@ -1910,8 +1944,9 @@ textarea:focus
 }
 
 .cbi-dropdown.btn>ul>li {
-  min-height: 1.5rem;
-  height: 1.6rem
+  min-height: 1.6rem;
+  height: 1.6rem;
+  margin: 0 0.2rem 0 0.6rem;
 }
 
 .cbi-dropdown[empty]>ul {
@@ -2340,6 +2375,10 @@ td.cbi-value-field var,
     font-size: var(--font-x);
     border-top: 0 !important;
 }
+
+#cbi-network .tr:first-child > .td {
+        width: 30%;
+} 
 .cbi-section-table .tr .td:first-child, .cbi-section-table .tr .th:first-child, .table .tr .td:first-child, .table .tr .th:first-child, .table .tr:before {
   padding-left: 1.5rem !important;
 }
@@ -2760,8 +2799,13 @@ label>input[type="checkbox"],
 label>input[type="radio"] {
     margin-right: 0.8rem;
     position: relative;
-    margin-bottom: 0.8rem;
+   /* margin-bottom: 0.8rem; */
     vertical-align: -webkit-baseline-middle
+}
+
+.cbi-value-field>div>input[type="checkbox"],
+.cbi-value-field>div>input[type="radio"] {
+      margin-top: 0.5rem;
 }
 
 label[data-index][data-depends] {
@@ -2776,9 +2820,8 @@ label[data-index][data-depends] {
   line-height: 1;
   position: inherit;
   cursor: pointer;
-  margin-bottom: 0.5rem;
   text-decoration: none;
-  padding: 0.3rem;
+  padding: 0.4rem;
 }
 
 .darkMask {
@@ -3194,28 +3237,27 @@ body.lang_pl.node-main-login .cbi-value-title {
 
 [data-page^="admin-status-routes"] #view table,
 [data-page^="admin-status-processes"] #view table,
-[data-page^="admin-status-realtime"] #view table[id*=connections] {
-    border: 1px;
-    font-weight: 400;
-    font-style: normal;
+[data-page^="admin-status-realtime"] #view table[id*=connections]  {
+
     line-height: 1;
     font-family: inherit;
     text-align: left;
     min-width: inherit;
     overflow-x: auto;
     overflow-y: hidden;
-    background-color: rgba(var(--primary-rgbbody), 0.5);
+    background-color: rgba(var(--primary-rgbbody), 0.1);
     -webkit-overflow-scrolling: touch;
     margin-bottom: 20px;
     margin-top: 5px;
 }
 
+[data-page^="admin-status-realtime"] #view>div,
 [data-page^="admin-status-channel"] #view>div:first-child,
 [data-page^="admin-status-channel"] #view>div>div>div>div,
 [data-page^="admin-status-channel"] #view>div>div>div>div>div,
 [data-page^="admin-status-realtime"] #view>div>div>div>div,
-[data-page^="admin-status-realtime"] #view>div>div>div {
-    background-color: rgba(var(--primary-rgbbody), 0.5) !important;
+[data-page^="admin-status-realtime"] #view>div>div>div{
+    background-color: rgba(var(--primary-rgbbody), 0.1) !important;
     border-radius: var(--radius2);
     border: 0px solid #000 !important
 }
@@ -3297,6 +3339,13 @@ body.lang_pl.node-main-login .cbi-value-title {
     box-shadow: 0 0.1rem 0.3rem var(--input-boxcolor)
 }
 
+[data-page^="admin-services-passwall"] #add_link_div,
+[data-page^="admin-services-passwall"] #reassign_group_div,
+[data-page^="admin-services-passwall"] .up-modal {
+    background: rgba(var(--primary-rgbbody), 95) !important;
+    border: none!important;
+}
+
 [data-page^="admin-services-shadowsocksr"]>.block:active,
 .block:active,
 [data-page^="admin-services-bypass"]>.main .block:active,
@@ -3318,7 +3367,8 @@ body.lang_pl.node-main-login .cbi-value-title {
     margin-right: 0 !important
 }
 
-[data-page^="admin-services-openclash"] .cbi-section .oc {
+[data-page^="admin-services-openclash"] .cbi-section .oc,
+[data-page^="admin-services-openclash"] #cbi-openclash {
     --bg-white: rgba(var(--primary-rgbbody), 0.4);
     --bg-light: rgba(255, 255, 255, 0);
     --bg-gray: rgba(var(--primary-rgbm), 0.02);
@@ -3326,7 +3376,7 @@ body.lang_pl.node-main-login .cbi-value-title {
     --text-secondary: var(--body-color);
     --border-color: rgba(255, 255, 255, 0);
     --border-light: rgba(255, 255, 255, 0);
-    --text-primary: var(--inputtext-color)
+    --text-primary: var(--inputtext-color);
 }
 
 [data-page^="admin-services-openclash"] .oc .plugin-toggle-slider {
@@ -3366,12 +3416,10 @@ body.lang_pl.node-main-login .cbi-value-title {
     width: 15rem !important;
     padding: .2813rem
 }
-
-[data-page^="admin-services-openclash"] [id="container.openclash.config.debug"] fieldset {
+[data-page^="admin-services-openclash"] fieldset {
     border: none !important;
     padding: 1rem !important
 }
-
 [data-page^="admin-services-openclash"] #debug-rc-output>textarea {
     font-family: 'Google Sans' !important
 }
@@ -3380,13 +3428,8 @@ body.lang_pl.node-main-login .cbi-value-title {
     font-size: inherit;
     background-color: rgba(0, 0, 0, 0.8) !important;
     color: var(--body-color) !important;
+    color: #bbb !important;
     font-family: 'Google Sans' !important
-}
-
-[data-page^="admin-services-openclash"] .cbi-button-up,
-[data-page^="admin-services-openclash"] .cbi-button-down {
-    font-size: 0;
-    padding: .8rem 1.5rem
 }
 
 [data-page^="admin-services-openclash"] select#CORE_VERSION,
@@ -3429,6 +3472,7 @@ body.lang_pl.node-main-login .cbi-value-title {
     box-shadow: none !important
 }
 
+[data-page^="admin-services-openclash"] .diag-style,
 [data-page^="admin-services-openclash"] .cbi-tabmenu {
     background-color: rgba(var(--primary-rgbbody), 0.2) !important;
     border: none!important;
@@ -3437,7 +3481,13 @@ body.lang_pl.node-main-login .cbi-value-title {
     border: 0px solid #ddd !important;
     box-shadow: none !important
 }
-
+[data-page^="admin-services-openclash"] ul>li>a {
+    height: auto!important;
+}
+[data-page^="admin-services-openclash"] .diag-style>div {
+    white-space: normal!important;
+    min-width: 200px;
+}
 #cbi-nikki-proxy .cbi-value-field,
 #cbi-nikki-proxy .cbi-section-table-row>.cbi-value-field .cbi-dropdown,
 #cbi-nikki-proxy .cbi-value-field .cbi-dropdown,
@@ -3459,7 +3509,8 @@ body.lang_pl.node-main-login .cbi-value-title {
     max-width: 14rem;
     width: 10rem
 }
-.history-tooltip {
+.bandix-container .traffic-increments-tooltip
+.bandix-container .history-tooltip {
   background-color: rgba(var(--primary-rgbbody),1)!important;
   color: var(--body-color) !important;
   border: 1px solid rgba(255, 255, 255, 0)!important;
@@ -3487,7 +3538,7 @@ body.lang_pl.node-main-login .cbi-value-title {
 
 }
 
-.bandix-container button {
+.bandix-container .cbi-button-neutral {
   color: var(--primary-title-color);
   background-color: rgba(255, 255, 255, 0);
   box-shadow: none;
@@ -3495,12 +3546,28 @@ body.lang_pl.node-main-login .cbi-value-title {
   border: 1px solid rgba(255, 255, 255, 0);
 }
 
+.bandix-container .cbi-button-positive,
 .bandix-container .history-tab.active,
 .bandix-container button.active,
 .bandix-container button:active{
   color: var(--menu-color);
   background-color: rgba(var(--primary-rgbm), 0.7);
   border: 1px solid var(--inputborder-color);
+}
+
+.bandix-container .usage-ranking-list {
+    max-height: 100%!important;
+    gap: 5px;
+}
+
+.bandix-container .form-input,
+.bandix-container select,
+.bandix-container input {
+  border-radius: 0!important; 
+}
+
+.show .bandix-modal {
+  background-color: rgba(var(--primary-rgbbody), 1)!important
 }
 
 .bandix-container .history-tab:hover:not(.active) ,
@@ -3749,7 +3816,6 @@ pre {
     color: var(--menu-hover-color)
 }
 
-.container-bar-right a,
 .a-to-btn {
     text-decoration: none
 }
@@ -3798,6 +3864,29 @@ input,
 .zonebadge-empty>strong,
 #file-manager-container #status-bar #status-info {
     color: var(--title-color)
+}
+
+/* hide switch-menu */
+
+.logout-container>a {
+    margin-left: 0.2rem;
+}
+
+.logout-container {
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* 菜单项可见性类 */
+.menu-item-basic,
+.menu-item-allmenu {
+    transition: opacity 0.3s ease;
+}
+
+/* 确保菜单项正确显示 */
+#mainmenu .nav > li.menu-item-basic,
+#mainmenu .nav > li.menu-item-allmenu {
+    display: none;
 }
 
 @keyframes anim-fade-in {
@@ -3898,16 +3987,14 @@ input,
 }
 
 @media only screen and (max-width: 920px) {
+
+
     .main-right .bfill,
     .bfill .bcontainer .showWord,
     .bfill .bcontainer .flex1 .brand {
         display: inline-block
     }
 
-    /* 
-    .bfill .bcontainer .flex1 .brand {
-        color: var(--menu-hover-color)
-    } */
     .fill .container .showWord {
         display: none;
     }
@@ -3931,20 +4018,8 @@ input,
         text-decoration: none
     }
 
-    html,
-    .main {
-        overflow-y: hidden
-    }
-
-    .sidebar-open .showSide:before {
-        content: "\e92f";
-	text-shadow: 1px 1px 2px var(--input-boxcolor);
-        font-size: 1.7rem 
-    }
     .showSide:before {
-        content: "\e930";
 	text-shadow: 1px 1px 2px var(--input-boxcolor);
-        font-size: 1.7rem 
     }
 
 
@@ -3955,7 +4030,7 @@ input,
     .modal .cbi-value-title,
     .cbi-value-title {
         width: 12rem;
-        padding-right: 0.6rem
+        padding-right: 0.5rem
     }
 
     .Interfaces .table {
@@ -4075,14 +4150,16 @@ input,
         margin: 0.5rem 0.2rem
     }
 
-    .modal .cbi-value-title,
-    .cbi-value-title {
+    .modal .cbi-value-title{
         width: 100%;
-        font-weight: 600;
         padding: 0.5rem 0 0.2rem 0.3rem
     }
 
-
+    .cbi-value-title,
+    .cbi-value-field {
+        text-align: left;
+        padding: 0 1rem
+    }
     .td,
     .th {
         margin: 0;
@@ -4155,12 +4232,6 @@ input,
         padding: 0.5rem
     }
 
-    .cbi-value-title,
-    .cbi-value-field {
-        text-align: left;
-        padding: 0 0.3rem
-    }
-
     .cbi-dynlist p {
         padding: 0.5rem 1rem
     }
@@ -4218,6 +4289,16 @@ input,
     .device-card {
     background-color: rgba(var(--primary-rgbbody), 0.3)!important
     }
+    
+    .cbi-page-actions:last-child {
+        margin-bottom: 10px;
+        position: relative;
+        z-index: 10;
+    }
+    .footend {
+        padding-bottom: 5rem;
+        padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    }
 }
 
 @media (max-width: 600px) {
@@ -4231,6 +4312,9 @@ input,
         width: 100% !important
     }
 
+    .bfill .bcontainer .flex1 .brand {
+      display: none;
+    }
     .cbi-section>div {
         width: 100%
     }

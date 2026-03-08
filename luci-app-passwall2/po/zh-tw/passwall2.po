@@ -169,14 +169,23 @@ msgstr "遠程查詢策略"
 msgid "Use FakeDNS work in the domain that proxy."
 msgstr "需要代理的域名使用 FakeDNS。"
 
+msgid "Suitable scenarios for let the node servers get the target domain names."
+msgstr "適合讓節點伺服器取得目標網域的場景。"
+
+msgid "Such as: DNS unlocking of streaming media, reducing DNS query latency, etc."
+msgstr "例如：流媒體的 DNS 解鎖、減少 DNS 查詢延遲等。"
+
 msgid "Domain Override"
 msgstr "域名重寫"
 
 msgid "Direct DNS result write to IPSet"
 msgstr "直連 DNS 解析結果寫入到 IPSet"
 
-msgid "Perform the matching direct domain name rules into IP to IPSet/NFTSet, and then connect directly (not entering the core). Maybe conflict with some special circumstances."
-msgstr "將匹配到的直連規則的域名解析IP寫入到 IPSet/NFTSet，然後直連（不進入內核）。可能和某些特殊情況衝突。"
+msgid "Perform the matching direct domain name rules into IP to IPSet/NFTSet, and then connect directly (not entering the core)."
+msgstr "將匹配到的直連規則的網域解析IP寫入到 IPSet/NFTSet，然後直連（不進入核心）。"
+
+msgid "Maybe conflict with some special circumstances."
+msgstr "可能和某些特殊情況衝突。"
 
 msgid "DNS Redirect"
 msgstr "DNS 重定向"
@@ -286,6 +295,9 @@ msgstr "清空所有節點"
 msgid "Are you sure to clear all nodes?"
 msgstr "你確定要清空所有節點吗？"
 
+msgid "Success"
+msgstr "成功"
+
 msgid "Error"
 msgstr "錯誤"
 
@@ -355,6 +367,30 @@ msgstr "分流"
 msgid "Balancing"
 msgstr "負載均衡"
 
+msgid "Node Addition Method"
+msgstr "節點新增方式"
+
+msgid "Manual"
+msgstr "手動"
+
+msgid "Batch"
+msgstr "批量"
+
+msgid "Select Group"
+msgstr "選擇分組"
+
+msgid "Node Matching Rules"
+msgstr "節點匹配規則"
+
+msgid ""
+"Example: <code>^A && B && !C && D$</code><br>"
+"This means the node remark must start with A (^), include B, exclude C (!), and end with D ($).<br>"
+"Conditions are joined by <code>&&</code>, and their order does not affect the result."
+msgstr ""
+"示例：<code>^A && B && !C && D$</code><br>"
+"表示節點備註需同時滿足：以 A 開頭（^）、包含 B、不包含 C（!）、並以 D 結尾（$）。<br>"
+"多個條件使用 <code>&&</code> 連接，條件順序不影響結果。"
+
 msgid "Balancing Strategy"
 msgstr "負載均衡策略"
 
@@ -400,8 +436,11 @@ msgstr "前置代理"
 msgid "Preproxy Node"
 msgstr "前置代理節點"
 
-msgid "Set the node to be used as a pre-proxy. Each rule (including <code>Default</code>) has a separate switch that controls whether this rule uses the pre-proxy or not."
-msgstr "設置用作前置代理的節點。每条規則（包括<code>默認</code>）都有独立開關控制本規則是否使用前置代理。"
+msgid "Set the node to be used as a pre-proxy."
+msgstr "設置用作前置代理的節點。"
+
+msgid "Each rule has a separate switch that controls whether this rule uses the pre-proxy or not."
+msgstr "每条規則都有独立開關控制本規則是否使用前置代理。"
 
 msgid "Close (Not use)"
 msgstr "關閉 (不使用)"
@@ -414,12 +453,6 @@ msgstr "直連"
 
 msgid "Blackhole (Block)"
 msgstr "黑洞（屏蔽）"
-
-msgid "Use preproxy node"
-msgstr "使用前置代理節點"
-
-msgid "Default Preproxy"
-msgstr "默認前置代理"
 
 msgid "There are no available nodes, please add or subscribe nodes first."
 msgstr "沒有可用節點，請先添加或訂閱節點。"
@@ -736,18 +769,6 @@ msgstr "恢復切換"
 msgid "When detects main node is available, switch back to the main node."
 msgstr "當檢測到主節點可用時，切換回主節點。"
 
-msgid "If the main node is shunt"
-msgstr "如果主節點是分流"
-
-msgid "Switch it"
-msgstr "切掉它"
-
-msgid "Applying to the default node"
-msgstr "應用於默認節點"
-
-msgid "Applying to the default preproxy node"
-msgstr "應用於默認前置節點"
-
 msgid "Add nodes to the standby node list by keywords"
 msgstr "通過關键字添加節點到備用節點列表"
 
@@ -841,6 +862,12 @@ msgstr "規則版本"
 msgid "Manually update"
 msgstr "手動更新"
 
+msgid "Rollback"
+msgstr "回滾"
+
+msgid "Rollbacking..."
+msgstr "回滾中..."
+
 msgid "Enable auto update rules"
 msgstr "開啟自動更新規則"
 
@@ -898,11 +925,11 @@ msgstr "Geo 资源文件目錄"
 msgid "This variable specifies a directory where geoip.dat and geosite.dat files are."
 msgstr "此變量指定geoip.dat和geosite.dat文件所在的目錄。"
 
-msgid "Enable Geo Data Parsing"
-msgstr "開啟 Geo 數据解析"
+msgid "Enable GeoIP Data Parsing"
+msgstr "開啟 GeoIP 數据解析"
 
-msgid "Analyzes and preloads GeoIP/Geosite data to enhance the shunt performance of Sing-box/Xray."
-msgstr "分析和预加载 GeoIP/Geosite 數据，以增強 Sing-box/Xray 的分流效果。"
+msgid "Analyzes and preloads GeoIP data to enhance the shunt performance."
+msgstr "分析和预加载 GeoIP 數据，以增強分流效果。"
 
 msgid "Note: Increases resource usage."
 msgstr "注：会增加一些系統资源的開销。"
@@ -993,6 +1020,12 @@ msgstr "訂閱網址不能為空。"
 
 msgid "Subscribe via proxy"
 msgstr "通過代理訂閱"
+
+msgid "Update Once on Boot"
+msgstr "開機更新一次"
+
+msgid "Updates the subscription the first time runs automatically after each system boot."
+msgstr "路由每次啟動後，首次自動執行時更新訂閱。"
 
 msgid "Enable auto update subscribe"
 msgstr "開啟自動更新訂閱"
@@ -1221,9 +1254,6 @@ msgstr "插件名称"
 
 msgid "Plugin Arguments"
 msgstr "插件參數"
-
-msgid "Naiveproxy Protocol"
-msgstr "Naiveproxy協議"
 
 msgid "User Level"
 msgstr "用戶等級(level)"
@@ -1585,9 +1615,6 @@ msgstr "覆盖連接目標地址"
 msgid "Override the connection destination address with the sniffed domain.<br />Otherwise use sniffed domain for routing only.<br />If using shunt nodes, configure the domain shunt rules correctly."
 msgstr "用探測出的域名覆盖連接目標地址。<br />否則仅將探測得到的域名用於路由。<br />如使用分流節點，請正確設置域名分流規則。"
 
-msgid "Override the connection destination address with the sniffed domain.<br />When enabled, traffic will match only by domain, ignoring IP rules.<br />If using shunt nodes, configure the domain shunt rules correctly."
-msgstr "用探測出的域名覆盖連接目標地址。<br />啟用後仅使用域名进行流量匹配，將忽略IP規則。<br />如使用分流節點，請正確設置域名分流規則。"
-
 msgid "Handshake Server"
 msgstr "握手服務器"
 
@@ -1606,17 +1633,17 @@ msgstr "TLS 憑證鏈指紋（SHA256）"
 msgid "Once set, connects only when the server’s chain fingerprint matches."
 msgstr "設定後，僅在伺服器憑證鏈指紋匹配時連接。"
 
+msgid "TLS Certificate Name (CertName)"
+msgstr "TLS 憑證名稱（CertName）"
+
+msgid "TLS is used to verify the leaf certificate name."
+msgstr "TLS 用於驗證 leaf 憑證的 name。"
+
 msgid "ECH Config"
 msgstr "ECH 配置"
 
 msgid "ECH Key"
 msgstr "ECH 密鑰"
-
-msgid "PQ signature schemes"
-msgstr "後量子對等證書签名方案"
-
-msgid "Disable adaptive sizing of TLS records"
-msgstr "禁用 TLS 記錄的自適應大小调整"
 
 msgid "ECH Query Policy"
 msgstr "ECH 查詢策略"
@@ -1626,6 +1653,9 @@ msgstr "控制使用 DNS 查詢 ECH 配置時的策略。"
 
 msgid "Enable Multipath TCP, need to be enabled in both server and client configuration."
 msgstr "啟用 Multipath TCP，需在服務端和客戶端配置中同時啟用。"
+
+msgid "An FinalMaskObject in JSON format, used for sharing."
+msgstr "JSON 格式的 FinalMaskObject，用來實現分享。"
 
 msgid "Fragment"
 msgstr "分片"
@@ -1698,11 +1728,9 @@ msgstr "仅支持一層代理。"
 
 msgid ""
 "Chained proxy works only with Xray or Sing-box nodes.<br>"
-"The chained node must be the same type as your subscription node (Xray with Xray, Sing-box with Sing-box).<br>"
 "You can only use manual or imported nodes as chained nodes."
 msgstr ""
 "鏈式代理仅支持 Xray 与 Sing-box 節點。<br>"
-"鏈式節點需与訂閱節點類型一致（Xray 對應 Xray，Sing-box 對應 Sing-box）。<br>"
 "仅支持手動添加或導入的節點用作鏈式節點。"
 
 msgid "Set the default domain resolution strategy for the sing-box node."
@@ -1849,6 +1877,9 @@ msgstr "請輸入查詢內容！"
 msgid "No results were found!"
 msgstr "未找到任何結果！"
 
+msgid "Rules containing this value:"
+msgstr "所在規則列表："
+
 msgid "Domain/IP Query"
 msgstr "域名/IP 查詢"
 
@@ -1954,8 +1985,8 @@ msgstr "Socks節點：[%s]%s，啟動 %s:%s"
 msgid "To enable experimental IPv6 transparent proxy (TProxy), please ensure your node and type support IPv6!"
 msgstr "開啟實驗性IPv6透明代理(TProxy)，請確認您的節點及類型支持IPv6！"
 
-msgid "[%s] process %s error, skip!"
-msgstr "【%s】 進程 %s 錯誤，跳過！"
+msgid "[%s] process %s error, skip this transparent proxy!"
+msgstr "【%s】 進程 %s 錯誤，跳過此透明代理！"
 
 msgid "Analyzing the node configuration of the Socks service..."
 msgstr "分析 Socks 服務的節點配置..."

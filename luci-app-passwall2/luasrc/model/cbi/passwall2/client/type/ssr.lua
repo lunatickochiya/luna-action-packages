@@ -1,12 +1,10 @@
 local m, s = ...
 
-local api = require "luci.passwall2.api"
-
 if not api.is_finded("ssr-local") then
 	return
 end
 
-local type_name = "SSR"
+type_name = "SSR"
 
 -- [[ ShadowsocksR Libev ]]
 
@@ -66,8 +64,7 @@ o = s:option(Value, _n("timeout"), translate("Connection Timeout"))
 o.datatype = "uinteger"
 o.default = 300
 
-o = s:option(ListValue, _n("tcp_fast_open"), "TCP " .. translate("Fast Open"), translate("Need node support required"))
-o:value("false")
-o:value("true")
+o = s:option(Flag, _n("tcp_fast_open"), "TCP " .. translate("Fast Open"), translate("Need node support required"))
+o.default = 0
 
 api.luci_types(arg[1], m, s, type_name, option_prefix)

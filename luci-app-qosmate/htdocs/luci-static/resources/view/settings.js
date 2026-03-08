@@ -39,6 +39,7 @@ function createStatusText(status, text) {
 }
 
 var healthCheckData = null;
+var activeCakeType = null;
 var versionInfo = {
     backend: { current: 'Unknown', latest: 'Unknown', channel: 'Unknown' },
     frontend: { current: 'Unknown', latest: 'Unknown', channel: 'Unknown' }
@@ -146,7 +147,10 @@ return view.extend({
             uci.load('qosmate'),
             uci.load('firewall'),
             this.fetchHealthCheck(),
-            fetchVersionInfo()
+            fetchVersionInfo(),
+            fs.read('/tmp/qosmate/cake_type').then(function(res) {
+                activeCakeType = (res || '').trim() || null;
+            }).catch(function() { activeCakeType = null; })
         ]).catch(error => {
             console.error('Error in load function:', error);
             ui.addNotification(null, E('p', _('Error loading initial data: %s').format(error.message || error)), 'error');
@@ -758,8 +762,20 @@ return view.extend({
             switch(value) {
                 case 'hfsc':
                     return _('HFSC - Hierarchical Fair Service Curve. Configure realtime traffic settings in the HFSC tab.');
-                case 'cake':
-                    return _('CAKE - Common Applications Kept Enhanced. Configure CAKE-specific parameters in the CAKE tab.');
+                case 'cake': {
+                    var base = _('CAKE - Common Applications Kept Enhanced. Configure CAKE-specific parameters in the CAKE tab.');
+                    if (!activeCakeType) return base;
+                    var useMq = uci.get('qosmate', 'cake', 'USE_MQ') || '0';
+                    var mqStatus;
+                    if (activeCakeType === 'cake_mq') {
+                        mqStatus = ' ✓ ' + _('cake_mq active');
+                    } else if (useMq === '1') {
+                        mqStatus = ' ⚠ ' + _('cake_mq not available');
+                    } else {
+                        mqStatus = ' — ' + _('cake_mq off');
+                    }
+                    return base + mqStatus;
+                }
                 case 'hybrid':
                     return _('Hybrid - HFSC as shaper, Game Qdisc for realtime traffic, CAKE for default traffic and fq_codel for bulk traffic. Configure realtime class settings in HFSC tab and default class settings in CAKE tab.');
                 case 'htb':
@@ -850,6 +866,42 @@ return view.extend({
             } else {
                 return E('div');
             }
+        };
+
+        // Autorate Section
+        var s_autorate = m.section(form.NamedSection, 'autorate', 'autorate', _('Dynamic Bandwidth (Autorate)'));
+        s_autorate.anonymous = true;
+
+        o = s_autorate.option(form.Flag, 'enabled', _('Enable Autorate'), 
+            _('Dynamically adjust bandwidth based on latency measurements. Fine-tune in Advanced tab.'));
+        o.rmempty = false;
+
+        o = s_autorate.option(form.DummyValue, '_autorate_status', _(''));
+        o.rawhtml = true;
+        o.render = function(section_id) {
+            var enabled = uci.get('qosmate', 'autorate', 'enabled');
+            if (enabled !== '1') {
+                return E('div');
+            }
+            
+            var uprate = parseInt(uci.get('qosmate', 'settings', 'UPRATE') || '0');
+            var downrate = parseInt(uci.get('qosmate', 'settings', 'DOWNRATE') || '0');
+            
+            var minUl = parseInt(uci.get('qosmate', 'autorate', 'min_ul_rate')) || Math.floor(uprate * 25 / 100);
+            var maxUl = parseInt(uci.get('qosmate', 'autorate', 'max_ul_rate')) || Math.floor(uprate * 105 / 100);
+            var minDl = parseInt(uci.get('qosmate', 'autorate', 'min_dl_rate')) || Math.floor(downrate * 25 / 100);
+            var maxDl = parseInt(uci.get('qosmate', 'autorate', 'max_dl_rate')) || Math.floor(downrate * 105 / 100);
+
+            return E('div', { 'class': 'cbi-value' }, [
+                E('label', { 'class': 'cbi-value-title' }, _('Active Range')),
+                E('div', { 'class': 'cbi-value-field' }, [
+                    E('span', { 'style': 'color: #2196F3;' }, '↓ '),
+                    minDl + ' - ' + maxDl + ' kbps',
+                    E('span', { 'style': 'margin: 0 12px; color: #666;' }, '|'),
+                    E('span', { 'style': 'color: #4CAF50;' }, '↑ '),
+                    minUl + ' - ' + maxUl + ' kbps'
+                ])
+            ]);
         };
         
         return m.render();

@@ -1,6 +1,5 @@
-local sys = require "luci.sys"
 local api = require "luci.passwall.api"
-local appname = "passwall"
+local appname = api.appname
 
 local var = api.get_args(arg)
 local FLAG = var["-FLAG"]
@@ -33,6 +32,11 @@ local FLAG_PATH = TMP_ACL_PATH .. "/" .. FLAG
 local config_lines = {}
 local tmp_lines = {}
 local USE_GEOVIEW = uci:get(appname, "@global_rules[0]", "enable_geoview")
+local IS_SHUNT_NODE = uci:get(appname, TCP_NODE, "protocol") == "_shunt"
+
+if IS_SHUNT_NODE then
+	REMOTE_FAKEDNS = uci:get(appname, TCP_NODE, "fakedns") or "0"
+end
 
 local function log(...)
 	if NO_LOGIC_LOG == "1" then
@@ -91,8 +95,11 @@ local function get_geosite(list_arg, out_path)
 	local geosite_path = uci:get(appname, "@global_rules[0]", "v2ray_location_asset") or "/usr/share/v2ray/"
 	geosite_path = geosite_path:match("^(.*)/") .. "/geosite.dat"
 	if not is_file_nonzero(geosite_path) then return 1 end
-	if api.is_finded("geoview") and list_arg and out_path then
-		sys.exec("geoview -type geosite -append=true -input " .. geosite_path .. " -list '" .. list_arg .. "' -output " .. out_path)
+	local bin = api.finded_com("geoview")
+	if bin and list_arg and out_path then
+		local cmd = string.format("%q -type geosite -append=true -input %q -list %q -output %q -lowmem=true",
+			bin, geosite_path, list_arg, out_path)
+		sys.call(cmd)
 		return 0
 	end
 	return 1
@@ -354,7 +361,7 @@ if CHNLIST ~= "0" and is_file_nonzero(RULES_PATH .. "/chnlist") then
 end
 
 --分流规则
-if uci:get(appname, TCP_NODE, "protocol") == "_shunt" then
+if IS_SHUNT_NODE then
 	local white_domain, lookup_white_domain = {}, {}
 	local shunt_domain, lookup_shunt_domain = {}, {}
 	local file_white_host = FLAG_PATH .. "/shunt_direct_host"
@@ -492,7 +499,7 @@ if CHNLIST == "proxy" then DEFAULT_TAG = "chn" end
 --全局模式，默认使用远程DNS
 if only_global then
 	DEFAULT_TAG = "gfw"
-	if NO_IPV6_TRUST == "1" and uci:get(appname, TCP_NODE, "protocol") ~= "_shunt" then 
+	if NO_IPV6_TRUST == "1" and not IS_SHUNT_NODE then 
 		table.insert(config_lines, "no-ipv6")
 	end
 end

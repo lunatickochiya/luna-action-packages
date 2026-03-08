@@ -3,6 +3,8 @@
 function modem_data(){
 	generic_data
 	OIFS="$IFS"; IFS="|" # Get hw and sim info
+	# FIX regstate
+	REGST=$(echo "$O" | awk -F',' '/(\+CREG|\+CGREG|\+CEREG)/ {if (NF >= 5 && $NF ~ /^[0-9]$|^1[0-3]$/) {print $2; exit}}')
 	set -- $(echo "$O" | awk -F'[:,]' '
 		/\+CGMI/ {gsub("\"",""); manuf=$2}
 		/\+CGMM/ {gsub("\"",""); model=$2}
@@ -18,7 +20,8 @@ function modem_data(){
 	set -- $(echo "$O" | awk -v model=$MODEL -v mode=$MODE '
 		BEGIN { map[15]=1; map[25]=2; map[50]=3; map[75]=4; map[100]=5 }
 		mode ~ /LTE/ { # LTE mode
-			if (/^\PCC:/ && model~/952|FM/) { lte_ca++; split($0, ca, ","); pch = ca[3]; pcica = ca[2] }
+			if (/^\PCC:/ && model~/952|FM/) {split($0, ca, ","); pch = ca[3]; pcica = ca[2] }
+                        if (/^\SCC\d/ && model~/952|FM/) {lte_ca++}
 			if (/^\+GTCAINFO: 1/) { lte_ca++; split($0, ca, ","); pch = ca[5]; pcica = ca[4] }
 			if (/\+GTCCINFO:/) { getline; getline; split($0, f, ",")
 				lac = (model~/952|FM/) ? sprintf("%d","0x"f[5]) : f[5]
@@ -65,15 +68,18 @@ function modem_data(){
 				{
 				if (model ~ /FM|952/ && /^SCC[0-9]+:/) {
 					chan_field = 5; bw_field = 6
-				} else if (/\+\+GTCAINFO: 2/) {
+				} else if (/\+GTCAINFO: 2/) {
 					chan_field = 4; bw_field = NF
-				} else next
+				} else {
+					next
+				}
 			        if ($chan_field > 1) {
 					band = earfcn_to_band($chan_field)
 					if (band != "") scc = scc "+" band
 					sum += $bw_field/5; bwca = sum + bwp_num
 				}
-			} END { print scc "|" bwca }')
+				} END { print scc "|" bwca }
+			')
 			SCC=${1}; BWCA=${2}
 			IFS="$OIFS"; unset OIFS
 		fi

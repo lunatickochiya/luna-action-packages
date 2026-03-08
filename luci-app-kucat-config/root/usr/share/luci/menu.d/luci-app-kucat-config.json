@@ -1,9 +1,8 @@
 {
     "admin/system/kucat-config": {
-
-		"title": "KuCat Config",
-		"order": 90,
-		"action": {
+        "title": "KuCat Config",
+        "order": 90,
+        "action": {
             "type": "firstchild"
         }
     },
@@ -17,13 +16,21 @@
     },
     "admin/system/kucat-config/schemes": {
         "title": "Color Schemes",
-        "order": 20, 
+        "order": 20,
         "action": {
             "type": "view",
             "path": "kucat-config/schemes"
         }
     },
 
+    "admin/system/kucat-config/menu-config": {
+        "title": "Menu Configuration",
+        "order": 25,
+        "action": {
+            "type": "view",
+            "path": "kucat-config/menu-config"
+        }
+    },
     "admin/system/kucat-config/updesktop": {
         "title": "Desktop Wallpaper Upload",
         "order": 30,

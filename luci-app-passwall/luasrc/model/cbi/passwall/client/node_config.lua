@@ -1,5 +1,5 @@
-local api = require "luci.passwall.api"
-local appname = "passwall"
+api = require "luci.passwall.api"
+appname = "passwall"
 
 m = Map(appname, translate("Node Config"))
 m.redirect = api.url("node_list")
@@ -9,8 +9,22 @@ if not arg[1] or not m:get(arg[1]) then
 	luci.http.redirect(m.redirect)
 end
 
+local header = Template(appname .. "/node_config/header")
+header.api = api
+header.section = arg[1]
+m:append(header)
+
 m:append(Template(appname .. "/cbi/nodes_multivalue_com"))
 m:append(Template(appname .. "/cbi/nodes_listvalue_com"))
+
+groups = {}
+m.uci:foreach(appname, "nodes", function(s)
+	if s[".name"] ~= arg[1] then
+		if s.group and s.group ~= "" then
+			groups[s.group] = true
+		end
+	end
+end)
 
 s = m:section(NamedSection, arg[1], "nodes", "")
 s.addremove = false
@@ -18,7 +32,7 @@ s.dynamic = false
 
 o = s:option(DummyValue, "passwall", "　")
 o.rawhtml  = true
-o.template = "passwall/node_list/link_share_man"
+o.template = "passwall/node_config/link_share_man"
 o.value = arg[1]
 
 o = s:option(Value, "remarks", translate("Node Remarks"))
@@ -28,14 +42,6 @@ o.rmempty = false
 o = s:option(Value, "group", translate("Group Name"))
 o.default = ""
 o:value("", translate("default"))
-local groups = {}
-m.uci:foreach(appname, "nodes", function(s)
-	if s[".name"] ~= arg[1] then
-		if s.group and s.group ~= "" then
-			groups[s.group] = true
-		end
-	end
-end)
 for k, v in pairs(groups) do
 	o:value(k)
 end
@@ -59,6 +65,7 @@ local fs = api.fs
 local types_dir = "/usr/lib/lua/luci/model/cbi/passwall/client/type/"
 s.val = {}
 s.val["type"] = m.uci:get(appname, arg[1], "type")
+s.val["protocol"] = m.uci:get(appname, arg[1], "protocol")
 
 o = s:option(ListValue, "type", translate("Type"))
 
@@ -99,13 +106,10 @@ for index, value in ipairs(type_table) do
 	setfenv(p_func, getfenv(1))(m, s)
 end
 
-o = s:option(DummyValue, "switch_type", " ")
-o.template = appname .. "/node_config/switch_type"
-o:depends("___hide", true)
-for _, v in ipairs(s.fields["type"].keylist or {}) do
-	if s.val["type"] ~= v then
-		o:depends("type", v)
-	end
-end
+local footer = Template(appname .. "/node_config/footer")
+footer.api = api
+footer.section = arg[1]
+
+m:append(footer)
 
 return m
