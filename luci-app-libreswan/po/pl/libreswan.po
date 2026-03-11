@@ -1,16 +1,14 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: \n"
-"POT-Creation-Date: \n"
-"PO-Revision-Date: 2026-02-27 01:00+0000\n"
-"Last-Translator: Franco Castillo <castillofrancodamian@gmail.com>\n"
-"Language-Team: Spanish <https://hosted.weblate.org/projects/openwrt/"
-"luciapplicationslibreswan/es/>\n"
-"Language: es\n"
-"MIME-Version: 1.0\n"
+"PO-Revision-Date: 2026-02-26 14:29+0000\n"
+"Last-Translator: Matthaiks <kitynska@gmail.com>\n"
+"Language-Team: Polish <https://hosted.weblate.org/projects/openwrt/"
+"luciapplicationslibreswan/pl/>\n"
+"Language: pl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2);\n"
 "X-Generator: Weblate 5.16.1-dev\n"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:50
@@ -45,35 +43,35 @@ msgstr "AES_CTR"
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:180
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:198
 msgid "Acceptable values are an integer followed by m, h, d"
-msgstr "Valores aceptables son un entero seguido por m, h, d"
+msgstr "Dopuszczalne wartości to liczba całkowita, po której następują m, h, d"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:17
 msgid "Add Proposal"
-msgstr "Agregar propuesta"
+msgstr "Dodaj propozycję"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:47
 msgid "Add Tunnel"
-msgstr "Añadir túnel"
+msgstr "Dodaj tunel"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:72
 msgid "Advanced"
-msgstr "Avanzado"
+msgstr "Zaawansowane"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:63
 msgid "Allowed Virtual Private"
-msgstr "Privado virtual permitido"
+msgstr "Dozwolone wirtualne prywatne"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:146
 msgid "Auth Method"
-msgstr "Método de autenticación"
+msgstr "Metoda uwierzytelniania"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:70
 msgid "Authentication"
-msgstr "Autenticación"
+msgstr "Uwierzytelnienie"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:268
 msgid "Auto Update Peer Address of VTI interface"
-msgstr "Actualización automática de la dirección de pares de la interfaz VTI"
+msgstr "Automatyczna aktualizacja adresu peera interfejsu VTI"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:57
 msgid "CAMELLIA_CBC"
@@ -81,206 +79,207 @@ msgstr "CAMELLIA_CBC"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:213
 msgid "Clear"
-msgstr "Limpiar"
+msgstr "Wyczyść"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:59
 msgid "DH Group"
-msgstr "Grupo DH"
+msgstr "Grupa DH"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:63
 msgid "DH Group 14"
-msgstr "Grupo DH 14"
+msgstr "Grupa 14 DH"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:64
 msgid "DH Group 15"
-msgstr "Grupo DH 15"
+msgstr "Grupa 15 DH"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:65
 msgid "DH Group 16"
-msgstr "Grupo DH 16"
+msgstr "Grupa 16 DH"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:66
 msgid "DH Group 17"
-msgstr "Grupo DH 17"
+msgstr "Grupa 17 DH"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:67
 msgid "DH Group 18"
-msgstr "Grupo DH 18"
+msgstr "Grupa 18 DH"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:68
 msgid "DH Group 19"
-msgstr "Grupo DH 19"
+msgstr "Grupa 19 DH"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:69
 msgid "DH Group 20"
-msgstr "Grupo DH 20"
+msgstr "Grupa 20 DH"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:70
 msgid "DH Group 21"
-msgstr "Grupo DH 21"
+msgstr "Grupa 21DH"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:71
 msgid "DH Group 22*"
-msgstr "Grupo DH 22*"
+msgstr "Grupa 20 DH*"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:72
 msgid "DH Group 31"
-msgstr "Grupo DH 31"
+msgstr "Grupa 31 DH"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:62
 msgid "DH Group 5*"
-msgstr "Grupo DH 5*"
+msgstr "Grupa 5 DH*"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:210
 msgid "DPD Action"
-msgstr "Acción DPD"
+msgstr "Akcja DPD"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:218
 msgid "DPD Delay"
-msgstr "Retraso DPD"
+msgstr "Opóźnienie DPD"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:223
 msgid "DPD Timeout"
-msgstr "Tiempo de espera del DPD"
+msgstr "Limit czasu DPD"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:23
 msgid "Debug Logs"
-msgstr "Registros de depuración"
+msgstr "Dzienniki debugowania"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:61
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:62
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:63
 msgid "Down"
-msgstr "Bajar"
+msgstr "W dół"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:56
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:240
 msgid "Enable nflog on nfgroup"
-msgstr "Activar nflog en nfgroup"
+msgstr "Włącz nflog w nfgroup"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:48
 msgid "Encryption Method"
-msgstr "Método de cifrado"
+msgstr "Metoda szyfrowania"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:38
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:69
 msgid "General"
-msgstr "General"
+msgstr "Ogólne"
 
 #: applications/luci-app-libreswan/root/usr/share/rpcd/acl.d/luci-app-libreswan.json:3
 msgid "Grant access to LuCI app Libreswan IPSec"
-msgstr "Otorgar acceso a la app LuCI de IPSec Libreswan"
+msgstr "Udziel dostępu do aplikacji LuCI Libreswan IPSec"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:40
 msgid "Hash Algorithm"
-msgstr "Algoritmo Hash"
+msgstr "Algorytm haszujący"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:214
 msgid "Hold"
-msgstr "Mantener"
+msgstr "Wstrzymaj"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:180
 msgid "IKE Life Time"
-msgstr "Tiempo de vida IKE"
+msgstr "Czas trwania IKE"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:161
 msgid "IKE V2"
-msgstr "IKE v2"
+msgstr "IKEv2"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:164
 msgid "IKE Version 1"
-msgstr "IKE versión 1"
+msgstr "IKE w wersji 1"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:163
 msgid "IKE Version 2"
-msgstr "IKE versión 2"
+msgstr "IKE w wersji 2"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:46
 msgid "IP address to listen on, default depends on Listen Interface"
-msgstr "Dirección IP para escucha, por defecto depende en Interfaz Escucha"
+msgstr "Adres IP do nasłuchiwania, domyślnie zależy od interfejsu nasłuchiwania"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:17
 msgid "IPSec Global Settings"
-msgstr "Ajustes de IPSec global"
+msgstr "Ustawienia globalne IPSec"
 
 #: applications/luci-app-libreswan/root/usr/share/luci/menu.d/luci-app-libreswan.json:20
 msgid "IPSec Globals"
-msgstr "IPSec globales"
+msgstr "Globalne IPSec"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:11
 #: applications/luci-app-libreswan/root/usr/share/luci/menu.d/luci-app-libreswan.json:29
 msgid "IPSec Proposals"
-msgstr "Propuestas IPSec"
+msgstr "Propozycje IPSec"
 
 #: applications/luci-app-libreswan/root/usr/share/luci/menu.d/luci-app-libreswan.json:38
 msgid "IPSec Tunnels"
-msgstr "Túneles IPSec"
+msgstr "Tunele IPSec"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:73
 msgid "IPSec Tunnels Summary"
-msgstr "Sumario de túneles IPSec"
+msgstr "Podsumowanie tuneli IPSec"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:77
 msgid "Initiate"
-msgstr "Comenzar"
+msgstr "Inicjuj"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:71
 msgid "Interface"
-msgstr "Interfaz"
+msgstr "Interfejs"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:40
 msgid "Interface for IPsec to use"
-msgstr "Interfaz para IPsec a utilizar"
+msgstr "Interfejs IPsec do używania"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:98
 msgid "Left ID"
-msgstr "ID izquierda"
+msgstr "Identyfikator lewy"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:84
 msgid "Left IP/Device"
-msgstr "IP izquierda/Dispositivo"
+msgstr "IP/Urządzenie lewe"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:79
 msgid "Left Interface"
-msgstr "Interfaz izquierda"
+msgstr "Interfejs lewy"
 
 #: applications/luci-app-libreswan/root/usr/share/luci/menu.d/luci-app-libreswan.json:3
 msgid "Libreswan IPSec"
-msgstr "IPSec Libreswan"
+msgstr "Libreswan IPSec"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:76
 msgid "Listen"
-msgstr "Escucha"
+msgstr "Nasłuchuj"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:45
 msgid "Listen Address"
-msgstr "Dirección de escucha"
+msgstr "Adres nasłuchiwania"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:39
 msgid "Listen Interface"
-msgstr "Interfaz Escucha"
+msgstr "Interfejs nasłuchiwania"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:250
 msgid "Lists VTI interfaces configured with ikey and okey"
-msgstr "Lista los interfaces VTI configurados con ikey y okey"
+msgstr "Wyświetla interfejsy VTI skonfigurowane za pomocą ikey i okey"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:249
 msgid ""
 "Lists XFRM interfaces in format \"ipsecN\", N denotes ifid of xfrm interface"
 msgstr ""
-"Enumera interfaces XFRM en formato \"ipsecN\", N denota ifid de interfaz xfrm"
+"Wyświetla interfejsy XFRM w formacie „ipsecN”, gdzie N oznacza identyfikator "
+"interfejsu XFRM"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:114
 msgid "Local Source IP"
-msgstr "IP de origen local"
+msgstr "Lokalny źródłowy adres IP"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:36
 msgid "Local Subnet"
-msgstr "Subred local"
+msgstr "Lokalna podsieć"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:129
 msgid "Local Subnets"
-msgstr "Subredes locales"
+msgstr "Lokalne podsieci"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:42
 msgid "MD5*"
@@ -288,94 +287,94 @@ msgstr "MD5*"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:74
 msgid "Mode"
-msgstr "Modo"
+msgstr "Tryb"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:57
 msgid "NFLOG group number to log all pre-crypt and post-decrypt traffic to"
 msgstr ""
-"Número de grupo NFLOG para bitácora de todo el tráfico pre-cifrado y post-"
-"cifrado a"
+"Numer grupy NFLOG do rejestrowania całego ruchu przed szyfrowaniem i po "
+"odszyfrowaniu"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:34
 msgid "Name"
-msgstr "Nombre"
+msgstr "Nazwa"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:32
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:63
 msgid "Name length shall not exceed 15 characters"
-msgstr "La longitud del nombre no debe exceder los 15 caracteres"
+msgstr "Długość nazwy nie może przekraczać 15 znaków"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:212
 msgid "None"
-msgstr "Ninguno"
+msgstr "Brak"
 
 #: applications/luci-app-libreswan/root/usr/share/luci/menu.d/luci-app-libreswan.json:11
 msgid "Overview"
-msgstr "Vista general"
+msgstr "Przegląd"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:40
 msgid "Phase1"
-msgstr "Fase 1"
+msgstr "Faza 1"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:167
 msgid "Phase1 Proposals"
-msgstr "Propuestas fase 1"
+msgstr "Propozycje Fazy 1"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:41
 msgid "Phase2"
-msgstr "Fase 2"
+msgstr "Faza 2"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:234
 msgid "Phase2 Proposals"
-msgstr "Propuestas fase 2"
+msgstr "Propozycje Fazy 2"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:228
 msgid "Phase2 Protocol"
-msgstr "Protocolo fase 2"
+msgstr "Protokół Fazy 2"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:154
 msgid "Preshared Key"
-msgstr "Clava pre-compartida"
+msgstr "Klucz współdzielony"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:37
 msgid "Proposals must be configured for Tunnels"
-msgstr "Propuestas deben ser configuradas para túneles"
+msgstr "Propozycje muszą być skonfigurowane dla tuneli"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:193
 msgid "Rekey"
-msgstr "Re-clave"
+msgstr "Regeneracja klucza"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:198
 msgid "Rekey Margin Time"
-msgstr "Tiempo de margen de Re-clave"
+msgstr "Czas marginesu regeneracji klucza"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:35
 msgid "Remote"
-msgstr "Remoto"
+msgstr "Zdalny"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:103
 msgid "Remote IP"
-msgstr "IP remota"
+msgstr "Zdalny adres IP"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:124
 msgid "Remote Source IP"
-msgstr "IP de origen remoto"
+msgstr "Zdalny źródłowy adres IP"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:37
 msgid "Remote Subnet"
-msgstr "Subred remota"
+msgstr "Zdalna podsieć"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:142
 msgid "Remote Subnets"
-msgstr "Subredes remotas"
+msgstr "Zdalne podsieci"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:215
 msgid "Restart"
-msgstr "Reiniciar"
+msgstr "Restartuj"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:109
 msgid "Right ID"
-msgstr "ID derecha"
+msgstr "Identyfikator prawy"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:39
 msgid "Rx"
@@ -399,35 +398,35 @@ msgstr "SHA512"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:148
 msgid "Shared Secret"
-msgstr "Secreto compartido"
+msgstr "Wspólny sekret"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:42
 msgid "Status"
-msgstr "Estado"
+msgstr "Status"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:64
 msgid ""
 "The address ranges that may live behind a NAT router through which a client "
 "connects"
 msgstr ""
-"Los intervalos de dirección que pueden existir destrás de un enrutador NAT a "
-"través del cual un cliente se conecta"
+"Zakresy adresów, które mogą znajdować się za routerem NAT, przez który łączy "
+"się klient"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:67
 msgid "There are no active Tunnels"
-msgstr "No hay túneles activos"
+msgstr "Brak aktywnych tuneli"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:30
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:61
 msgid ""
 "This may not share the same name as other proposals or configured tunnels."
 msgstr ""
-"Esto puede no compartir el mismo nombre como otras propuestas o túneles "
-"configurados."
+"Nazwa ta może różnić się od nazwy innych propozycji lub skonfigurowanych "
+"tuneli."
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:248
 msgid "Tunnel Interface"
-msgstr "Interfaz del túnel"
+msgstr "Interfejs tunelu"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:38
 msgid "Tx"
@@ -435,55 +434,57 @@ msgstr "Tx"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:34
 msgid "Uniquely Identify Remotes"
-msgstr "Únicamente identificar remotos"
+msgstr "Jednoznacznie identyfikuj zdalne"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:40
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:48
 msgid "Unsafe"
-msgstr "Inseguro"
+msgstr "Niebezpieczny"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/proposals.js:60
 msgid "Unsafe, See"
-msgstr "Inseguro, vea"
+msgstr "Niebezpieczny, zobacz"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:61
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:62
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:63
 msgid "Up"
-msgstr "Subir"
+msgstr "W górę"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/tunnels.js:267
 msgid "Update Peer Address"
-msgstr "Actualizar la dirección del par"
+msgstr "Aktualizuj adres peera"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/overview.js:43
 msgid "Uptime"
-msgstr "Tiempo de actividad"
+msgstr "Czas pracy"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:35
 msgid "Whether IDs should be considered identifying remote parties uniquely"
-msgstr "Si los ID serían considerados identificando únicamente partes remotas"
+msgstr ""
+"Czy identyfikatory powinny być uważane za jednoznacznie identyfikujące "
+"strony zdalne"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:27
 msgid "base - Moderate Logging"
-msgstr "base - Registro moderado"
+msgstr "base - Umiarkowane rejestrowanie"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:28
 msgid "cpu-usage - Timing/Load Logging"
-msgstr "uso-cpu - Registro de tiempo/carga"
+msgstr "cpu-usage - Rejestrowanie czasu/obciążenia"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:29
 msgid "crypto - All crypto related Logging"
-msgstr "cifrado - Todo el registro relacionado con cifrado"
+msgstr "crypto - Rejestrowanie wszystkich zdarzeń kryptograficznych"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:26
 msgid "none - No Logging"
-msgstr "ninguno - Sin registro"
+msgstr "none - Brak rejestrowania"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:31
 msgid "private - Sensitive private-key/password Logging"
-msgstr "privado - Registro confidencial de claves privadas y contraseñas"
+msgstr "private - Rejestrowanie poufnych kluczy prywatnych/haseł"
 
 #: applications/luci-app-libreswan/htdocs/luci-static/resources/view/libreswan/globals.js:30
 msgid "tmi - Too Much/Excessive Logging"
-msgstr "tmi - Registro excesivo/demasiado registro"
+msgstr "tmi - Rejestrowanie zbyt duże/nadmierne"
