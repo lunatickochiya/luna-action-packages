@@ -1,6 +1,7 @@
+# SPDX-License-Identifier: GPL-3.0-only
 #
-# Copyright (C) 2022-2026 sirpdboy <herboy2008@gmail.com>
-#
+# Copyright (C) 2021-2026 sirpdboy  <herboy2008@gmail.com>
+# 
 # This is free software, licensed under the Apache License, Version 2.0 .
 #
 
@@ -8,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ddns-go
 PKG_VERSION:=6.16.2
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/jeessy2/ddns-go/tar.gz/v$(PKG_VERSION)?
@@ -23,7 +24,6 @@ PKG_BUILD_PARALLEL:=1
 PKG_BUILD_FLAGS:=no-mips16
 
 GO_PKG:=github.com/jeessy2/ddns-go/v6
-GO_PKG_LDFLAGS:=-w -s
 GO_PKG_LDFLAGS_X:=main.Version=$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
@@ -44,19 +44,17 @@ define Package/ddns-go/description
   support Alidns Dnspod Cloudflare Hicloud Callback Baiducloud porkbun GoDaddy Google Domains.
 endef
 
-define Package/ddns-go/install
-	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(GO_PKG_BUILD_BIN_DIR)/ddns-go $(1)/usr/bin/ddns-go
-	$(INSTALL_DIR) $(1)/etc/ddns-go
-	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) ./files/ddns-go.init $(1)/etc/init.d/ddns-go
-	$(INSTALL_DIR) $(1)/etc/config/
-	$(INSTALL_CONF) ./files/ddns-go.conf $(1)/etc/config/ddns-go
+define Package/ddns-go/conffiles
+  /etc/config/ddns-go
+  /etc/ddns-go/ddns-go-config.yaml
 endef
 
-define Package/ddns-go/conffiles
-/etc/config/ddns-go
-/etc/ddns-go/ddns-go-config.yaml
+define Package/ddns-go/install
+  $(call GoPackage/Package/Install/Bin,$(1))
+  $(INSTALL_DIR) $(1)/etc/init.d
+  $(INSTALL_BIN) $(CURDIR)/files/ddns-go.init $(1)/etc/init.d/ddns-go
+  $(INSTALL_DIR) $(1)/etc/config/
+  $(INSTALL_CONF) $(CURDIR)/files/ddns-go.conf $(1)/etc/config/ddns-go
 endef
 
 $(eval $(call GoBinPackage,ddns-go))

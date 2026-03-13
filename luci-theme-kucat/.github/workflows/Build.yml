@@ -32,12 +32,31 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Prepare package feed
+        run: |
+            mkdir -p feed/luci-theme-kucat
+            if [ -f "Makefile" ]; then
+            echo "Makefile found in root, copying all files"
+            cp -r * feed/luci-theme-kucat/ 2>/dev/null || true
+            # 如果Makefile在子目录
+            elif [ -f "luci-theme-kucat/Makefile" ]; then
+            echo "Makefile found in luci-app-kucat-config subdirectory"
+            cp -r luci-theme-kucat/* feed/luci-theme-kucat/
+            else
+            echo "ERROR: Cannot find Makefile"
+            find . -name "Makefile"
+            exit 1
+            fi
+            echo "Final feed structure:"
+            ls -la feed/luci-theme-kucat/
       - name: Build packages
-        uses: sbwml/openwrt-gh-action-sdk@go1.25
+        uses: sirpdboy/gh-action-sdk@go1.26
         env:
           ARCH: ${{ matrix.arch }}-${{ matrix.sdk }}
           FEEDNAME: packages_ci
-          PACKAGES: luci-app-taskplan
+          PACKAGES: luci-theme-kucat
+          FEED_DIR: ${{ github.workspace }}/feed
           NO_REFRESH_CHECK: true
 
       - name: Upload artifacts

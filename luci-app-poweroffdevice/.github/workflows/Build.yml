@@ -37,7 +37,7 @@ jobs:
         env:
           ARCH: ${{ matrix.arch }}-${{ matrix.sdk }}
           FEEDNAME: packages_ci
-          PACKAGES: luci-app-taskplan
+          PACKAGES: luci-app-poweroffdevice
           NO_REFRESH_CHECK: true
 
       - name: Upload artifacts
