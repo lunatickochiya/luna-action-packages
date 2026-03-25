@@ -6,7 +6,7 @@
  	entry({"admin", "services", "shadowsocksr", "restart"}, call("act_restart"))
  	entry({"admin", "services", "shadowsocksr", "delete"}, call("act_delete"))
 +	entry({'admin', 'services', "shadowsocksr", 'ip'}, call('check_ip')) -- 获取ip情况
- 		--[[Backup]]
+ 	--[[Backup]]
  	entry({"admin", "services", "shadowsocksr", "backup"}, call("create_backup")).leaf = true
  	
  end
