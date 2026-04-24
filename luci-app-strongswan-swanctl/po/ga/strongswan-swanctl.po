@@ -1,18 +1,16 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2026-04-16 14:10+0000\n"
-"Last-Translator: ZW <roc_fe@users.noreply.hosted.weblate.org>\n"
-"Language-Team: Chinese (Traditional Han script) <https://hosted.weblate.org/"
-"projects/openwrt/luciapplicationsstrongswan-swanctl/zh_Hant/>\n"
-"Language: zh_Hant\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: ga\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17.1-dev\n"
+"Plural-Forms: nplurals=5; plural=n==1 ? 0 : n==2 ? 1 : (n>2 && n<7) ? 2 :(n>"
+"6 && n<11) ? 3 : 4;\n"
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:299
 msgid "Action on initial configuration load"
-msgstr "初始配置載入時的動作"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:307
 msgid "Action when CHILD_SA is closed"
@@ -29,34 +27,34 @@ msgstr ""
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:92
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:259
 msgid "Advanced"
-msgstr "進階"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:397
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:404
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:413
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:418
 msgid "Algorithms marked with * are considered insecure"
-msgstr "標有 * 的演算法被認為不安全"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:91
 msgid "Authentication"
-msgstr "認證"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:159
 msgid "Authentication Method"
-msgstr "認證方式"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:123
 msgid "Bytes in"
-msgstr "傳入位元組"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:124
 msgid "Bytes out"
-msgstr "傳出位元組"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:195
 msgid "CA Certificate"
-msgstr "CA 憑證"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:196
 msgid ""
@@ -65,23 +63,23 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:151
 msgid "CHILD_SAs"
-msgstr "CHILD_SAs"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:185
 msgid "Certificate pathname to use for authentication"
-msgstr "用於認證的憑證路徑名稱"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:139
 msgid "Close"
-msgstr "關閉"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:306
 msgid "Close Action"
-msgstr "關閉動作"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:95
 msgid "Configuration is enabled or not"
-msgstr "配置是否啟用"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:387
 msgid ""
@@ -90,39 +88,39 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:57
 msgid "Configure strongSwan for secure VPN connections."
-msgstr "配置 strongSwan 以建立安全 VPN 連線。"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:118
 msgid "Crypto Proposal"
-msgstr "加密提案"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:315
 msgid "Crypto Proposal (Phase 2)"
-msgstr "加密提案 (提案 2)"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:346
 msgid "DPD Action"
-msgstr "DPD 動作"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:222
 msgid "DPD Delay"
-msgstr "DPD 延遲"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:103
 msgid "Daemon"
-msgstr "常駐程式"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:15
 msgid "Day"
-msgstr "天"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:15
 msgid "Days"
-msgstr "天"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:78
 msgid "Debug Level"
-msgstr "除錯等級"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:253
 msgid ""
@@ -131,15 +129,15 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:85
 msgid "Define Remote IKE Configurations."
-msgstr "定義遠端 IKE 配置。"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:164
 msgid "Details"
-msgstr "詳情"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:412
 msgid "Diffie-Hellman Group"
-msgstr "Diffie-Hellman 群組"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:356
 msgid "Duration of the CHILD_SA before rekeying"
@@ -147,32 +145,32 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:392
 msgid "ESP Proposal"
-msgstr "ESP 提案"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:366
 msgid "Enable Hardware offload"
-msgstr "啟用硬體卸載"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:361
 msgid "Enable ipcomp compression"
-msgstr "啟用 ipcomp 壓縮"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:94
 msgid "Enabled"
-msgstr "已啟用"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:121
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:396
 msgid "Encryption Algorithm"
-msgstr "加密演算法"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:122
 msgid "Encryption Keysize"
-msgstr "加密金鑰大小"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:386
 msgid "Encryption Proposals"
-msgstr "加密提案"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:162
 msgid "Established for"
@@ -189,47 +187,47 @@ msgstr ""
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:90
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:258
 msgid "General"
-msgstr "一般"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:61
 msgid "General Settings"
-msgstr "一般設定"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/root/usr/share/rpcd/acl.d/luci-app-strongswan-swanctl.json:3
 msgid "Grant access to luci-app-strongswan-swanctl"
-msgstr "授予存取 luci-app-strongswan-swanctl 的權限"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:365
 msgid "H/W Offload"
-msgstr "H/W 卸載"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:105
 msgid "Half-Open IKE_SAs"
-msgstr "半開放 IKE_SA"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:403
 msgid "Hash Algorithm"
-msgstr "雜湊演算法"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:16
 msgid "Hour"
-msgstr "小時"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:16
 msgid "Hours"
-msgstr "小時"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:207
 msgid "IKE Fragmentation"
-msgstr "IKE 分片"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:161
 msgid "IKE Version"
-msgstr "IKE 版本"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:159
 msgid "IKE authentication (phase 1)"
-msgstr "IKE 認證 (階段 1)"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:234
 msgid ""
@@ -246,7 +244,7 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:360
 msgid "IPComp"
-msgstr "IPComp"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:228
 msgid "Inactivity"
@@ -254,11 +252,11 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:126
 msgid "Install Time"
-msgstr "安裝時間"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:71
 msgid "Interfaces that accept VPN traffic"
-msgstr "接受 VPN 流量的介面"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:229
 msgid "Interval before closing an inactive CHILD_SA"
@@ -270,7 +268,7 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:243
 msgid "Keyexchange"
-msgstr "金鑰交換"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:216
 msgid "Keying Retries"
@@ -278,11 +276,11 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:125
 msgid "Life Time"
-msgstr "生命週期"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:341
 msgid "Lifetime"
-msgstr "生命週期"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:239
 msgid "Limit on time to complete rekeying/reauthentication"
@@ -300,43 +298,43 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:70
 msgid "Listening Interfaces"
-msgstr "監聽連接埠"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:184
 msgid "Local Certificate"
-msgstr "本地憑證"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:103
 msgid "Local Gateway"
-msgstr "本地閘道"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:113
 msgid "Local IP"
-msgstr "本地 IP"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:164
 msgid "Local Identifier"
-msgstr "本地識別碼"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:190
 msgid "Local Key"
-msgstr "本地金鑰"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:273
 msgid "Local NAT"
-msgstr "本地 NAT"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:108
 msgid "Local Source IP"
-msgstr "本地來源 IP"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:261
 msgid "Local Subnet"
-msgstr "本地子網路"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:119
 msgid "Local Traffic Selectors"
-msgstr "本地流量選擇器"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:114
 msgid "Local address(es) to use in IKE negotiation"
@@ -344,19 +342,19 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:165
 msgid "Local identifier for IKE (phase 1)"
-msgstr "IKE (階段 1) 本地識別碼"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:262
 msgid "Local network(s)"
-msgstr "本地網路"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:202
 msgid "MOBIKE"
-msgstr "MOBIKE"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:203
 msgid "MOBIKE (IKEv2 Mobility and Multihoming Protocol)"
-msgstr "MOBIKE (IKEv2 移動性與多重主目錄協定)"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:342
 msgid "Maximum duration of the CHILD_SA before closing"
@@ -364,15 +362,15 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:17
 msgid "Minute"
-msgstr "分鐘"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:17
 msgid "Minutes"
-msgstr "分鐘"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:117
 msgid "Mode"
-msgstr "模式"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:274
 msgid "NAT range for tunnels with overlapping IP addresses"
@@ -380,11 +378,11 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:158
 msgid "Name"
-msgstr "名稱"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:42
 msgid "Name length shall not exceed 15 characters"
-msgstr "名稱長度不得超過 15 個字元"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:11
 msgid "Number must have suffix s, m, h or d"
@@ -400,7 +398,7 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:417
 msgid "PRF Algorithm"
-msgstr "PRF 演算法"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:424
 msgid ""
@@ -414,27 +412,27 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:126
 msgid "Please create a Proposal first"
-msgstr "請先建立提案"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:147
 msgid "Please create a Tunnel first"
-msgstr "請先建立隧道"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:323
 msgid "Please create an ESP Proposal first"
-msgstr "請先建立 ESP 提案"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:176
 msgid "Pre-Shared Key"
-msgstr "預共享金鑰"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:373
 msgid "Priority"
-msgstr "優先級"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:374
 msgid "Priority of the CHILD_SA"
-msgstr "CHILD_SA 優先級"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:191
 msgid "Private key pathname to use with above certificate"
@@ -442,11 +440,11 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:118
 msgid "Protocol"
-msgstr "協定"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:89
 msgid "Querying strongSwan failed"
-msgstr "查詢 strongSwan 失敗"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:163
 msgid "Reauthentication in"
@@ -463,31 +461,31 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:160
 msgid "Remote"
-msgstr "遠端"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:84
 msgid "Remote Configuration"
-msgstr "遠端配置"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:170
 msgid "Remote Identifier"
-msgstr "遠端識別碼"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:267
 msgid "Remote Subnet"
-msgstr "遠端子網路"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:120
 msgid "Remote Traffic Selectors"
-msgstr "遠端流量選擇器"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:171
 msgid "Remote identifier for IKE (phase 1)"
-msgstr "IKE (階段 1) 遠端識別碼"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:268
 msgid "Remote network(s)"
-msgstr "遠端網路"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:39
 msgid "Remotes, Encryption Proposals and Tunnels may not share the same names."
@@ -503,19 +501,19 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:128
 msgid "SPI in"
-msgstr "傳入 SPI"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:129
 msgid "SPI out"
-msgstr "傳出 SPI"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:18
 msgid "Second"
-msgstr "秒"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:18
 msgid "Seconds"
-msgstr "秒"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:156
 msgid "Security Associations (SAs)"
@@ -527,7 +525,7 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:153
 msgid "Show Details"
-msgstr "顯示詳情"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:298
 msgid "Start Action"
@@ -536,11 +534,11 @@ msgstr ""
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:116
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:159
 msgid "State"
-msgstr "狀態"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:100
 msgid "Stats"
-msgstr "統計資料"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:140
 msgid "The Tunnel containing the ESP (phase 2) section"
@@ -548,7 +546,7 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:177
 msgid "The pre-shared key for the tunnel"
-msgstr "隧道預共享金鑰"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:79
 msgid "Trace level: 0 is least verbose, 4 is most"
@@ -556,11 +554,11 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:139
 msgid "Tunnel"
-msgstr "隧道"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:252
 msgid "Tunnel Configuration"
-msgstr "隧道配置"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:336
 msgid "Up/Down Script Path"
@@ -568,11 +566,11 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:102
 msgid "Uptime"
-msgstr "上線時間"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:208
 msgid "Use IKE fragmentation"
-msgstr "使用 IKE 分片"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:40
 msgid "Use combinations like tunnel1_phase1 that do not exceed 15 characters."
@@ -580,15 +578,15 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:380
 msgid "Values larger than 32 are supported by the Netlink backend only"
-msgstr "大於 32 的值只被 Netlink 後端支援"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:101
 msgid "Version"
-msgstr "版本"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:244
 msgid "Version of IKE for negotiation"
-msgstr "IKE 協商版本"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:109
 msgid "Virtual IP(s) to request in IKEv2 configuration payloads requests"
@@ -600,30 +598,30 @@ msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:279
 msgid "XFRM interface ID set on input and output interfaces"
-msgstr "設定在傳入和傳出介面上的 XFRM 介面 ID"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:65
 msgid "Zone"
-msgstr "區域"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:247
 msgid "both"
-msgstr "兩者"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:245
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:247
 msgid "deprecated"
-msgstr "已棄用"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:56
 msgid "strongSwan Configuration"
-msgstr "strongSwan 配置"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/root/usr/share/luci/menu.d/luci-app-strongswan-swanctl.json:3
 #: applications/luci-app-strongswan-swanctl/root/usr/share/luci/menu.d/luci-app-strongswan-swanctl.json:16
 msgid "strongSwan IPsec"
-msgstr "strongSwan IPsec"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:175
 msgid "strongSwan Status"
-msgstr "strongSwan 狀態"
+msgstr ""
