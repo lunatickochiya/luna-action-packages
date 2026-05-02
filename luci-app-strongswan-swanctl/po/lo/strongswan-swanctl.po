@@ -1,643 +1,626 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2026-04-23 10:25+0000\n"
-"Last-Translator: Aindriú Mac Giolla Eoin <aindriu80@gmail.com>\n"
-"Language-Team: Irish <https://hosted.weblate.org/projects/openwrt/"
-"luciapplicationsstrongswan-swanctl/ga/>\n"
-"Language: ga\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: lo\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=5; plural=n==1 ? 0 : n==2 ? 1 : (n>2 && n<7) ? 2 :(n>"
-"6 && n<11) ? 3 : 4;\n"
-"X-Generator: Weblate 5.17.1-dev\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:299
 msgid "Action on initial configuration load"
-msgstr "Gníomh ar an ualach cumraíochta tosaigh"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:307
 msgid "Action when CHILD_SA is closed"
-msgstr "Gníomh nuair a bhíonn CHILD_SA dúnta"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:347
 msgid "Action when DPD timeout occurs"
-msgstr "Gníomh nuair a tharlaíonn teorainn ama DPD"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:104
 msgid "Active IKE_SAs"
-msgstr "IKE_SAanna gníomhacha"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:92
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:259
 msgid "Advanced"
-msgstr "Ardleibhéil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:397
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:404
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:413
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:418
 msgid "Algorithms marked with * are considered insecure"
-msgstr "Meastar go bhfuil halgartaim atá marcáilte le * neamhshábháilte"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:91
 msgid "Authentication"
-msgstr "Fíordheimhniú"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:159
 msgid "Authentication Method"
-msgstr "Modh Fíordheimhnithe"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:123
 msgid "Bytes in"
-msgstr "Bearta isteach"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:124
 msgid "Bytes out"
-msgstr "Bearta amach"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:195
 msgid "CA Certificate"
-msgstr "Teastas CA"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:196
 msgid ""
 "CA certificate that need to lie in remote peer's certificate's path of trust"
 msgstr ""
-"Teastas CA a chaithfidh a bheith i gcosán muiníne deimhnithe piaraí iargúlta"
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:151
 msgid "CHILD_SAs"
-msgstr "CHILD_SAs"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:185
 msgid "Certificate pathname to use for authentication"
-msgstr "Ainm cosáin an deimhnithe le húsáid le haghaidh fíordheimhnithe"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:139
 msgid "Close"
-msgstr "Dún"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:306
 msgid "Close Action"
-msgstr "Dún Gníomh"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:95
 msgid "Configuration is enabled or not"
-msgstr "An bhfuil an chumraíocht cumasaithe nó nach bhfuil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:387
 msgid ""
 "Configure Cipher Suites to define IKE (Phase 1) or ESP (Phase 2) Proposals."
 msgstr ""
-"Cumraigh Sraith Cipher chun Tograí IKE (Céim 1) nó ESP (Céim 2) a shainiú."
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:57
 msgid "Configure strongSwan for secure VPN connections."
-msgstr "Cumraigh strongSwan le haghaidh naisc VPN slána."
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:118
 msgid "Crypto Proposal"
-msgstr "Togra Cripte"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:315
 msgid "Crypto Proposal (Phase 2)"
-msgstr "Togra Cripte (Céim 2)"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:346
 msgid "DPD Action"
-msgstr "Gníomh DPD"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:222
 msgid "DPD Delay"
-msgstr "Moill DPD"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:103
 msgid "Daemon"
-msgstr "Daemon"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:15
 msgid "Day"
-msgstr "Lá"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:15
 msgid "Days"
-msgstr "Laethanta"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:78
 msgid "Debug Level"
-msgstr "Leibhéal Dífhabhtaithe"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:253
 msgid ""
 "Define Connection Children to be used as Tunnels in Remote Configurations."
-msgstr "Sainmhínigh Leanaí Nasc le húsáid mar Tholláin i gCumraíochtaí Cianda."
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:85
 msgid "Define Remote IKE Configurations."
-msgstr "Sainmhínigh Cumraíochtaí IKE Cianda."
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:164
 msgid "Details"
-msgstr "Sonraí"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:412
 msgid "Diffie-Hellman Group"
-msgstr "Grúpa Diffie-Hellman"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:356
 msgid "Duration of the CHILD_SA before rekeying"
-msgstr "Fad an CHILD_SA roimh ath-eochrú"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:392
 msgid "ESP Proposal"
-msgstr "Togra ESP"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:366
 msgid "Enable Hardware offload"
-msgstr "Cumasaigh díluchtú crua-earraí"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:361
 msgid "Enable ipcomp compression"
-msgstr "Cumasaigh comhbhrú ipcomp"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:94
 msgid "Enabled"
-msgstr "Cumasaithe"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:121
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:396
 msgid "Encryption Algorithm"
-msgstr "Algartam Criptithe"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:122
 msgid "Encryption Keysize"
-msgstr "Méid Eochrach Criptithe"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:386
 msgid "Encryption Proposals"
-msgstr "Tograí Criptithe"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:162
 msgid "Established for"
-msgstr "Bunaithe do"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:66
 msgid "Firewall zone that has to match the defined firewall zone"
 msgstr ""
-"Crios balla dóiteáin a chaithfidh a bheith mar an gcéanna leis an gcrios "
-"balla dóiteáin atá sainithe"
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:98
 msgid "Gateway (Remote Endpoint)"
-msgstr "Geata (Críochphointe Iargúlta)"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:90
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:258
 msgid "General"
-msgstr "Ginearálta"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:61
 msgid "General Settings"
-msgstr "Socruithe Ginearálta"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/root/usr/share/rpcd/acl.d/luci-app-strongswan-swanctl.json:3
 msgid "Grant access to luci-app-strongswan-swanctl"
-msgstr "Deonaigh rochtain ar luci-app-strongswan-swanctl"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:365
 msgid "H/W Offload"
-msgstr "Díluchtú Crua-earraí"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:105
 msgid "Half-Open IKE_SAs"
-msgstr "IKE_SAanna Leath-Oscailte"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:403
 msgid "Hash Algorithm"
-msgstr "Algartam Hais"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:16
 msgid "Hour"
-msgstr "Uair an chloig"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:16
 msgid "Hours"
-msgstr "Uaireanta"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:207
 msgid "IKE Fragmentation"
-msgstr "Ilroinnt IKE"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:161
 msgid "IKE Version"
-msgstr "Leagan IKE"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:159
 msgid "IKE authentication (phase 1)"
-msgstr "Fíordheimhniú IKE (céim 1)"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:234
 msgid ""
 "IKEv2 interval to refresh keying material; also used to compute lifetime"
 msgstr ""
-"Eatramh IKEv2 chun ábhar eochrach a athnuachan; úsáidtear é freisin chun "
-"saolré a ríomh"
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:99
 msgid "IP address or FQDN name of the tunnel remote endpoint"
-msgstr "Seoladh IP nó ainm FQDN chríochphointe iargúlta an tolláin"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:104
 msgid "IP address or FQDN of the tunnel local endpoint"
-msgstr "Seoladh IP nó FQDN chríochphointe áitiúil an tolláin"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:360
 msgid "IPComp"
-msgstr "IPComp"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:228
 msgid "Inactivity"
-msgstr "Neamhghníomhaíocht"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:126
 msgid "Install Time"
-msgstr "Am Suiteála"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:71
 msgid "Interfaces that accept VPN traffic"
-msgstr "Comhéadain a ghlacann le trácht VPN"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:229
 msgid "Interval before closing an inactive CHILD_SA"
-msgstr "Eatramh roimh dhúnadh CHILD_SA neamhghníomhach"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:223
 msgid "Interval to check liveness of a peer"
-msgstr "Eatramh chun beochan piara a sheiceáil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:243
 msgid "Keyexchange"
-msgstr "Malartú Eochrach"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:216
 msgid "Keying Retries"
-msgstr "Ath-Iarrachtaí Eochracha"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:125
 msgid "Life Time"
-msgstr "Am Saoil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:341
 msgid "Lifetime"
-msgstr "Saolré"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:239
 msgid "Limit on time to complete rekeying/reauthentication"
-msgstr "Teorainn ama chun ath-eochrú/athfhíordheimhniú a chríochnú"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:316
 msgid ""
 "List of ESP (phase two) proposals. Only Proposals with checked ESP flag are "
 "selectable"
 msgstr ""
-"Liosta de thograí ESP (céim a dó). Ní féidir ach tograí a roghnú a bhfuil "
-"bratach ESP ticáilte orthu"
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:119
 msgid "List of IKE (phase 1) proposals to use for authentication"
-msgstr "Liosta de mholtaí IKE (céim 1) le húsáid le haghaidh fíordheimhnithe"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:70
 msgid "Listening Interfaces"
-msgstr "Comhéadain Éisteachta"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:184
 msgid "Local Certificate"
-msgstr "Teastas Áitiúil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:103
 msgid "Local Gateway"
-msgstr "Geata Áitiúil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:113
 msgid "Local IP"
-msgstr "IP Áitiúil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:164
 msgid "Local Identifier"
-msgstr "Aitheantóir Áitiúil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:190
 msgid "Local Key"
-msgstr "Eochair Áitiúil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:273
 msgid "Local NAT"
-msgstr "NAT Áitiúil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:108
 msgid "Local Source IP"
-msgstr "IP Foinse Áitiúil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:261
 msgid "Local Subnet"
-msgstr "Fo-líonra Áitiúil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:119
 msgid "Local Traffic Selectors"
-msgstr "Roghnóirí Tráchta Áitiúla"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:114
 msgid "Local address(es) to use in IKE negotiation"
-msgstr "Seoladh(anna) áitiúil le húsáid in idirbheartaíocht IKE"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:165
 msgid "Local identifier for IKE (phase 1)"
-msgstr "Aitheantóir áitiúil le haghaidh IKE (céim 1)"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:262
 msgid "Local network(s)"
-msgstr "Líonra(í) áitiúil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:202
 msgid "MOBIKE"
-msgstr "MOBIKE"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:203
 msgid "MOBIKE (IKEv2 Mobility and Multihoming Protocol)"
-msgstr "MOBIKE (Prótacal Soghluaisteachta agus Il-Tíre IKEv2)"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:342
 msgid "Maximum duration of the CHILD_SA before closing"
-msgstr "Uasfhad an CHILD_SA roimh dhúnadh"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:17
 msgid "Minute"
-msgstr "Nóiméad"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:17
 msgid "Minutes"
-msgstr "Nóiméid"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:117
 msgid "Mode"
-msgstr "Mód"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:274
 msgid "NAT range for tunnels with overlapping IP addresses"
-msgstr "Raon NAT do tholláin le seoltaí IP forluiteacha"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:158
 msgid "Name"
-msgstr "Ainm"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:42
 msgid "Name length shall not exceed 15 characters"
-msgstr "Ní fhéadfaidh fad an ainm a bheith níos mó ná 15 charachtar"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:11
 msgid "Number must have suffix s, m, h or d"
-msgstr "Ní mór iarmhír s, m, h nó d a bheith ag an uimhir"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:217
 msgid "Number of retransmissions attempts during initial negotiation"
-msgstr "Líon na n-iarrachtaí athchraolta le linn na caibidlíochta tosaigh"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:238
 msgid "Overtime"
-msgstr "Am breise"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:417
 msgid "PRF Algorithm"
-msgstr "Algartam PRF"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:424
 msgid ""
 "PRF Algorithm must be configured when using an Authenticated Encryption "
 "Algorithm"
 msgstr ""
-"Ní mór Algartam PRF a chumrú agus Algartam Criptithe Fíordheimhnithe á úsáid"
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:337
 msgid "Path to script to run on CHILD_SA up/down events"
-msgstr "Cosán chuig an script le rith ar imeachtaí suas/síos CHILD_SA"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:126
 msgid "Please create a Proposal first"
-msgstr "Cruthaigh Togra ar dtús le do thoil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:147
 msgid "Please create a Tunnel first"
-msgstr "Cruthaigh Tollán ar dtús le do thoil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:323
 msgid "Please create an ESP Proposal first"
-msgstr "Cruthaigh Togra ESP ar dtús le do thoil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:176
 msgid "Pre-Shared Key"
-msgstr "Eochair Réamh-Roinnte"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:373
 msgid "Priority"
-msgstr "Tosaíocht"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:374
 msgid "Priority of the CHILD_SA"
-msgstr "Tosaíocht an CHILD_SA"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:191
 msgid "Private key pathname to use with above certificate"
-msgstr "Ainm cosáin eochrach phríobháideach le húsáid leis an teastas thuas"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:118
 msgid "Protocol"
-msgstr "Prótacal"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:89
 msgid "Querying strongSwan failed"
-msgstr "Theip ar an gceistiú strongSwan"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:163
 msgid "Reauthentication in"
-msgstr "Athfhíordheimhniú i"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:233
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:355
 msgid "Rekey Time"
-msgstr "Am Atheochrach"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:127
 msgid "Rekey in"
-msgstr "Ath-eochair isteach"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:160
 msgid "Remote"
-msgstr "Cianda"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:84
 msgid "Remote Configuration"
-msgstr "Cumraíocht Chianda"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:170
 msgid "Remote Identifier"
-msgstr "Aitheantóir Cianda"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:267
 msgid "Remote Subnet"
-msgstr "Fo-líonra cianda"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:120
 msgid "Remote Traffic Selectors"
-msgstr "Roghnóirí Tráchta Cianda"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:171
 msgid "Remote identifier for IKE (phase 1)"
-msgstr "Aitheantóir cianda le haghaidh IKE (céim 1)"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:268
 msgid "Remote network(s)"
-msgstr "Líonra(í) iargúlta"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:39
 msgid "Remotes, Encryption Proposals and Tunnels may not share the same names."
 msgstr ""
-"B’fhéidir nach mbeadh na hainmneacha céanna ar Chianrialtáin, ar Thograí "
-"Criptithe agus ar Tolláin."
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:378
 msgid "Replay Window"
-msgstr "Fuinneog Athsheinm"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:379
 msgid "Replay Window of the CHILD_SA"
-msgstr "Fuinneog Athsheinm an CHILD_SA"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:128
 msgid "SPI in"
-msgstr "SPI isteach"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:129
 msgid "SPI out"
-msgstr "SPI amach"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:18
 msgid "Second"
-msgstr "Soicind"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:18
 msgid "Seconds"
-msgstr "Soicindí"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:156
 msgid "Security Associations (SAs)"
-msgstr "Cumainn Slándála (SAanna)"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:73
 msgid "Select an interface or leave empty for all interfaces"
-msgstr "Roghnaigh comhéadan nó fág folamh do gach comhéadan"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:153
 msgid "Show Details"
-msgstr "Taispeáin Sonraí"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:298
 msgid "Start Action"
-msgstr "Tosaigh Gníomh"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:116
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:159
 msgid "State"
-msgstr "Stát"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:100
 msgid "Stats"
-msgstr "Staitisticí"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:140
 msgid "The Tunnel containing the ESP (phase 2) section"
-msgstr "An Tollán ina bhfuil an chuid ESP (céim 2)"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:177
 msgid "The pre-shared key for the tunnel"
-msgstr "An eochair réamhroinnte don tollán"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:79
 msgid "Trace level: 0 is least verbose, 4 is most"
-msgstr "Leibhéal rianaithe: 0 is lú focal, 4 is mó"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:139
 msgid "Tunnel"
-msgstr "Tollán"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:252
 msgid "Tunnel Configuration"
-msgstr "Cumraíocht Tolláin"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:336
 msgid "Up/Down Script Path"
-msgstr "Cosán Scripte Suas/Síos"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:102
 msgid "Uptime"
-msgstr "Am ar Fáil"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:208
 msgid "Use IKE fragmentation"
-msgstr "Úsáid ilroinnt IKE"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:40
 msgid "Use combinations like tunnel1_phase1 that do not exceed 15 characters."
 msgstr ""
-"Bain úsáid as teaglaim cosúil le tunnel1_phase1 nach bhfuil níos mó ná 15 "
-"charachtar."
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:380
 msgid "Values larger than 32 are supported by the Netlink backend only"
-msgstr "Ní thacaíonn ach cúltaca Netlink le luachanna níos mó ná 32"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:101
 msgid "Version"
-msgstr "Leagan"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:244
 msgid "Version of IKE for negotiation"
-msgstr "Leagan de IKE le haghaidh caibidlíochta"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:109
 msgid "Virtual IP(s) to request in IKEv2 configuration payloads requests"
-msgstr "IP(anna) fíorúla le hiarraidh in iarratais ar ualaí cumraíochta IKEv2"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:393
 msgid "Whether this is an ESP (phase 2) proposal or not"
-msgstr "Cibé acu togra ESP (céim 2) atá ann nó nach ea"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:279
 msgid "XFRM interface ID set on input and output interfaces"
-msgstr "Socraíodh ID comhéadain XFRM ar chomhéadain ionchuir agus aschuir"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:65
 msgid "Zone"
-msgstr "Crios"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:247
 msgid "both"
-msgstr "an dá cheann"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:245
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:247
 msgid "deprecated"
-msgstr "as feidhm"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/swanctl.js:56
 msgid "strongSwan Configuration"
-msgstr "Cumraíocht strongSwan"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/root/usr/share/luci/menu.d/luci-app-strongswan-swanctl.json:3
 #: applications/luci-app-strongswan-swanctl/root/usr/share/luci/menu.d/luci-app-strongswan-swanctl.json:16
 msgid "strongSwan IPsec"
-msgstr "IPsec strongSwan"
+msgstr ""
 
 #: applications/luci-app-strongswan-swanctl/htdocs/luci-static/resources/view/strongswan-swanctl/status.js:175
 msgid "strongSwan Status"
-msgstr "Stádas strongSwan"
+msgstr ""
