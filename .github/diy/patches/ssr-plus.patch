@@ -70,14 +70,13 @@
 
 --- a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
 +++ b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
-@@ -168,5 +168,6 @@ if is_finded("chinadns-ng") then
+@@ -293,4 +293,5 @@ if is_finded("chinadns-ng") then
  	end
  end
  
 +m:section(SimpleSection).template = "shadowsocksr/status_bottom"
  return m
 
-diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/status_bottom.htm b/luci-app-passwall/luasrc/view/shadowsocksr/status_bottom.htm
 new file mode 100644
 index 000000000000..a00fff9c79b3
 --- /dev/null
