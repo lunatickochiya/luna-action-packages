@@ -1,16 +1,16 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=hickory-dns
-PKG_VERSION:=2026.05.10~02c4b7b
-PKG_RELEASE:=24
+PKG_VERSION:=2026.05.12~954f1ad
+PKG_RELEASE:=25
 
-HICKORY_COMMIT:=02c4b7b8a259027e3d0b915a04102905e1ff6a2b
+HICKORY_COMMIT:=954f1ad88e9f23399d0339bc51d4fd2af0dd9340
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/hickory-dns/hickory-dns/tar.gz/02c4b7b8a259027e3d0b915a04102905e1ff6a2b?
+PKG_SOURCE_URL:=https://codeload.github.com/hickory-dns/hickory-dns/tar.gz/954f1ad88e9f23399d0339bc51d4fd2af0dd9340?
 PKG_HASH:=skip
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-02c4b7b8a259027e3d0b915a04102905e1ff6a2b
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-954f1ad88e9f23399d0339bc51d4fd2af0dd9340
 
 PKG_BUILD_DEPENDS:=rust/host
 PKG_BUILD_PARALLEL:=1
@@ -59,7 +59,6 @@ define Package/hickory-dns/install
 	$(INSTALL_DATA) ./files/etc/hickory-dns/255.zone $(1)/etc/hickory-dns/255.zone
 	$(INSTALL_DATA) ./files/etc/hickory-dns/0.zone $(1)/etc/hickory-dns/0.zone
 	echo "$(HICKORY_COMMIT)" > $(1)/etc/hickory-dns/commit
-	chown -R nobody:nogroup $(1)/etc/hickory-dns/
 endef
 
 $(eval $(call RustBinPackage,hickory-dns))
