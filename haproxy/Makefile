@@ -10,11 +10,11 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=haproxy
-PKG_VERSION:=3.2.19
-PKG_RELEASE:=6
+PKG_VERSION:=3.0.19
+PKG_RELEASE:=7
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://www.haproxy.org/download/3.2/src
+PKG_SOURCE_URL:=https://www.haproxy.org/download/3.0/src
 PKG_HASH:=skip
 
 PKG_MAINTAINER:=Thomas Heil <heil@terminal-consulting.de>, \
@@ -31,8 +31,13 @@ define Package/haproxy/Default
   CATEGORY:=Network
   TITLE:=TCP/HTTP Load Balancer
   URL:=https://www.haproxy.org/
-  DEPENDS:= +USE_GLIBC:libcrypt-compat +libpcre2 +libltdl +zlib +libpthread +liblua5.4 +libatomic
 endef
+
+define Package/haproxy/conffiles
+/etc/haproxy.cfg
+endef
+
+Package/haproxy-nossl/conffiles = $(Package/haproxy/conffiles)
 
 define Package/haproxy/Default/description
  Open source Reliable, High Performance TCP/HTTP Load Balancer.
@@ -41,7 +46,7 @@ endef
 define Package/haproxy
   $(call Package/haproxy/Default)
   TITLE+=with SSL support
-  DEPENDS+= +libopenssl +libncurses +libreadline
+  DEPENDS+= +libpcre2 +libltdl +zlib +libpthread +liblua5.3 +libopenssl +libncurses +libreadline +libatomic
   VARIANT:=ssl
 endef
 
@@ -54,6 +59,7 @@ define Package/haproxy-nossl
   $(call Package/haproxy/Default)
   TITLE+=without SSL support
   VARIANT:=nossl
+  DEPENDS+= +libpcre2 +libltdl +zlib +libpthread +liblua5.3 +libatomic
   CONFLICTS:=haproxy
 endef
 
@@ -73,6 +79,7 @@ ifeq ($(BUILD_VARIANT),ssl)
 	ADDON+=USE_OPENSSL=1
 	ADDON+=ADDLIB="-lcrypto -lm"
 	ADDON+=USE_QUIC=1
+	ADDON+=USE_QUIC_OPENSSL_COMPAT=1
 endif
 
 define Build/Compile
@@ -80,8 +87,9 @@ define Build/Compile
 		DESTDIR="$(PKG_INSTALL_DIR)" \
 		CC="$(TARGET_CC)" \
 		PCREDIR="$(STAGING_DIR)/usr/" \
-		USE_LUA=1 LUA_LIB_NAME="lua5.4" LUA_INC="$(STAGING_DIR)/usr/include/lua5.4" LUA_LIB="$(STAGING_DIR)/usr/lib" \
-		USE_ZLIB=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_LIBATOMIC=1 USE_PROMEX=1 \
+		USE_LUA=1 LUA_LIB_NAME="lua5.3" LUA_INC="$(STAGING_DIR)/usr/include/lua5.3" LUA_LIB="$(STAGING_DIR)/usr/lib" \
+		SMALL_OPTS="-DBUFSIZE=16384 -DMAXREWRITE=1030 -DSYSTEM_MAXCONN=165530" \
+		USE_ZLIB=1 USE_PCRE2=1 USE_PCRE2_JIT=1 USE_PTHREAD_PSHARED=1 USE_LIBATOMIC=1 USE_PROMEX=1 \
 		VERSION="$(PKG_VERSION)" SUBVERS="-$(PKG_RELEASE)" \
 		VERDATE="$(shell date -d @$(SOURCE_DATE_EPOCH) '+%Y/%m/%d')" IGNOREGIT=1 \
 		$(ADDON) \
@@ -107,6 +115,10 @@ endef
 define Package/haproxy/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/haproxy $(1)/usr/sbin/
+	$(INSTALL_DIR) $(1)/etc
+	$(INSTALL_CONF) ./files/haproxy.cfg $(1)/etc/
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/haproxy.init $(1)/etc/init.d/haproxy
 endef
 
 Package/haproxy-nossl/install = $(Package/haproxy/install)
