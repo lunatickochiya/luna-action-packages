@@ -91,6 +91,7 @@ if not arg_select_proto:find("_") then
 	load_normal_options = true
 end
 
+local netdev_list = api.get_network_devices()
 local node_list = api.get_node_list()
 
 if load_urltest_options then -- [[ URLTest Start ]]
@@ -196,8 +197,10 @@ end -- [[ URLTest End ]]
 
 if load_iface_options then -- [[ 自定义接口 Start ]]
 	o = s:option(Value, _n("iface"), translate("Interface"))
-	o.default = "eth1"
 	o:depends({ [_n("protocol")] = "_iface" })
+	for _, d in ipairs(netdev_list) do
+		o:value(d.name, d.label)
+	end
 end
 
 
@@ -824,17 +827,24 @@ if not load_shunt_options then
 	if not (load_iface_options or load_urltest_options) then
 		-- Special node cannot be use pre-proxy.
 		o:value("1", translate("Preproxy Node"))
+		o:value("3", translate("Outbound Interface"))
 	end
 	o:value("2", translate("Landing Node"))
-	o:depends({ [_n("hysteria2_realms")] = false })
 
 	o1 = s:option(ListValue, _n("preproxy_node"), translate("Preproxy Node"), translate("Only support a layer of proxy."))
-	o1:depends({ [_n("chain_proxy")] = "1" })
+	o1:depends({ [_n("chain_proxy")] = "1", [_n("hysteria2_realms")] = false })
 	o1.template = appname .. "/cbi/nodes_listvalue"
 	o1.group = {}
 
+	o3 = s:option(Value, _n("outbound_iface"), translate("Outbound Interface"))
+	o3:depends({ [_n("chain_proxy")] = "3" })
+	o3:value("", translate("All"))
+	for _, d in ipairs(netdev_list) do
+		o3:value(d.name, d.label)
+	end
+
 	o2 = s:option(ListValue, _n("to_node"), translate("Landing Node"), translate("Only support a layer of proxy."))
-	o2:depends({ [_n("chain_proxy")] = "2" })
+	o2:depends({ [_n("chain_proxy")] = "2", [_n("hysteria2_realms")] = false })
 	o2.template = appname .. "/cbi/nodes_listvalue"
 	o2.group = {}
 
