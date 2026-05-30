@@ -12,7 +12,7 @@ PKG_ARCH_DDNSTO:=$(ARCH)
 PKG_NAME:=ddnsto
 # use PKG_SOURCE_DATE instead of PKG_VERSION for compatible
 PKG_SOURCE_DATE:=4.2.0
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 
 # 构建类型：standard 或 lite
 DDNSTO_TYPE?=standard
@@ -31,7 +31,7 @@ ARCH_HEXCODE=aa32
 else ifeq ($(ARCH),mipsel)
 ARCH_HEXCODE=1b0c
 endif
-PKG_SOURCE_VERSION:=caef74418dcb0f2b6b834c0c8aee60fa4d76b1d8
+PKG_SOURCE_VERSION:=0570972d01083fb27b344d70baf97a04f2e6b183
 
 
 # 根据类型选择下载地址和文件名
