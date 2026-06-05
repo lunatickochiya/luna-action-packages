@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=accel-ppp
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 PKG_VERSION:=1.14.0
 
 PKG_SOURCE_PROTO:=git
@@ -69,7 +69,7 @@ CMAKE_OPTIONS += \
 	-DBUILD_VLAN_MON_DRIVER=$(if $(CONFIG_PACKAGE_kmod-$(PKG_NAME)-vlan-mon),TRUE,FALSE)
 
 CMAKE_BINARY_DIR := $(PKG_BUILD_DIR)/build
-TARGET_CFLAGS += -I$(STAGING_DIR)/opt/include -D_GNU_SOURCE -g -O2 -Wno-incompatible-pointer-types
+TARGET_CFLAGS += -I$(STAGING_DIR)/opt/include -D_GNU_SOURCE -g -O2 -Wno-incompatible-pointer-types -Wno-deprecated-declarations
 TARGET_LDFLAGS += -lpthread -latomic -lucontext -Wl,-rpath,/usr/lib/accel-ppp
 
 define KernelPackage/$(PKG_NAME)-ipoe
@@ -97,6 +97,7 @@ define Package/$(PKG_NAME)/install
 		$(1)/usr/share/accel-ppp \
 		$(1)/usr/share/accel-ppp/radius \
 		$(1)/usr/share/accel-ppp/l2tp \
+		$(1)/usr/share/accel-ppp/l2tp/dictionary \
 		$(1)/etc/init.d \
 		$(1)/etc/accel-ppp
 
@@ -114,7 +115,7 @@ define Package/$(PKG_NAME)/install
 
 	$(INSTALL_DATA) \
 		$(PKG_INSTALL_DIR)/usr/share/accel-ppp/l2tp/dictionary.* \
-		$(1)/usr/share/accel-ppp/l2tp/ || true
+		$(1)/usr/share/accel-ppp/l2tp/dictionary/ || true
 
 	$(INSTALL_BIN) \
 		files/accel-ppp.init \
