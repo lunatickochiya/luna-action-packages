@@ -5,7 +5,7 @@
 
 ### 下载源码方法:
 
- ```Brach
+ ```Bash
 
    # 下载源码
    git clone --depth=1 https://github.com/laipeng668/luci-app-gecoosac package/luci-app-gecoosac
@@ -15,7 +15,7 @@
 
 ### 配置菜单:
 
- ```Brach
+ ```Bash
 
    make menuconfig
    # 找到 LuCI -> Applications, 选择 luci-app-gecoosac, 保存后退出。
@@ -24,7 +24,7 @@
 
 ### 编译:
 
- ```Brach
+ ```Bash
 
    # 编译固件
    make package/luci-app-gecoosac/compile V=s
@@ -33,7 +33,7 @@
 
 ### 致谢:
 
- ```Brach
+ ```text
 
    特别感谢lwb1978大佬的付出！
 
