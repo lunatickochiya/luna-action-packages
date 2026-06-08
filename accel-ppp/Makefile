@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=accel-ppp
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 PKG_VERSION:=1.14.0
 
 PKG_SOURCE_PROTO:=git
@@ -28,28 +28,26 @@ include $(INCLUDE_DIR)/kernel.mk
 TARGET_CFLAGS:=$(filter-out -mips16 -minterlink-mips16,$(TARGET_CFLAGS))
 TARGET_LDFLAGS:=$(filter-out -mips16 -minterlink-mips16,$(TARGET_LDFLAGS))
 
-# Base depends
-DEPENDS_COMMON:=+libpcre2 +libopenssl +libpthread +librt +libatomic +libucontext
-
-ifeq ($(CONFIG_ACCEL_PPP_PGSQL_LOG),y)
-  DEPENDS_COMMON+= +libpq
-endif
-
-ifeq ($(CONFIG_ACCEL_PPP_SNMP),y)
-  DEPENDS_COMMON+= +netsnmp
-endif
+define Package/$(PKG_NAME)/config
+  source "$(SOURCE)/Config.in"
+endef
 
 define Package/$(PKG_NAME)
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=VPN
   TITLE:=accel-ppp VPN server
-  DEPENDS:=$(DEPENDS_COMMON)
+  DEPENDS:= +libpcre2 \
+	+libopenssl \
+	+libpthread \
+	+librt \
+	+libatomic \
+	+libucontext \
+	+ACCEL_PPP_LOG_PGSQL:libpq \
+	+ACCEL_PPP_SNMP_NOSSL:libnetsnmp-nossl \
+	+ACCEL_PPP_SNMP_SSL:libnetsnmp-ssl \
+	+ACCEL_PPP_LUA:liblua
   MENU:=1
-endef
-
-define Package/$(PKG_NAME)/config
-  source "$(SOURCE)/Config.in"
 endef
 
 # CMake Config flags
@@ -59,14 +57,17 @@ CMAKE_OPTIONS += \
 	-DCROSS_COMPILE=$(TARGET_CROSS) \
 	-DCMAKE_INSTALL_PREFIX=/usr \
 	-DCMAKE_BUILD_TYPE=Release \
-	-DLOG_PGSQL=$(if $(CONFIG_ACCEL_PPP_PGSQL_LOG),TRUE,FALSE) \
-	-DLOG_FILE=$(if $(CONFIG_ACCEL_PPP_FILE_LOG),TRUE,FALSE) \
+	-DLOG_PGSQL=$(if $(CONFIG_ACCEL_PPP_LOG_PGSQL),TRUE,FALSE) \
+	-DLOG_FILE=$(if $(CONFIG_ACCEL_PPP_LOG_FILE),TRUE,FALSE) \
 	-DSHAPER=$(if $(CONFIG_ACCEL_PPP_SHAPER),TRUE,FALSE) \
 	-DRADIUS=$(if $(CONFIG_ACCEL_PPP_RADIUS),TRUE,FALSE) \
 	-DNETSNMP=$(if $(CONFIG_ACCEL_PPP_SNMP),TRUE,FALSE) \
+	-DLUA=$(if $(CONFIG_ACCEL_PPP_LUA),TRUE,FALSE) \
 	-DLIB_SUFFIX= \
 	-DBUILD_IPOE_DRIVER=$(if $(CONFIG_PACKAGE_kmod-$(PKG_NAME)-ipoe),TRUE,FALSE) \
-	-DBUILD_VLAN_MON_DRIVER=$(if $(CONFIG_PACKAGE_kmod-$(PKG_NAME)-vlan-mon),TRUE,FALSE)
+	-DBUILD_VLAN_MON_DRIVER=$(if $(CONFIG_PACKAGE_kmod-$(PKG_NAME)-vlan-mon),TRUE,FALSE) \
+	$(if $(CONFIG_ACCEL_PPP_SNMP),-DSNMP_SEARCH_PATH=$(STAGING_DIR)/usr/lib) \
+	$(if $(CONFIG_ACCEL_PPP_LOG_PGSQL),-DPGSQL_SEARCH_PATH=$(STAGING_DIR)/usr/lib)
 
 CMAKE_BINARY_DIR := $(PKG_BUILD_DIR)/build
 TARGET_CFLAGS += -I$(STAGING_DIR)/opt/include -D_GNU_SOURCE -g -O2 -Wno-incompatible-pointer-types -Wno-deprecated-declarations
@@ -116,6 +117,13 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DATA) \
 		$(PKG_INSTALL_DIR)/usr/share/accel-ppp/l2tp/dictionary.* \
 		$(1)/usr/share/accel-ppp/l2tp/dictionary/ || true
+
+	$(if $(CONFIG_ACCEL_PPP_RADIUS), \
+		$(INSTALL_DIR) $(1)/usr/share/accel-ppp/radius/dictionary; \
+		$(INSTALL_DATA) \
+			$(PKG_INSTALL_DIR)/usr/share/accel-ppp/radius/dictionary.* \
+			$(1)/usr/share/accel-ppp/radius/dictionary/ \
+	)
 
 	$(INSTALL_BIN) \
 		files/accel-ppp.init \
