@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=accel-ppp
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 PKG_VERSION:=1.14.0
 
 PKG_SOURCE_PROTO:=git
@@ -79,6 +79,7 @@ define KernelPackage/$(PKG_NAME)-ipoe
   DEPENDS:=+kmod-ppp +kmod-pppox
   FILES:=$(CMAKE_BINARY_DIR)/drivers/ipoe/driver/ipoe.ko
   AUTOLOAD:=$(call AutoProbe,ipoe)
+  DEFAULT:=n
 endef
 
 define KernelPackage/$(PKG_NAME)-vlan-mon
@@ -87,6 +88,7 @@ define KernelPackage/$(PKG_NAME)-vlan-mon
   DEPENDS:=+kmod-8021q
   FILES:=$(CMAKE_BINARY_DIR)/drivers/vlan_mon/driver/vlan_mon.ko
   AUTOLOAD:=$(call AutoProbe,vlan_mon)
+  DEFAULT:=n
 endef
 
 define Package/$(PKG_NAME)/install
