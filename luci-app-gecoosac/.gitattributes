@@ -1,0 +1,15 @@
+* text=auto
+
+*.lua text eol=lf
+*.htm text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.po text eol=lf
+
+Makefile text eol=lf
+*/Makefile text eol=lf
+
+gecoosac/files/etc/config/* text eol=lf
+gecoosac/files/etc/init.d/* text eol=lf
+gecoosac/files/etc/uci-defaults/* text eol=lf
+luci-app-gecoosac/root/etc/uci-defaults/* text eol=lf
