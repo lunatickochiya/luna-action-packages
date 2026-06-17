@@ -85,7 +85,7 @@ export function yqRead(flags, command, content) {
 };
 
 export function yqReadFile(flags, command, filepath) {
-	const out = executeCommand(null, 'yq', flags, shellQuote(command), filepath);
+	const out = executeCommand(null, 'yq', flags, shellQuote(command), shellQuote(filepath));
 
 	return out.stdout;
 };
@@ -217,8 +217,9 @@ export function parseListener(cfg, isClient, label) {
 		type: cfg.type,
 
 		listen: cfg.listen || '::',
-		port: cfg.port,
+		port: strToInt(cfg.port),
 		...(isClient ? {
+			"routing-mark": strToInt(cfg.routing_mark) || null,
 			rule: cfg.rule,
 			proxy: label,
 		} : {}),

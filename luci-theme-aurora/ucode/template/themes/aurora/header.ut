@@ -16,7 +16,7 @@
 	const boardinfo = ubus.call('system', 'board');
 	const uci = cursor();
 	const tokens = uci.get_all('aurora', 'theme') || {};
-	const nav_submenu_type = tokens.nav_submenu_type || 'mega-menu';
+	const nav_type = tokens.nav_type || 'mega-menu';
 	const toolbar_enabled = tokens.toolbar_enabled ? tokens.toolbar_enabled == '1' : true;
 	const icon_cache_version = tokens.icon_cache_version || '0';
 	const logo_svg = tokens.logo_svg || 'logo.svg';
@@ -75,7 +75,9 @@
 				const prev = document.documentElement.getAttribute('data-darkmode');
 				const apply = () => document.documentElement.setAttribute('data-darkmode', next);
 
-				if (prev !== null && prev !== next && document.startViewTransition &&
+				const navOpen = document.body?.classList.contains('mobile-navigation-open');
+
+				if (prev !== null && prev !== next && document.startViewTransition && !navOpen &&
 					!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 					document.startViewTransition(apply);
 				} else {
@@ -180,28 +182,28 @@
 		{% endif %}
 	</head>
 
-	<body class="lang_{{ dispatcher.lang }} {{ entityencode(striptags(node?.title ?? ''), true) }}" data-page="{{ entityencode(join('-', ctx.request_path), true) }}" data-nav-type="{{ nav_submenu_type }}">
+	<body class="lang_{{ dispatcher.lang }} {{ entityencode(striptags(node?.title ?? ''), true) }}" data-page="{{ entityencode(join('-', ctx.request_path), true) }}" data-nav-type="{{ nav_type }}">
 		{% if (!blank_page): %}
 		<header>
 			<div class="header-content">
 				<div class="navigation-controls">
-					<div class="navigation-toggle" id="navigation-toggle" title="{{ _('Menu') }}" role="button" aria-expanded="false">
+					<button class="navigation-toggle" id="navigation-toggle" type="button" title="{{ _('Navigation') }}" aria-label="{{ _('Navigation') }}" aria-controls="mobile-menu-overlay" aria-expanded="false">
 						<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 							<line class="navigation-toggle-line navigation-toggle-line-top" x1="2.5" y1="5" x2="17.5" y2="5"/>
 							<line class="navigation-toggle-line navigation-toggle-line-middle" x1="2.5" y1="10" x2="17.5" y2="10"/>
 							<line class="navigation-toggle-line navigation-toggle-line-bottom" x1="2.5" y1="15" x2="10" y2="15"/>
 						</svg>
-					</div>
+					</button>
 				</div>
 				<a class="brand" href="/">{{ striptags(boardinfo.hostname ?? '?') }}</a>
 				<ul class="nav" id="topmenu" style="display:none"></ul>
-				{% if (nav_submenu_type == 'sidebar'): %}
+				{% if (nav_type == 'sidebar'): %}
 				<ol class="header-crumb" id="header-crumb"></ol>
 				{% endif %}
 				<div id="indicators" class="pull-right"></div>
 		</div>
 
-		{% if (nav_submenu_type == 'mega-menu'): %}
+		{% if (nav_type == 'mega-menu'): %}
 			{%
 				/* boardinfo fields are not guaranteed on every platform; the
 				   summary tolerates a missing model/firmware line (hostname is
@@ -211,7 +213,7 @@
 					trim(`${boardinfo.release?.distribution ?? ''} ${boardinfo.release?.version ?? ''}`);
 			-%}
 			<div class="desktop-menu-container">
-				<div class="desktop-menu-board" aria-hidden="true">
+				<div class="desktop-menu-board" aria-hidden="true"><span class="board-label">{{ _('Device') }}</span>
 					<span class="board-line board-line-host" title="{{ entityencode(striptags(boardinfo.hostname ?? '?'), true) }}"><span class="board-text">{{ striptags(boardinfo.hostname ?? '?') }}</span></span>
 					{% if (board_model): %}
 					<span class="board-line board-line-model" title="{{ entityencode(striptags(board_model), true) }}"><span class="board-text">{{ striptags(board_model) }}</span></span>
@@ -231,8 +233,8 @@
 		</header>
 		{% endif %}
 
-		{% if (nav_submenu_type == 'sidebar'): %}
-		<aside class="sidebar-panel" aria-label="{{ _('Navigation') }}">
+		{% if (nav_type == 'sidebar'): %}
+		<aside class="sidebar-panel" id="sidebar-panel" aria-label="{{ _('Navigation') }}">
 			<nav class="sidebar-panel-inner">
 				<ul class="sidebar-list" id="sidebar-list"></ul>
 				<div class="sidebar-footer" id="sidebar-footer"></div>
@@ -246,7 +248,7 @@
 		{% endif %}
 
 		<div class="mobile-menu-overlay" id="mobile-menu-overlay">
-			<nav class="mobile-nav">
+			<nav class="mobile-nav" aria-label="{{ _('Navigation') }}">
 				<div class="mobile-nav-body">
 					<div class="mobile-nav-label">{{ _('Navigation') }}</div>
 					<ul class="mobile-nav-list" id="mobile-nav-list">

@@ -6,7 +6,7 @@ input[type="reset"],
 .cbi-button {
   /* transform stays in this list for the .cbi-button active:scale-95
      variant in _form.css, which relies on this base transition. */
-  @apply inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-2xl border px-3 py-1.5 text-sm font-medium antialiased shadow-sm transition-[background-color,border-color,transform] duration-200 max-md:text-base max-md:font-medium;
+  @apply inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium antialiased transition-[background-color,border-color,transform] duration-150 max-md:text-base max-md:font-medium;
   &[disabled] {
     @apply cursor-not-allowed opacity-40 dark:opacity-30;
   }
@@ -23,11 +23,11 @@ input[type="reset"],
 .cbi-button-link,
 .cbi-button-up,
 .cbi-button-down {
-  @apply border-secondary bg-secondary text-secondary-foreground hover:bg-secondary/90;
+  @apply border-hairline bg-surface-sunken text-text hover:bg-hover-faint;
 }
 
 .drag-handle {
-  @apply border-muted bg-muted text-muted-foreground hover:bg-muted/90;
+  @apply border-hairline bg-surface-sunken text-text-muted hover:bg-hover-faint;
 }
 
 .btn.primary,
@@ -36,18 +36,18 @@ input[type="reset"],
 .cbi-button-reload,
 .cbi-button-add,
 .cbi-button-edit {
-  @apply border-primary bg-primary hover:bg-primary/90 text-primary-foreground;
+  @apply border-brand bg-brand hover:bg-brand-hover text-on-brand;
 }
 
 .cbi-button-positive,
 .cbi-button-fieldadd,
 .cbi-button-save {
-  @apply border-primary/25 bg-primary/25 text-primary hover:bg-primary/30;
+  @apply border-transparent bg-brand-subtle text-brand hover:bg-brand-subtle-hover;
 }
 
 .cbi-button-negative,
 .cbi-section-remove .cbi-button,
 .cbi-button-reset,
 .cbi-button-remove {
-  @apply border-destructive bg-destructive text-destructive-foreground hover:bg-destructive/90;
+  @apply border-transparent bg-danger-surface text-danger hover:bg-danger-surface-hover;
 }

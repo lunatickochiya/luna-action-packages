@@ -27,25 +27,16 @@ return baseclass.extend({
 
     if (!navigationToggle || !overlay) return;
 
+    const mobileList = overlay.querySelector("#mobile-nav-list");
     const desktop = window.matchMedia("(min-width: 768px)");
     const SIDEBAR_COLLAPSED_KEY = "aurora.sidebarCollapsed";
 
     const isDesktopSidebar = () =>
       desktop.matches && document.body.dataset.navType === "sidebar";
 
-    const resetMobileSubmenus = () => {
-      document
-        .querySelectorAll(".mobile-nav-item.submenu-expanded")
-        .forEach((item) => item.classList.remove("submenu-expanded"));
-    };
-
-    const expandActiveMobileGroup = () => {
-      document
-        .querySelector(".mobile-nav-item.has-active")
-        ?.classList.add("submenu-expanded");
-    };
-
     const updateToggleState = (expanded) => {
+      const desktopSidebar = isDesktopSidebar();
+
       // The hamburger ↔ X morph is a mobile-drawer affordance; the desktop
       // sidebar toggle stays a static hamburger (see 2026-06-11 redesign
       // spec, superseding the unified-toggle "always X when expanded" rule).
@@ -53,13 +44,26 @@ return baseclass.extend({
         "is-expanded",
         expanded && !desktop.matches,
       );
-      navigationToggle.setAttribute("aria-expanded", expanded);
+      navigationToggle.setAttribute(
+        "aria-expanded",
+        expanded ? "true" : "false",
+      );
+      navigationToggle.setAttribute(
+        "aria-controls",
+        desktopSidebar ? "sidebar-panel" : "mobile-menu-overlay",
+      );
+
+      const label = expanded && !desktopSidebar ? _("Close") : _("Navigation");
+
+      navigationToggle.setAttribute("title", label);
+      navigationToggle.setAttribute("aria-label", label);
     };
 
     const closeMobileNavigation = () => {
       overlay.classList.remove("mobile-menu-open");
+      document.body.classList.remove("mobile-navigation-open");
       document.body.style.overflow = "";
-      resetMobileSubmenus();
+      this.resetNavigationGroups(mobileList);
     };
 
     const getNavigationExpanded = () => {
@@ -88,10 +92,11 @@ return baseclass.extend({
       }
 
       overlay.classList.toggle("mobile-menu-open", expanded);
+      document.body.classList.toggle("mobile-navigation-open", expanded);
       document.body.style.overflow = expanded ? "hidden" : "";
 
-      if (expanded) expandActiveMobileGroup();
-      else resetMobileSubmenus();
+      if (expanded) this.expandActiveNavigationGroup(mobileList);
+      else this.resetNavigationGroups(mobileList);
 
       updateToggleState(expanded);
     };
@@ -135,110 +140,41 @@ return baseclass.extend({
     syncNavigationState();
 
     document.addEventListener("click", (e) => {
-      const link = e.target.closest(".mobile-nav-link");
-      if (!link) return;
+      const destination = e.target?.closest?.(
+        ".navigation-direct, .navigation-sublink, .mobile-nav-logout",
+      );
 
-      const item = link.closest(".mobile-nav-item");
-      const submenu = item?.querySelector(".mobile-nav-submenu");
-
-      if (submenu) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const isExpanded = item.classList.contains("submenu-expanded");
-
-        document
-          .querySelectorAll(".mobile-nav-item.submenu-expanded")
-          .forEach((i) => {
-            if (i !== item) i.classList.remove("submenu-expanded");
-          });
-
-        item.classList.toggle("submenu-expanded", !isExpanded);
+      if (destination && overlay.contains(destination)) {
+        setNavigationExpanded(false);
       }
     });
   },
 
-  renderMobileMenu(tree, url) {
+  renderMobileMenu(items) {
     const list = document.querySelector("#mobile-nav-list");
     const footerAction = document.querySelector("#mobile-nav-footer-action");
-    const children = ui.menu.getChildren(tree);
 
-    if (!list || !footerAction || !children.length) return;
+    if (list) list.innerHTML = "";
+    if (footerAction) footerAction.innerHTML = "";
 
-    list.innerHTML = "";
-    footerAction.innerHTML = "";
+    if (!list) return;
 
-    children.forEach((child) => {
-      const submenu = ui.menu.getChildren(child);
-      const hasSubmenu = submenu.length > 0;
-      const isActive = this.isActivePath(child.name);
-
-      if (child.name === "logout") {
-        footerAction.appendChild(
-          E(
-            "a",
-            {
-              class: "mobile-nav-logout",
-              href: L.url(url, child.name),
-            },
-            [_(child.title)],
-          ),
-        );
+    items.forEach((item) => {
+      if (item.isLogout) {
+        if (footerAction) {
+          footerAction.appendChild(
+            E("a", { class: "mobile-nav-logout", href: item.href }, [
+              item.title,
+            ]),
+          );
+        }
         return;
       }
 
-      // "has-submenu" gates the drawer's expand chevron in _overlay.css.
-      // "has-active" drives the auto-expand on drawer open.
-      const itemClasses = [
-        "mobile-nav-item",
-        hasSubmenu ? "has-submenu" : "",
-        isActive && hasSubmenu ? "has-active" : "",
-      ].filter(Boolean);
-
-      const li = E("li", { class: itemClasses.join(" ") }, [
-        E(
-          "a",
-          {
-            class: `mobile-nav-link${
-              isActive && !hasSubmenu ? " nav-link-active" : ""
-            }`,
-            href: hasSubmenu ? "#" : L.url(url, child.name),
-          },
-          [_(child.title)],
-        ),
-      ]);
-
-      if (hasSubmenu) {
-        li.appendChild(this.buildCategoryPreview(child.name, submenu));
-
-        const wrap = E("div", { class: "mobile-nav-submenu" });
-        const ul = E("ul", { class: "mobile-nav-submenu-list" });
-
-        submenu.forEach((item) => {
-          const subActive = this.isActivePath(child.name, item.name);
-
-          ul.appendChild(
-            E("li", { class: "mobile-nav-subitem" }, [
-              E(
-                "a",
-                {
-                  class: `mobile-nav-sublink${
-                    subActive ? " nav-link-active" : ""
-                  }`,
-                  href: L.url(url, child.name, item.name),
-                },
-                [_(item.title)],
-              ),
-            ]),
-          );
-        });
-
-        wrap.appendChild(ul);
-        li.appendChild(wrap);
-      }
-
-      list.appendChild(li);
+      list.appendChild(this.renderNavigationItem(item, "mobile"));
     });
+
+    this.bindNavigationAccordion(list);
   },
 
   render(tree) {
@@ -292,32 +228,44 @@ return baseclass.extend({
     return ul;
   },
 
-  renderMainMenu(tree, url, level = 0) {
+  renderMainMenu(tree, url, level = 0, navigationItems = null) {
     const ul = level
       ? E("ul", { class: "desktop-nav-list" })
       : document.querySelector("#topmenu");
     const children = ui.menu.getChildren(tree);
 
-    if (!children.length || level > 1) return E([]);
+    if (level > 1) return E([]);
 
     if (level === 0) {
       const navType = document.body?.dataset?.navType || "mega-menu";
 
       if (navType === "sidebar") {
-        this.renderSidebar(children, url);
-        return ul;
-      } else if (navType === "mega-menu") {
+        this.renderSidebar(navigationItems || []);
+        return ul || E([]);
+      }
+
+      if (!ul || !children.length) return E([]);
+
+      if (navType === "mega-menu") {
         this.initMegaMenu(children, url, ul);
       } else {
-        this.initBoxedDropdown(children, url, ul);
+        this.initDropdown(children, url, ul);
       }
     } else {
+      if (!children.length) return E([]);
+
       children.forEach((child) => {
-        ul.appendChild(
-          E("li", {}, [
-            E("a", { href: L.url(url, child.name) }, [_(child.title)]),
-          ]),
-        );
+        // Mark the current page so it gets the active pill — same vocabulary
+        // as the top-level trigger (.menu-active). tree is the section node,
+        // so tree.name is its dispatch segment.
+        const isActive = this.isActivePath(tree.name, child.name);
+        const attributes = {
+          class: isActive ? "is-active-page" : "",
+          href: L.url(url, child.name),
+        };
+        if (isActive) attributes["aria-current"] = "page";
+
+        ul.appendChild(E("li", {}, [E("a", attributes, [_(child.title)])]));
       });
     }
 
@@ -333,153 +281,208 @@ return baseclass.extend({
     return page == null || L.env.dispatchpath[2] === page;
   },
 
-  // Decorative, aria-hidden summary used by collapsed mobile groups.
-  buildCategoryPreview(parentName, submenu) {
-    const nodes = [];
+  buildNavigationModel(children, url) {
+    return children
+      .filter((child) => child?.name)
+      .map((child) => {
+        const pages = ui.menu
+          .getChildren(child)
+          .filter((page) => page?.name)
+          .map((page) => ({
+            name: page.name,
+            title: _(page.title),
+            href: L.url(url, child.name, page.name),
+            isActivePage: this.isActivePath(child.name, page.name),
+          }));
+        const hasChildren = pages.length > 0;
+        const isCurrentTopLevel = this.isActivePath(child.name);
 
-    submenu.forEach((item, i) => {
-      if (i) nodes.push(" · ");
+        return {
+          name: child.name,
+          title: _(child.title),
+          href: L.url(url, child.name),
+          hasChildren,
+          isLogout: child.name === "logout",
+          isActiveGroup: hasChildren && isCurrentTopLevel,
+          isActivePage: !hasChildren && isCurrentTopLevel,
+          activePage: pages.find((page) => page.isActivePage) || null,
+          pages,
+        };
+      });
+  },
 
-      nodes.push(
-        this.isActivePath(parentName, item.name)
-          ? E("span", { class: "nav-preview-current" }, [_(item.title)])
-          : _(item.title),
+  navigationSubmenuId(mode, name) {
+    return `${mode}-submenu-${encodeURIComponent(String(name))}`;
+  },
+
+  renderNavigationItem(item, mode) {
+    const mobile = mode === "mobile";
+    const itemClass = mobile ? "mobile-nav-item" : "";
+    const directClass = mobile
+      ? "navigation-direct mobile-nav-link"
+      : "navigation-direct nav-link";
+
+    if (!item.hasChildren) {
+      const attributes = {
+        class: `${directClass}${item.isActivePage ? " is-active-page" : ""}`,
+        href: item.href,
+      };
+      if (item.isActivePage) attributes["aria-current"] = "page";
+      return E("li", { class: itemClass }, [E("a", attributes, [item.title])]);
+    }
+
+    const submenuId = this.navigationSubmenuId(mode, item.name);
+    const groupClasses = [
+      "navigation-group",
+      mobile ? "mobile-nav-item" : "sidebar-group",
+      item.isActiveGroup ? "is-active-group" : "",
+      item.isActiveGroup ? "is-expanded" : "",
+    ].filter(Boolean);
+    const toggleAttributes = {
+      class: mobile
+        ? "navigation-group-toggle mobile-nav-link mobile-nav-toggle"
+        : "navigation-group-toggle nav-category",
+      type: "button",
+      "aria-expanded": item.isActiveGroup ? "true" : "false",
+      "aria-controls": submenuId,
+    };
+    if (item.isActiveGroup) toggleAttributes["aria-current"] = "location";
+
+    const list = E("ul", {
+      class: mobile
+        ? "navigation-submenu-list mobile-nav-submenu-list"
+        : "navigation-submenu-list sidebar-submenu",
+    });
+    item.pages.forEach((page) => {
+      const linkAttributes = {
+        class: [
+          "navigation-sublink",
+          mobile ? "mobile-nav-sublink" : "",
+          page.isActivePage ? "is-active-page" : "",
+        ]
+          .filter(Boolean)
+          .join(" "),
+        href: page.href,
+      };
+      if (page.isActivePage) linkAttributes["aria-current"] = "page";
+      list.appendChild(
+        E("li", { class: mobile ? "mobile-nav-subitem" : "" }, [
+          E("a", linkAttributes, [page.title]),
+        ]),
       );
     });
 
-    return E(
-      "div",
-      { class: "nav-category-preview", "aria-hidden": "true" },
-      nodes,
-    );
+    const regionAttributes = {
+      class: mobile
+        ? "navigation-group-region mobile-nav-submenu"
+        : "navigation-group-region sidebar-section",
+      id: submenuId,
+      "aria-hidden": item.isActiveGroup ? "false" : "true",
+    };
+    if (!item.isActiveGroup) regionAttributes.inert = "";
+
+    return E("li", { class: groupClasses.join(" ") }, [
+      E("button", toggleAttributes, [
+        E("span", { class: "nav-category-label" }, [item.title]),
+      ]),
+      E("div", regionAttributes, [list]),
+    ]);
   },
 
-  setSidebarSectionExpanded(item, expanded) {
-    const category = item.querySelector(".nav-category");
-    const section = item.querySelector(".sidebar-section");
+  setNavigationGroupExpanded(item, expanded) {
+    const toggle = item.querySelector(".navigation-group-toggle");
+    const region = item.querySelector(".navigation-group-region");
 
-    item.classList.toggle("sidebar-group-open", expanded);
-    category?.setAttribute("aria-expanded", expanded ? "true" : "false");
-    section?.setAttribute("aria-hidden", expanded ? "false" : "true");
+    item.classList.toggle("is-expanded", expanded);
+    toggle?.setAttribute("aria-expanded", expanded ? "true" : "false");
+    region?.setAttribute("aria-hidden", expanded ? "false" : "true");
+
+    if (expanded) region?.removeAttribute("inert");
+    else region?.setAttribute("inert", "");
+  },
+
+  setExclusiveNavigationGroupExpanded(surface, item, expanded) {
+    if (!surface || !item) return;
 
     if (expanded) {
-      section?.removeAttribute("inert");
-    } else {
-      section?.setAttribute("inert", "");
+      surface
+        .querySelectorAll(".navigation-group.is-expanded")
+        .forEach((expandedItem) => {
+          if (expandedItem !== item) {
+            this.setNavigationGroupExpanded(expandedItem, false);
+          }
+        });
+    }
+
+    this.setNavigationGroupExpanded(item, expanded);
+  },
+
+  resetNavigationGroups(surface) {
+    surface
+      ?.querySelectorAll(".navigation-group.is-expanded")
+      .forEach((item) => this.setNavigationGroupExpanded(item, false));
+  },
+
+  expandActiveNavigationGroup(surface) {
+    const activeGroup = surface?.querySelector(
+      ".navigation-group.is-active-group",
+    );
+
+    if (activeGroup) {
+      this.setExclusiveNavigationGroupExpanded(surface, activeGroup, true);
     }
   },
 
-  renderSidebar(children, url) {
+  bindNavigationAccordion(surface) {
+    if (!surface || surface.dataset.accordionBound === "true") return;
+
+    surface.dataset.accordionBound = "true";
+    surface.addEventListener("click", (event) => {
+      const toggle = event.target?.closest?.(".navigation-group-toggle");
+      const item = toggle?.closest?.(".navigation-group");
+
+      if (!item || !surface.contains(item)) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      this.setExclusiveNavigationGroupExpanded(
+        surface,
+        item,
+        !item.classList.contains("is-expanded"),
+      );
+    });
+  },
+
+  renderSidebar(items) {
     const list = document.querySelector("#sidebar-list");
     const footer = document.querySelector("#sidebar-footer");
+    const crumbEl = document.querySelector("#header-crumb");
+
+    if (list) list.innerHTML = "";
+    if (footer) footer.innerHTML = "";
+    if (crumbEl) crumbEl.innerHTML = "";
 
     if (!list) return;
 
     const crumb = [];
 
-    const link = (href, title, active) =>
-      E("a", { class: `nav-link${active ? " nav-link-active" : ""}`, href }, [
-        _(title),
-      ]);
-
-    children.forEach((child) => {
-      const submenu = ui.menu.getChildren(child);
-      const inGroup = this.isActivePath(child.name);
-
-      if (inGroup) {
-        crumb.push(_(child.title));
-
-        const page = submenu.find((item) =>
-          this.isActivePath(child.name, item.name),
-        );
-        if (page) crumb.push(_(page.title));
+    items.forEach((item) => {
+      if (item.isActiveGroup || item.isActivePage) {
+        crumb.push(item.title);
+        if (item.activePage) crumb.push(item.activePage.title);
       }
 
-      if (child.name === "logout") {
+      if (item.isLogout) {
         (footer || list).appendChild(
-          link(L.url(url, child.name), child.title, false),
+          E("a", { class: "nav-link", href: item.href }, [item.title]),
         );
         return;
       }
 
-      if (!submenu.length) {
-        list.appendChild(
-          E("li", {}, [link(L.url(url, child.name), child.title, inGroup)]),
-        );
-        return;
-      }
-
-      const sectionId = `sidebar-section-${String(child.name).replace(
-        /[^A-Za-z0-9_-]/g,
-        "-",
-      )}`;
-      const ul = E("ul", { class: "sidebar-submenu" });
-
-      submenu.forEach((item) => {
-        ul.appendChild(
-          E("li", {}, [
-            link(
-              L.url(url, child.name, item.name),
-              item.title,
-              this.isActivePath(child.name, item.name),
-            ),
-          ]),
-        );
-      });
-
-      const sectionAttrs = {
-        class: "sidebar-section",
-        id: sectionId,
-        "aria-hidden": inGroup ? "false" : "true",
-      };
-
-      if (!inGroup) sectionAttrs.inert = "";
-
-      const groupClasses = [
-        "sidebar-group",
-        inGroup ? "sidebar-group-open" : "",
-      ].filter(Boolean);
-
-      list.appendChild(
-        E(
-          "li",
-          {
-            class: groupClasses.join(" "),
-            "data-section": child.name,
-          },
-          [
-            E(
-              "button",
-              {
-                class: "nav-category",
-                type: "button",
-                "aria-expanded": inGroup ? "true" : "false",
-                "aria-controls": sectionId,
-              },
-              [E("span", { class: "nav-category-label" }, [_(child.title)])],
-            ),
-            E("div", sectionAttrs, [ul]),
-          ],
-        ),
-      );
+      list.appendChild(this.renderNavigationItem(item, "sidebar"));
     });
 
-    list.addEventListener("click", (e) => {
-      const category = e.target.closest(".nav-category");
-      const item = category?.closest(".sidebar-group");
-
-      if (!item || !list.contains(item)) return;
-
-      const shouldOpen = !item.classList.contains("sidebar-group-open");
-
-      list.querySelectorAll(".sidebar-group-open").forEach((group) => {
-        if (group !== item) this.setSidebarSectionExpanded(group, false);
-      });
-
-      this.setSidebarSectionExpanded(item, shouldOpen);
-    });
-
-    const crumbEl = document.querySelector("#header-crumb");
+    this.bindNavigationAccordion(list);
 
     crumb.forEach((title, i) => {
       if (i) crumbEl?.appendChild(E("li", { class: "crumb-sep" }, ["/"]));
@@ -490,7 +493,7 @@ return baseclass.extend({
   },
 
   // Shared scaffolding for the two desktop dropdown modes (mega-menu and
-  // boxed-dropdown): builds the top-level `.menu` link + its `.desktop-nav`
+  // dropdown): builds the top-level `.menu` link + its `.desktop-nav`
   // panel. Hover/activation behaviour differs per mode and is wired by the
   // caller on the returned nodes.
   buildDropdownItem(child, url, ul) {
@@ -518,17 +521,32 @@ return baseclass.extend({
       const children = [list];
 
       if (document.body?.dataset?.navType === "mega-menu") {
-        // Constant canvas: links fill top-to-bottom; capping at 4 columns
-        // keeps the canvas height stable until a submenu exceeds 24 items.
+        // Constant canvas: links fill top-to-bottom. Base column count is 4;
+        // more items grow the row count, not the width, so the list stays
+        // inside the three-column canvas middle track.
         list.style.setProperty(
           "--menu-rows",
           Math.max(6, Math.ceil(submenu.length / 4)),
         );
+        // data-section keys the first-level icon off the node name (stable,
+        // language-independent) — see _layout.css. Unmapped names fall back
+        // to the default icon via var(--menu-icon, …).
         children.unshift(
           E("div", { class: "desktop-nav-anchor" }, [
-            E("span", { class: "desktop-nav-title" }, [_(child.title)]),
+            E(
+              "span",
+              { class: "desktop-nav-title", "data-section": child.name },
+              [_(child.title)],
+            ),
           ]),
         );
+        // Right column: clone the server-rendered device board into each
+        // panel so the grid can lay it out as the third track. The original
+        // stays hidden as the template (see _layout.css).
+        const board = document.querySelector(
+          ".desktop-menu-container > .desktop-menu-board",
+        );
+        if (board) children.push(board.cloneNode(true));
       }
 
       nav = E("div", { class: "desktop-nav" }, children);
@@ -573,7 +591,7 @@ return baseclass.extend({
         let maxPanel = 0;
         header
           .querySelectorAll(".desktop-nav")
-          .forEach((nav) => (maxPanel = Math.max(maxPanel, nav.scrollHeight)));
+          .forEach((nav) => (maxPanel = Math.max(maxPanel, nav.offsetHeight)));
         canvasHeight = headerHeight + maxPanel;
       }
       container?.style.setProperty("--mega-menu-height", `${canvasHeight}px`);
@@ -586,6 +604,44 @@ return baseclass.extend({
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(applyCanvasHeight, 150);
     });
+
+    // Pointer trajectory: keep a sample from ~60ms ago so a pill's mouseenter
+    // can tell whether the cursor is diving down into the open panel (heading
+    // for a submenu link) versus scanning along the pill row. Diving across
+    // the row would otherwise hijack the open category on every pill it grazes.
+    let agedPos = { x: 0, y: 0 };
+    let agedAt = 0;
+    let livePos = { x: 0, y: 0 };
+    header.addEventListener("mousemove", (e) => {
+      if (e.timeStamp - agedAt > 60) {
+        agedPos = livePos;
+        agedAt = e.timeStamp;
+      }
+      livePos = { x: e.clientX, y: e.clientY };
+    });
+
+    // menu-aim / "safe area": instead of the cursor's instantaneous slope
+    // (which reads near-horizontal exactly when it grazes the neighbouring
+    // pills at the very start of a dive), project the travel vector forward and
+    // ask whether it lands inside the OPEN panel. If the user is aiming at a
+    // submenu link — even the far top-left one, reached by a shallow diagonal
+    // across other pills — the projection falls within the panel rect, so we
+    // hold the current category instead of letting each grazed pill hijack it.
+    const isAimingIntoOpenPanel = () => {
+      const openNav = header.querySelector(".desktop-nav.active");
+      if (!openNav) return false;
+
+      const vx = livePos.x - agedPos.x;
+      const vy = livePos.y - agedPos.y;
+      if (vy <= 2) return false; // horizontal / upward → a deliberate switch
+
+      const rect = openNav.getBoundingClientRect();
+      if (livePos.y >= rect.top) return true; // already descending into it
+
+      // Where the current heading crosses the panel's top edge.
+      const xAtTop = livePos.x + (vx * (rect.top - livePos.y)) / vy;
+      return xAtTop >= rect.left - 24 && xAtTop <= rect.right + 24;
+    };
 
     children.forEach((child) => {
       const { li, nav, menuLink, hasSubmenu } = this.buildDropdownItem(
@@ -608,6 +664,14 @@ return baseclass.extend({
           hideTimer = null;
         }
 
+        // First open waits for hover intent. Once open, scanning the pill row
+        // switches instantly (Apple's flyout-change feel), but a cursor diving
+        // diagonally toward a submenu link must NOT hijack every pill it grazes
+        // — so while diving we fall back to a short intent dwell that a quick
+        // pass-through cancels via mouseleave before it ever fires.
+        const isOpen = container?.classList.contains("active");
+        const delay = !isOpen ? 100 : isAimingIntoOpenPanel() ? 260 : 0;
+
         showTimer = setTimeout(() => {
           const wasActive = nav.classList.contains("active");
 
@@ -620,10 +684,11 @@ return baseclass.extend({
           if (container) {
             applyCanvasHeight();
             container.classList.add("active");
+            container.classList.remove("closing");
             overlay.classList.add("active");
           }
           nav.classList.add("active");
-        }, 100);
+        }, delay);
       });
 
       li.addEventListener("mouseleave", () => {
@@ -658,7 +723,7 @@ return baseclass.extend({
     overlay.addEventListener("click", () => this.hideDesktopNav());
   },
 
-  initBoxedDropdown(children, url, ul) {
+  initDropdown(children, url, ul) {
     children.forEach((child) => {
       const { li, nav, menuLink, hasSubmenu } = this.buildDropdownItem(
         child,
@@ -697,7 +762,7 @@ return baseclass.extend({
     });
   },
 
-  // Only ever called from mega-menu mode (the boxed dropdown closes itself
+  // Only ever called from mega-menu mode (the dropdown closes itself
   // per-item on mouseleave), so it always performs the mega-menu cleanup.
   hideDesktopNav() {
     this.deactivateDesktopNavExcept(null, null);
@@ -706,42 +771,47 @@ return baseclass.extend({
     document.querySelector(".desktop-menu-overlay")?.classList.remove("active");
 
     if (!container) return;
+    if (
+      !container.classList.contains("active") &&
+      !container.classList.contains("closing")
+    )
+      return;
 
-    const wasActive = container.classList.contains("active");
+    container.classList.add("closing");
     container.classList.remove("active");
 
-    // --mega-menu-height is set on open in initMegaMenu and otherwise never
-    // cleared. Drop it back to the h-0 fallback once the container is fully
-    // hidden, so a closed menu doesn't leave invisible scrollable space
-    // below the header on pages shorter than the canvas.
-    const resetHeight = () => {
+    // Retract the canvas: dropping --mega-menu-height lets the container's
+    // height fall to its 0 fallback, and because the container transitions
+    // height (see _layout.css) it animates the collapse — the drawer close —
+    // instead of the height vanishing in one frame after the fade. overflow
+    // -hidden clips the content as it goes; the end state is already h-0 so no
+    // post-transition reset is needed.
+    container.style.removeProperty("--mega-menu-height");
+
+    let closeFallback = null;
+    const finishClosing = (event) => {
+      if (event?.target && event.target !== container) return;
+      if (event?.propertyName && event.propertyName !== "height") return;
+
+      if (closeFallback !== null) {
+        clearTimeout(closeFallback);
+        closeFallback = null;
+      }
+
+      container.removeEventListener("transitionend", finishClosing);
+
       if (!container.classList.contains("active")) {
-        container.style.removeProperty("--mega-menu-height");
+        container.classList.remove("closing");
       }
     };
 
-    // If the menu was never open, removing "active" is a no-op: clip-path
-    // never changes, so transitionend/transitioncancel would never fire and
-    // these listeners would pile up on every header mouseleave.
-    if (
-      !wasActive ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      resetHeight();
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      finishClosing();
       return;
     }
 
-    const onClipPathSettled = (event) => {
-      if (event.target !== container || event.propertyName !== "clip-path") {
-        return;
-      }
-      container.removeEventListener("transitionend", onClipPathSettled);
-      container.removeEventListener("transitioncancel", onClipPathSettled);
-      resetHeight();
-    };
-
-    container.addEventListener("transitionend", onClipPathSettled);
-    container.addEventListener("transitioncancel", onClipPathSettled);
+    container.addEventListener("transitionend", finishClosing);
+    closeFallback = setTimeout(finishClosing, 350);
   },
 
   renderModeMenu(tree) {
@@ -754,25 +824,31 @@ return baseclass.extend({
         ? child.name === L.env.requestpath[0]
         : index === 0;
 
-      ul.appendChild(
-        E(
-          "li",
-          {
-            class: isActive ? "active" : "",
-          },
-          [E("a", { href: L.url(child.name) }, [_(child.title)])],
-        ),
-      );
+      if (ul) {
+        ul.appendChild(
+          E(
+            "li",
+            {
+              class: isActive ? "active" : "",
+            },
+            [E("a", { href: L.url(child.name) }, [_(child.title)])],
+          ),
+        );
+      }
 
       if (isActive) activeChild = child;
     });
 
     if (activeChild) {
-      this.renderMainMenu(activeChild, activeChild.name);
-      this.renderMobileMenu(activeChild, activeChild.name);
+      const navigationItems = this.buildNavigationModel(
+        ui.menu.getChildren(activeChild),
+        activeChild.name,
+      );
+      this.renderMainMenu(activeChild, activeChild.name, 0, navigationItems);
+      this.renderMobileMenu(navigationItems);
     }
 
-    if (ul.children.length > 1) {
+    if (ul?.children.length > 1) {
       ul.style.display = "";
     }
   },
