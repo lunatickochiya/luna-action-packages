@@ -1,7 +1,9 @@
 * text=auto
+.gitattributes text eol=lf
 
 *.lua text eol=lf
 *.htm text eol=lf
+*.js text eol=lf
 *.json text eol=lf
 *.md text eol=lf
 *.po text eol=lf
