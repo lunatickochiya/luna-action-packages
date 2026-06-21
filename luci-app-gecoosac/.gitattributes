@@ -15,3 +15,4 @@ gecoosac/files/etc/config/* text eol=lf
 gecoosac/files/etc/init.d/* text eol=lf
 gecoosac/files/etc/uci-defaults/* text eol=lf
 luci-app-gecoosac/root/etc/uci-defaults/* text eol=lf
+luci-app-gecoosac/root/usr/libexec/rpcd/* text eol=lf
