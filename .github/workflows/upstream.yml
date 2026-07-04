@@ -376,11 +376,10 @@ jobs:
         #git clone --branch openwrt-22.03 --depth 1 https://github.com/openwrt/luci op-luci1 && mv op-luci1/applications/luci-app-wireguard ./ && rm -rf op-luci1
         ) &
         (
-        git_sparse_clone master "https://github.com/coolsnowwolf/packages" "leanpkg" net/miniupnpd net/mwan3 multimedia/UnblockNeteaseMusic-Go utils/bandwidthd \
+        git_sparse_clone master "https://github.com/coolsnowwolf/packages" "leanpkg" net/mwan3 multimedia/UnblockNeteaseMusic-Go utils/bandwidthd \
         multimedia/UnblockNeteaseMusic net/softethervpn5 net/baidupcs-web multimedia/gmediarender multimedia/pppwn-cpp net/go-aliyundrive-webdav \
         net/qBittorrent-static net/phtunnel net/frp \
         net/uugamebooster net/verysync net/vlmcsd net/dnsforwarder net/tcpping net/netatalk net/pgyvpn
-        mv -f miniupnpd miniupnpd-iptables
         git_sparse_clone openwrt-23.05 "https://github.com/openwrt/packages" "oppackages" \
         utils/coremark utils/watchcat utils/dockerd utils/cgroupfs-mount net/uwsgi net/ddns-scripts net/curl \
         net/ariang net/rp-pppoe
@@ -554,7 +553,6 @@ jobs:
         sed -i '/boot()/,+2d' ddns-scripts/files/etc/init.d/ddns
         sed -i "/DISTRIB_DESCRIPTION/c\DISTRIB_DESCRIPTION=\"%D %C by Kiddin'\"" base-files/files/etc/openwrt_release
         sed -i "s/PKG_VERSION:=2/PKG_VERSION:=3/" mwan3/Makefile
-        rm -f miniupnpd-iptables/patches/106-spam-syslog*
         sed -i "/+uhttpd/d" ariang/Makefile
         sed -i -e '$a /etc/bench.log' \
         -e '/\/etc\/profile/d' \
