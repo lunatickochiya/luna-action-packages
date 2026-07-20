@@ -104,7 +104,7 @@ const parseProviderYaml = hm.parseYaml.extend({
 		if (!cfg.type)
 			return null;
 
-		// key mapping // 2026/07/12
+		// key mapping // 2026/07/18
 		let config = hm.removeBlankAttrs({
 			id: this.id,
 			label: this.label,
@@ -742,6 +742,35 @@ return view.extend({
 		so.depends('type', 'shadowquic');
 		so.modalonly = true;
 
+		so = ss.taboption('field_general', form.Value, 'shadowquic_cwnd', _('Initial congestion window size'));
+		so.datatype = 'uinteger';
+		so.placeholder = '32';
+		so.depends('type', 'shadowquic');
+		so.modalonly = true;
+
+		so = ss.taboption('field_general', form.Value, 'shadowquic_max_datagram_frame_size', _('Max datagram frame size'));
+		so.datatype = 'uinteger';
+		so.placeholder = '1400';
+		so.depends('type', 'shadowquic');
+		so.modalonly = true;
+
+		so = ss.taboption('field_general', form.Value, 'shadowquic_recv_window_conn', _('Stream-level receive window size'));
+		so.datatype = 'uinteger';
+		so.placeholder = '0';
+		so.depends('type', 'shadowquic');
+		so.modalonly = true;
+
+		so = ss.taboption('field_general', form.Value, 'shadowquic_recv_window', _('Connection-level receive window size'));
+		so.datatype = 'uinteger';
+		so.placeholder = '0';
+		so.depends('type', 'shadowquic');
+		so.modalonly = true;
+
+		so = ss.taboption('field_general', form.Flag, 'shadowquic_mtu_discovery', _('Path MTU Discovery'));
+		so.default = so.enabled;
+		so.depends('type', 'shadowquic');
+		so.modalonly = true;
+
 		/* TrustTunnel fields */
 		so = ss.taboption('field_general', form.Flag, 'trusttunnel_health_check', _('Health check'));
 		so.default = so.enabled;
@@ -942,7 +971,7 @@ return view.extend({
 			_('The default value is <code>%s</code>, indicating that only the outer connection timeout is used.').format('0'));
 		so.datatype = 'uinteger';
 		so.placeholder = '30';
-		so.depends({type: /^(openvpn|masque)$/});
+		so.depends({type: /^(hysteria2|openvpn|masque)$/});
 		so.modalonly = true;
 
 		so = ss.taboption('field_general', form.Flag, 'udp', _('UDP'));
@@ -968,6 +997,7 @@ return view.extend({
 		so = ss.taboption('field_general', form.Flag, 'plugin', _('Plugin'));
 		so.default = so.disabled;
 		so.depends({type: /^(ss|snell)$/});
+		so.depends({type: /^(vmess|vless|trojan|anytls)$/});
 		so.modalonly = true;
 
 		so = ss.taboption('field_plugin', form.ListValue, 'plugin_type', _('Plugin type'));
@@ -982,9 +1012,16 @@ return view.extend({
 			const type = this.section.getOption('type').formvalue(section_id);
 
 			if (value) {
-				if (type === 'snell' && !['obfs', 'shadow-tls'].includes(value)) {
+				if (type === 'snell' && !['obfs', 'shadow-tls', 'restls', 'jls'].includes(value)) {
 					return _('Expecting: Only support %s.').format(_('obfs-simple') +
-						' / ' + _('ShadowTLS'));
+						' / ' + _('ShadowTLS') +
+						' / ' + _('Restls') +
+						' / ' + _('JLS'));
+				}
+				if (['vmess', 'vless', 'trojan', 'anytls'].includes(type) && !['shadow-tls', 'restls', 'jls'].includes(value)) {
+					return _('Expecting: Only support %s.').format(_('ShadowTLS') +
+						' / ' + _('Restls') +
+						' / ' + _('JLS'));
 				}
 			}
 
@@ -1028,6 +1065,8 @@ return view.extend({
 
 		so = ss.taboption('field_plugin', form.Value, 'plugin_opts_restls_versionhint', _('Version hint'));
 		so.default = 'tls13';
+		so.value('tls12', _('tls12'));
+		so.value('tls13', _('tls13'));
 		so.rmempty = false;
 		so.depends({plugin_type: 'restls'});
 		so.modalonly = true;
@@ -1167,14 +1206,6 @@ return view.extend({
 
 		so = ss.taboption('field_tls', form.Value, 'tls_sni', _('TLS SNI'),
 			_('Hostname that the client attempts to connect to at the start of the TLS handshake process.'));
-		so.validate = function(section_id, value) {
-			const tls_jls = this.section.getOption('tls_jls').formvalue(section_id);
-
-			if (tls_jls == 1 && !value)
-				return _('Expecting: %s cannot be empty when %s is enabled.').format(_('TLS SNI'), _('JLS'));
-
-			return true;
-		};
 		so.depends({tls: '1', type: /^(http|vmess|vless|trojan|anytls|hysteria|hysteria2|shadowquic|trusttunnel|masque)$/});
 		so.depends({tls: '1', type: /^(tuic)$/, tls_disable_sni: '0'});
 		so.modalonly = true;
@@ -1222,8 +1253,8 @@ return view.extend({
 			return true;
 		}
 		so.depends({tls: '1', type: /^(vmess|vless|trojan|anytls|tuic|hysteria|hysteria2|shadowquic|trusttunnel)$/});
-		so.depends({type: /^(ss|snell)$/, plugin_type: 'shadow-tls'});
-		so.depends({type: 'ss', plugin_type: 'jls'});
+		so.depends({type: 'ss', plugin_type: /^(shadow-tls|jls)$/});
+		so.depends({type: 'snell', plugin_type: 'shadow-tls'});
 		so.modalonly = true;
 
 		so = ss.taboption('field_tls', form.Value, 'tls_fingerprint', _('Cert fingerprint'),
@@ -1305,28 +1336,23 @@ return view.extend({
 			so.value.apply(so, res);
 		})
 		so.depends({tls: '1', type: /^(vmess|vless|trojan|anytls|trusttunnel)$/});
-		so.depends({type: /^(ss|snell)$/, plugin_type: /^(shadow-tls|restls)$/});
-		so.depends({type: 'ss', plugin_type: 'jls'});
-		so.modalonly = true;
-
-		so = ss.taboption('field_tls', form.Flag, 'tls_jls', _('JLS'));
-		so.default = so.disabled;
-		so.depends({tls: '1', type: /^(vmess|vless|trojan|anytls)$/});
-		so.modalonly = true;
-
-		so = ss.taboption('field_tls', form.Value, 'tls_jls_username', _('JLS username'));
-		so.rmempty = false;
-		so.depends('tls_jls', '1');
-		so.modalonly = true;
-
-		so = ss.taboption('field_tls', form.Value, 'tls_jls_password', _('JLS password'));
-		so.rmempty = false;
-		so.depends('tls_jls', '1');
+		so.depends({type: /^(ss|snell)$/, plugin_type: /^(shadow-tls|restls|jls)$/});
 		so.modalonly = true;
 
 		so = ss.taboption('field_tls', form.Flag, 'tls_reality', _('REALITY'));
 		so.default = so.disabled;
-		so.depends({tls: '1', tls_jls: '0', type: /^(vmess|vless|trojan)$/});
+		so.validate = function(section_id, value) {
+			const plugin_type = this.section.getOption('plugin_type').formvalue(section_id);
+			value = this.formvalue(section_id);
+
+			if (value == 1 && ['shadow-tls', 'restls', 'jls'].includes(plugin_type))
+				return _('Expecting: Cannot be enabled when %s is enabled.').format(_('ShadowTLS') +
+					' / ' + _('Restls') +
+					' / ' + _('JLS'));
+
+			return true;
+		}
+		so.depends({tls: '1', type: /^(vmess|vless|trojan)$/});
 		so.modalonly = true;
 
 		so = ss.taboption('field_tls', form.Value, 'tls_reality_public_key', _('REALITY public key'));
@@ -1985,7 +2011,7 @@ return view.extend({
 
 		so = ss.taboption('field_override', form.DynamicList, 'override_expr', _('Programmable replacement'),
 			_('For format see <a target="_blank" href="%s" rel="noreferrer noopener">%s</a>.')
-				.format('https://wiki.metacubex.one/config/proxy-providers/#override_expr', _('override.override-expr')));
+				.format('https://wiki.metacubex.one/config/proxy-providers/#overrideoverride-expr', _('override.override-expr')));
 		so.placeholder = '.name = "[provider1] " + .name';
 		so.depends({type: 'inline', '!reverse': true});
 		so.modalonly = true;

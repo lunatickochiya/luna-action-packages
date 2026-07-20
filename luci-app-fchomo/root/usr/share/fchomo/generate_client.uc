@@ -345,6 +345,8 @@ uci.foreach(uciconf, uciinbd, (cfg) => {
 
 	const listener = parseListener(cfg);
 	listener.proxy = get_proxy(listener.proxy);
+	if (listener["shadow-tls"])
+		listener["shadow-tls"].handshake.proxy = get_proxy(listener["shadow-tls"].handshake.proxy);
 	if (listener["res-tls"])
 		listener["res-tls"].proxy = get_proxy(listener["res-tls"].proxy);
 	if (listener["jls-config"])
@@ -527,7 +529,7 @@ uci.foreach(uciconf, ucinode, (cfg) => {
 		"padding-max": strToInt(cfg.sudoku_padding_max),
 		"table-type": cfg.sudoku_table_type,
 		"custom-tables": cfg.sudoku_custom_tables,
-		"enable-pure-downlink": (cfg.sudoku_enable_pure_downlink === '0') ? false : null,
+		"enable-pure-downlink": (cfg.sudoku_enable_pure_downlink === '0') ? false : true,
 		...(cfg.type === 'sudoku' ? {
 			httpmask: (cfg.sudoku_http_mask === '0') ? { disable: true } : {
 				disable: false,
@@ -541,7 +543,7 @@ uci.foreach(uciconf, ucinode, (cfg) => {
 
 		/* Snell */
 		psk: cfg.snell_psk,
-		version: cfg.snell_version,
+		version: strToInt(cfg.snell_version),
 		reuse: strToBool(cfg.snell_reuse),
 
 		/* VMess / VLESS */
@@ -602,11 +604,11 @@ uci.foreach(uciconf, ucinode, (cfg) => {
 		/* ShadowQUIC */
 		"quic-versions": cfg.shadowquic_quic_versions,
 		"zero-rtt": strToBool(cfg.shadowquic_zero_rtt),
-		// @# cwnd: 10 # default: 32,
-		// @# max-datagram-frame-size: 1400,
-		// @# recv-window-conn: 0,
-		// @# recv-window: 0,
-		// @# disable-mtu-discovery: false,
+		cwnd: strToInt(cfg.shadowquic_cwnd),
+		"max-datagram-frame-size": strToInt(cfg.shadowquic_max_datagram_frame_size),
+		"recv-window-conn": strToInt(cfg.shadowquic_recv_window_conn),
+		"recv-window": strToInt(cfg.shadowquic_recv_window),
+		"disable-mtu-discovery": cfg.shadowquic_mtu_discovery === '0' ? true : false,
 
 		/* TrustTunnel */
 		"health-check": cfg.type === 'trusttunnel' ? (cfg.trusttunnel_health_check === '0' ? false : true) : null,
@@ -641,38 +643,50 @@ uci.foreach(uciconf, ucinode, (cfg) => {
 
 		/* Plugin fields */
 		...(cfg.plugin === '1' ? (
-			cfg.type === 'snell' ? {
-				// snell
-				"obfs-opts": {
-					mode: cfg.plugin_type === 'shadow-tls' ? cfg.plugin_type : cfg.plugin_opts_obfsmode,
-					host: cfg.plugin_opts_host,
-					password: cfg.plugin_opts_thetlspassword,
+			cfg.type in ['vmess', 'vless', 'trojan', 'anytls'] ? {
+				tls: true,
+				...arrToObj([[(cfg.type in ['vmess', 'vless']) ? 'servername' : 'sni', cfg.plugin_opts_host]]),
+				// shadow-tls
+				"shadow-tls-opts": cfg.plugin_type === 'shadow-tls' ? {
 					version: strToInt(cfg.plugin_opts_shadowtls_version),
-					alpn: cfg.tls_alpn // Array
-				}
-			} : {
-				// others
-				plugin: cfg.plugin_type,
-				"plugin-opts": {
-					mode: cfg.plugin_opts_obfsmode,
-					host: cfg.plugin_opts_host,
-					username: cfg.plugin_opts_thetlsusername,
+					password: cfg.plugin_opts_thetlspassword
+				} : null,
+				// restls
+				"restls-opts": cfg.plugin_type === 'restls' ? {
 					password: cfg.plugin_opts_thetlspassword,
-					version: strToInt(cfg.plugin_opts_shadowtls_version),
-					alpn: cfg.tls_alpn, // Array
 					"version-hint": cfg.plugin_opts_restls_versionhint,
 					"restls-script": cfg.plugin_opts_restls_script
-				}
+				} : null,
+				// jls
+				"jls-opts": cfg.plugin_type === 'jls' ? {
+					username: cfg.plugin_opts_thetlsusername,
+					password: cfg.plugin_opts_thetlspassword
+				} : null,
+			} : {
+				// snell / shadowsocks
+				plugin: cfg.type === 'snell' ? null : cfg.plugin_type,
+				...arrToObj([[cfg.type === 'snell' ? "obfs-opts" : "plugin-opts",
+					{
+						mode: (cfg.type === 'snell' && cfg.plugin_type !== 'obfs') ? cfg.plugin_type : cfg.plugin_opts_obfsmode,
+						host: cfg.plugin_opts_host,
+						username: cfg.plugin_opts_thetlsusername,
+						password: cfg.plugin_opts_thetlspassword,
+						version: strToInt(cfg.plugin_opts_shadowtls_version),
+						alpn: cfg.tls_alpn, // Array
+						"version-hint": cfg.plugin_opts_restls_versionhint,
+						"restls-script": cfg.plugin_opts_restls_script
+					}
+				]])
 			}
 		) : {}),
 
 		/* SSH / WireGuard / Masque */
 		/* TLS fields */
-		tls: (cfg.type in ['trojan', 'anytls', 'tuic', 'hysteria', 'hysteria2', 'shadowquic', 'trusttunnel']) ? null : strToBool(cfg.tls),
+		...(strToBool(cfg.tls) ? {tls: cfg.type in ['trojan', 'anytls', 'tuic', 'hysteria', 'hysteria2', 'shadowquic', 'trusttunnel', 'masque'] ? null : true} : {}),
 		"disable-sni": strToBool(cfg.tls_disable_sni),
-		...arrToObj([[(cfg.type in ['vmess', 'vless']) ? 'servername' : 'sni', cfg.tls_sni]]),
+		...(cfg.tls_sni ? arrToObj([[(cfg.type in ['vmess', 'vless']) ? 'servername' : 'sni', cfg.tls_sni]]) : {}),
 		fingerprint: cfg.tls_fingerprint,
-		alpn: cfg.plugin_type in ['shadow-tls', 'jls'] ? null : cfg.tls_alpn, // Array
+		alpn: strToBool(cfg.tls) ? cfg.tls_alpn : null, // Array
 		"name-cert-verify": cfg.tls_name_cert_verify,
 		"skip-cert-verify": strToBool(cfg.tls_skip_cert_verify),
 		certificate: cfg.tls_cert_path, // mTLS
@@ -683,10 +697,6 @@ uci.foreach(uciconf, ucinode, (cfg) => {
 			enable: true,
 			config: cfg.tls_ech_config,
 			"query-server-name": cfg.tls_ech_query_server_name
-		} : null,
-		"jls-opts": cfg.tls_jls === '1' ? {
-			"username": cfg.tls_jls_username,
-			"password": cfg.tls_jls_password
 		} : null,
 		"reality-opts": cfg.tls_reality === '1' ? {
 			"public-key": cfg.tls_reality_public_key,

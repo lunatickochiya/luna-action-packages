@@ -555,6 +555,35 @@ function renderListeners(s, uciconfig, isClient) {
 	o.depends('type', 'shadowquic');
 	o.modalonly = true;
 
+	o = s.taboption('field_general', form.Value, 'shadowquic_cwnd', _('Initial congestion window size'));
+	o.datatype = 'uinteger';
+	o.placeholder = '32';
+	o.depends('type', 'shadowquic');
+	o.modalonly = true;
+
+	o = s.taboption('field_general', form.Value, 'shadowquic_max_datagram_frame_size', _('Max datagram frame size'));
+	o.datatype = 'uinteger';
+	o.placeholder = '1400';
+	o.depends('type', 'shadowquic');
+	o.modalonly = true;
+
+	o = s.taboption('field_general', form.Value, 'shadowquic_recv_window_conn', _('Stream-level receive window size'));
+	o.datatype = 'uinteger';
+	o.placeholder = '0';
+	o.depends('type', 'shadowquic');
+	o.modalonly = true;
+
+	o = s.taboption('field_general', form.Value, 'shadowquic_recv_window', _('Connection-level receive window size'));
+	o.datatype = 'uinteger';
+	o.placeholder = '0';
+	o.depends('type', 'shadowquic');
+	o.modalonly = true;
+
+	o = s.taboption('field_general', form.Flag, 'shadowquic_mtu_discovery', _('Path MTU Discovery'));
+	o.default = o.enabled;
+	o.depends('type', 'shadowquic');
+	o.modalonly = true;
+
 	/* TrustTunnel fields */
 
 	/* Tunnel fields */
@@ -652,12 +681,16 @@ function renderListeners(s, uciconfig, isClient) {
 		const type = this.section.getOption('type').formvalue(section_id);
 
 		if (value) {
-			if (type === 'snell' && !['obfs', 'shadow-tls'].includes(value)) {
+			if (type === 'snell' && !['obfs', 'shadow-tls', 'restls', 'jls'].includes(value)) {
 				return _('Expecting: Only support %s.').format(_('obfs-simple') +
-					' / ' + _('ShadowTLS'));
+					' / ' + _('ShadowTLS') +
+					' / ' + _('Restls') +
+					' / ' + _('JLS'));
 			}
-			if (['vmess', 'vless', 'trojan', 'anytls'].includes(type) && !['jls'].includes(value)) {
-				return _('Expecting: Only support %s.').format(_('JLS'));
+			if (['vmess', 'vless', 'trojan', 'anytls'].includes(type) && !['shadow-tls', 'restls', 'jls'].includes(value)) {
+				return _('Expecting: Only support %s.').format(_('ShadowTLS') +
+					' / ' + _('Restls') +
+					' / ' + _('JLS'));
 			}
 		}
 
@@ -726,7 +759,7 @@ function renderListeners(s, uciconfig, isClient) {
 				...hm.loadLabelValues(this.config, 'proxy_group')
 			], section_id);
 		}
-		o.depends({plugin_type: /^(restls|jls)$/});
+		o.depends({plugin_type: /^(shadow-tls|restls|jls)$/});
 		o.depends({type: 'shadowquic'});
 		o.modalonly = true;
 	}
@@ -1033,8 +1066,8 @@ function renderListeners(s, uciconfig, isClient) {
 
 	o = s.taboption('field_tls', form.Value, 'tls_sni', _('TLS SNI'),
 		_('Hostname that the client attempts to connect to at the start of the TLS handshake process.'));
-	o.depends('plugin_type', 'jls');
 	o.depends({tls: '1', type: 'shadowquic'});
+	o.depends('plugin_type', 'jls');
 	o.modalonly = true;
 
 	o = s.taboption('field_tls', form.DynamicList, 'tls_alpn', _('TLS ALPN'),
@@ -1092,9 +1125,11 @@ function renderListeners(s, uciconfig, isClient) {
 		const plugin_type = this.section.getOption('plugin_type').formvalue(section_id);
 		const tls_reality = this.section.getOption('tls_reality').formvalue(section_id);
 
-		if (plugin_type === 'jls' || tls_reality == 1) {
+		if (['shadow-tls', 'restls', 'jls'].includes(plugin_type) || tls_reality == 1) {
 			if (value)
-				return _('Expecting: Keep empty when %s is enabled.').format(_('JLS') +
+				return _('Expecting: Keep empty when %s is enabled.').format(_('ShadowTLS') +
+					' / ' + _('Restls') +
+					' / ' + _('JLS') +
 					' / ' + _('REALITY'));
 		} else if (!value) {
 			return _('Expecting: Cannot be empty.');
@@ -1207,8 +1242,10 @@ function renderListeners(s, uciconfig, isClient) {
 		const plugin_type = this.section.getOption('plugin_type').formvalue(section_id);
 		value = this.formvalue(section_id);
 
-		if (value == 1 && plugin_type === 'jls')
-			return _('Expecting: Cannot be enabled when %s is enabled.').format(_('JLS'));
+		if (value == 1 && ['shadow-tls', 'restls', 'jls'].includes(plugin_type))
+			return _('Expecting: Cannot be enabled when %s is enabled.').format(_('ShadowTLS') +
+				' / ' + _('Restls') +
+				' / ' + _('JLS'));
 
 		return true;
 	}
