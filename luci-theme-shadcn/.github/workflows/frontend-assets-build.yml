@@ -1,0 +1,37 @@
+name: Frontend Assets Build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: .dev/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: .dev
+
+      - name: Build
+        run: pnpm build
+        working-directory: .dev
+
+      - name: Commit built assets
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "build: update frontend assets [skip ci]"
+          file_pattern: "htdocs/**"

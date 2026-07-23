@@ -1,0 +1,1215 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8\n"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2926
+msgid "(No icons uploaded)"
+msgstr "(Keine Icons hochgeladen)"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2759
+msgid "(None)"
+msgstr "(Keine)"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2783
+msgid "192×192 icon for the installable web app manifest."
+msgstr "192×192 Icon für das Manifest der installierbaren Web-App."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2789
+msgid "512×512 icon for the installable web app manifest."
+msgstr "512×512 Icon für das Manifest der installierbaren Web-App."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:182
+msgid "Accent for errors, destructive controls, and critical states."
+msgstr "Akzent für Fehler, destruktive Steuerelemente und kritische Zustände."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:166
+msgid "Accent for informational alerts, labels, and tooltips."
+msgstr "Akzent für informative Hinweise, Beschriftungen und Tooltips."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:150
+msgid "Accent for primary buttons, active navigation, and selected states."
+msgstr ""
+"Akzent für primäre Schaltflächen, aktive Navigation und ausgewählte Zustände."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:176
+msgid "Accent for successful operations and healthy status."
+msgstr "Akzent für erfolgreiche Operationen und fehlerfreien Status."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:171
+msgid "Accent for warnings, notices, and validation messages."
+msgstr "Akzent für Warnungen, Hinweise und Validierungsmeldungen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:335
+msgid "Accents for notifications, validation, and status feedback."
+msgstr "Akzente für Benachrichtigungen, Validierung und Status-Feedback."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2897
+msgid "Add shortcuts, assign icons, and drag rows to reorder them."
+msgstr ""
+"Fügen Sie Verknüpfungen hinzu, weisen Sie Icons zu und ziehen Sie Zeilen, um "
+"ihre Reihenfolge zu ändern."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1545
+msgid "Amber Sand"
+msgstr "Bernsteinsand"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2781
+msgid "App Icon 192×192"
+msgstr "App-Icon 192×192"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2787
+msgid "App Icon 512×512"
+msgstr "App-Icon 512×512"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2775
+msgid "Apple Touch Icon"
+msgstr "Apple-Touch-Icon"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1685
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1691
+msgid "Apply"
+msgstr "Anwenden"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1634
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1638
+msgid "Apply Preset"
+msgstr "Preset anwenden"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1675
+msgid "Apply failed: %s"
+msgstr "Anwenden fehlgeschlagen: %s"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1643
+msgid ""
+"Apply the '%s' preset now? It is saved immediately and the page reloads. "
+"Presets set the light and dark colors only — layout, typography, branding, "
+"navigation, and toolbar are left unchanged."
+msgstr ""
+"Das Preset '%s' jetzt anwenden? Es wird sofort gespeichert und die Seite neu "
+"geladen. Presets legen nur die hellen und dunklen Farben fest — Layout, "
+"Typografie, Branding, Navigation und Symbolleiste bleiben unverändert."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1655
+msgid "Applying preset..."
+msgstr "Preset wird angewendet..."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1654
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1805
+msgid "Applying..."
+msgstr "Wird angewendet..."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:38
+msgid ""
+"Are you sure you want to update <strong>%h</strong> to version <strong>%h</"
+"strong>?"
+msgstr ""
+"Sind Sie sicher, dass Sie <strong>%h</strong> auf Version <strong>%h</"
+"strong> aktualisieren möchten?"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2740
+msgid ""
+"Assign uploaded images to icons, favicons, PWA metadata, and the login "
+"background. Saved on Save or Save & Apply."
+msgstr ""
+"Weisen Sie hochgeladene Bilder Icons, Favicons, PWA-Metadaten und dem Login-"
+"Hintergrund zu. Wird beim Speichern oder Speichern & Anwenden gespeichert."
+
+#: applications/luci-app-aurora-config/root/usr/share/luci/menu.d/luci-app-aurora.json:3
+msgid "Aurora Settings"
+msgstr "Aurora-Einstellungen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1528
+msgid "Aurora Theme Settings"
+msgstr "Aurora-Theme-Einstellungen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:959
+msgid "Automatic"
+msgstr "Automatisch"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:127
+msgid "Background"
+msgstr "Hintergrund"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:292
+msgid "Background for error alerts and destructive-action messages."
+msgstr ""
+"Hintergrund für Fehlermeldungen und Nachrichten zu destruktiven Aktionen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:275
+msgid "Background for informational alerts, labels, and tooltips."
+msgstr "Hintergrund für informative Hinweise, Beschriftungen und Tooltips."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:286
+msgid "Background for success alerts and healthy-state labels."
+msgstr ""
+"Hintergrund für Erfolgsmeldungen und Statusbeschriftungen für fehlerfreie "
+"Zustände."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:281
+msgid "Background for warning alerts, notices, and labels."
+msgstr "Hintergrund für Warnmeldungen, Hinweise und Beschriftungen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2057
+msgid "Base corner radius applied to buttons, inputs, cards, and surfaces."
+msgstr ""
+"Basis-Eckenradius, der auf Schaltflächen, Eingabefelder, Karten und "
+"Oberflächen angewendet wird."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2044
+msgid "Base spacing unit that scales padding and gaps across the interface."
+msgstr ""
+"Basis-Abstandseinheit, die Innenabstände und Lücken auf der "
+"Benutzeroberfläche skaliert."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:136
+msgid "Base surface for panels, cards, forms, tables, and neutral controls."
+msgstr ""
+"Basisoberfläche für Panels, Karten, Formulare, Tabellen und neutrale "
+"Steuerelemente."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:148
+msgid "Brand"
+msgstr "Brand"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2427
+msgid "Brand Asset Library"
+msgstr "Brand-Asset-Bibliothek"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:235
+msgid "Brand Hover"
+msgstr "Brand-Hover"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:343
+msgid "Brand Interaction Details"
+msgstr "Brand-Interaktionsdetails"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:244
+msgid "Brand-tinted surface for active navigation and selected states."
+msgstr ""
+"Brand-getönte Oberfläche für aktive Navigation und ausgewählte Zustände."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1995
+msgid "Branding & Shortcuts"
+msgstr "Branding & Verknüpfungen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1593
+msgid "Built-in"
+msgstr "Integriert"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1647
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1796
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1874
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2200
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2656
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:48
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:322
+msgid "Canvas and panel surfaces that frame the interface."
+msgstr "Canvas- und Panel-Oberflächen, die die Benutzeroberfläche einrahmen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:388
+msgid "Check for Updates"
+msgstr "Nach Updates suchen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:351
+msgid ""
+"Check for and install updates to the Aurora theme and configuration "
+"packages, pulled from their latest GitHub releases."
+msgstr ""
+"Suchen und installieren Sie Updates für das Aurora-Theme und die "
+"Konfigurationspakete, die von den neuesten GitHub-Releases abgerufen werden."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1770
+msgid "Checking file…"
+msgstr "Datei wird geprüft…"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:213
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:239
+msgid "Checking for updates..."
+msgstr "Es wird nach Updates gesucht..."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:227
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:264
+msgid "Checking..."
+msgstr "Prüfung..."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:967
+msgid "Choose a literal color for this token"
+msgstr "Wählen Sie eine genaue Farbe für dieses Token"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2929
+msgid "Choose an uploaded icon for this shortcut"
+msgstr "Wählen Sie ein hochgeladenes Icon für diese Verknüpfung"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:162
+msgid "Close"
+msgstr "Schließen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1993
+msgid "Colors"
+msgstr "Farben"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:373
+msgid "Config"
+msgstr "Konfiguration"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1973
+msgid "Config:"
+msgstr "Konfig:"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1738
+msgid "Configuration exported successfully."
+msgstr "Konfiguration erfolgreich exportiert."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1817
+msgid "Configuration imported successfully."
+msgstr "Konfiguration erfolgreich importiert."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2067
+msgid "Content Max Width"
+msgstr "Maximale Inhaltsbreite"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:216
+msgid "Control Fill"
+msgstr "Steuerelement-Füllung"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2054
+msgid "Corner Radius"
+msgstr "Eckenradius"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1568
+msgid "Custom"
+msgstr "Benutzerdefiniert"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1
+msgid "Name"
+msgstr "Name"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/utils/asset-upload.js:1
+msgid "Size"
+msgstr "Größe"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1
+msgid "Type"
+msgstr "Typ"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1
+msgid "Filename (with extension)"
+msgstr "Dateiname (mit Erweiterung)"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1
+msgid "Name it login-bg.* to use it as the login page background."
+msgstr "Mit dem Namen login-bg.* wird die Datei als Hintergrund der Anmeldeseite verwendet."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1
+msgid "Will replace the existing '%s'."
+msgstr "Ersetzt die vorhandene Datei „%s“."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1
+msgid "Drop a .woff2 font here, or click to browse"
+msgstr "Eine .woff2-Schriftart hierher ziehen oder klicken zum Auswählen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/utils/asset-upload.js:1
+msgid "Confirm Upload"
+msgstr "Hochladen bestätigen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1
+msgid "Custom Fonts"
+msgstr "Eigene Schriftarten"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/utils/asset-upload.js:1
+msgid "Unsupported file type. Allowed: %s"
+msgstr "Nicht unterstützter Dateityp. Erlaubt: %s"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/utils/asset-upload.js:1
+msgid "File is %s, exceeding the 8MB limit."
+msgstr "Die Datei ist %s groß und überschreitet das 8-MB-Limit."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1
+msgid "Delete Custom Font"
+msgstr "Eigene Schriftart löschen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1
+msgid "Delete '%s'? The interface will fall back to the default typeface."
+msgstr "„%s“ löschen? Die Oberfläche fällt auf die Standardschriftart zurück."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2196
+msgid "Keep custom font files as small as possible, as they are stored in the router's limited flash storage."
+msgstr "Halten Sie eigene Schriftdateien möglichst klein, da sie im begrenzten Flash-Speicher des Routers gespeichert werden."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:180
+msgid "Danger"
+msgstr "Gefahr"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:290
+msgid "Danger Surface"
+msgstr "Gefahren-Oberfläche"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:297
+msgid "Danger Surface Hover"
+msgstr "Gefahren-Oberfläche"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2007
+msgid "Dark Mode"
+msgstr "Dunkelmodus"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1542
+msgid "Default"
+msgstr "Standard"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:143
+msgid "Default foreground for headings, body text, icons, and form values."
+msgstr ""
+"Standard-Vordergrund für Überschriften, Fließtext, Icons und Formularwerte."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/utils/asset-upload.js:1
+msgid "Delete"
+msgstr "Löschen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2649
+msgid ""
+"Delete '%s' from /www/luci-static/aurora/images/? Theme settings that "
+"reference it may need updating."
+msgstr ""
+"Möchten Sie '%s' aus /www/luci-static/aurora/images/ löschen? Theme-"
+"Einstellungen, die darauf verweisen, müssen möglicherweise aktualisiert "
+"werden."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2644
+msgid "Delete Brand Asset"
+msgstr "Brand-Asset löschen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2242
+msgid "Delete failed: %s"
+msgstr "Löschen fehlgeschlagen: %s"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2673
+msgid "Deleted: %s"
+msgstr "Gelöscht: %s"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2664
+msgid "Deleting…"
+msgstr "Wird gelöscht…"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1052
+msgid "Derived Color Tokens"
+msgstr "Abgeleitete Farb-Tokens"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:345
+msgid ""
+"Derived from the brand color: hover states, subtle fills, focus rings, and "
+"progress meters."
+msgstr ""
+"Abgeleitet von der Brand-Farbe: Hover-Zustände, dezente Füllungen, Fokus-"
+"Ringe und Fortschrittsanzeigen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:352
+msgid ""
+"Derived from the canvas, surface, and text colors: muted and subtle text, "
+"borders, overlays, and menu layers."
+msgstr ""
+"Abgeleitet von den Canvas-, Oberflächen- und Textfarben: gedämpfter und "
+"dezenter Text, Rahmen, Overlays und Menüebenen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:359
+msgid "Derived from the status accents: alert, label, and badge backgrounds."
+msgstr ""
+"Abgeleitet von den Status-Akzenten: Hintergründe für Warnmeldungen, "
+"Beschriftungen und Badges."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:303
+msgid "Dimming backdrop behind modal dialogs."
+msgstr "Abdunkelnder Hintergrund hinter modalen Dialogen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:67
+msgid "Downloading update files..."
+msgstr "Update-Dateien werden heruntergeladen..."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2525
+msgid "Drop image asset here, or click to browse"
+msgstr "Bild-Asset hier ablegen oder zum Durchsuchen klicken"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2033
+msgid "Dropdown"
+msgstr "Dropdown"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2906
+msgid "Enabled"
+msgstr "Aktiviert"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2921
+msgid "Enter a LuCI shortcut URL"
+msgstr "Geben Sie eine LuCI-Verknüpfungs-URL ein"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2915
+msgid "Enter a shortcut label"
+msgstr "Geben Sie eine Verknüpfungsbeschriftung ein"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1899
+msgid "Error: %s"
+msgstr "Fehler: %s"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1190
+msgid "Expand or collapse this group"
+msgstr "Diese Gruppe ein- oder ausblenden"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1751
+msgid "Export"
+msgstr "Exportieren"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1698
+msgid "Export Aurora Settings"
+msgstr "Aurora-Einstellungen exportieren"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1703
+msgid "Export failed"
+msgstr "Export fehlgeschlagen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1745
+msgid "Export failed: %s"
+msgstr "Export fehlgeschlagen: %s"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:320
+msgid "Failed to check for updates: %s. Check your internet connection."
+msgstr ""
+"Fehler beim Überprüfen auf Updates: %s. Überprüfen Sie Ihre "
+"Internetverbindung."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2681
+msgid "Failed to delete: %s"
+msgstr "Löschen fehlgeschlagen: %s"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:228
+msgid "Faint Hover"
+msgstr "Schwacher Hover-Effekt"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2765
+msgid "Favicon (ICO / Legacy)"
+msgstr "Favicon (ICO / Legacy)"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2754
+msgid "Favicon (PNG)"
+msgstr "Favicon (PNG)"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:394
+msgid ""
+"Fields accept #hex, rgb(), hsl(), lab(), and oklch(). The picker fills hex; "
+"other formats can be typed."
+msgstr ""
+"Felder akzeptieren #hex, rgb(), hsl(), lab() und oklch(). Die Farbauswahl "
+"füllt Hex aus; andere Formate können eingegeben werden."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:218
+msgid "Fill for form controls: inputs, selects, textareas, and checkboxes."
+msgstr ""
+"Füllfarbe für Formularelemente: Eingabefelder, Auswahlfelder, Textbereiche "
+"und Kontrollkästchen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2877
+msgid "Floating shortcut launcher shown along the right edge of the interface."
+msgstr ""
+"Schwebender Verknüpfungs-Starter, der am rechten Rand der Benutzeroberfläche "
+"angezeigt wird."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:256
+msgid "Focus Ring"
+msgstr "Fokus-Ring"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:258
+msgid "Focus outline for inputs, selects, and keyboard-operated controls."
+msgstr ""
+"Fokus-Umrandung für Eingabefelder, Auswahllisten und tastaturbediente "
+"Steuerelemente."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2320
+msgid "Font CSS file is empty"
+msgstr "Schriftart-CSS-Datei ist leer"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2316
+msgid "Font CSS file is not available"
+msgstr "Schriftart-CSS-Datei ist nicht verfügbar"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2178
+msgid "Font family name, e.g. MiSans"
+msgstr "Schriftname, z. B. MiSans"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2115
+msgid "Font for code, command output, and the system log viewer."
+msgstr "Schriftart für Code, Befehlsausgabe und den Systemprotokoll-Viewer."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:328
+msgid "Foregrounds, hyperlinks, the brand color, and its contrast text."
+msgstr "Vordergründe, Hyperlinks, die Brand-Farbe und deren Kontrasttext."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2808
+msgid "Full-screen login page background; use a wide image."
+msgstr ""
+"Vollbild-Hintergrund für die Login-Seite; verwenden Sie ein breites Bild."
+
+#: applications/luci-app-aurora-config/root/usr/share/rpcd/acl.d/luci-app-aurora.json:3
+msgid "Grant access to Aurora theme configuration"
+msgstr "Zugriff auf die Aurora-Theme-Konfiguration gewähren"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:223
+msgid "Hairline"
+msgstr "Haarlinie"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2777
+msgid "Home Screen icon for iOS and iPadOS."
+msgstr "Home-Bildschirm-Icon für iOS und iPadOS."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:230
+msgid "Hover fill for menu items, table rows, and neutral controls."
+msgstr ""
+"Hover-Füllung für Menüelemente, Tabellenzeilen und neutrale Steuerelemente."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:298
+msgid "Hover fill for quiet destructive and delete controls."
+msgstr "Hover-Füllung für dezente destruktive und Lösch-Steuerelemente."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:251
+msgid "Hover fill for subtle primary buttons and selected surfaces."
+msgstr ""
+"Hover-Füllung für dezente primäre Schaltflächen und ausgewählte Oberflächen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:237
+msgid "Hover state for filled primary buttons and high-emphasis controls."
+msgstr ""
+"Hover-Zustand für ausgefüllte primäre Schaltflächen und Steuerelemente mit "
+"hoher Betonung."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:161
+msgid "Hyperlinks in page content, help text, and status output."
+msgstr "Hyperlinks im Seiteninhalt, Hilfetext und in der Statusausgabe."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2923
+msgid "Icon"
+msgstr "Icon"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1836
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1856
+msgid "Import"
+msgstr "Importieren"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1778
+msgid "Import Aurora Configuration?"
+msgstr "Aurora-Konfiguration importieren?"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1758
+msgid "Import Aurora Settings"
+msgstr "Aurora-Einstellungen importieren"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1828
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1845
+msgid "Import failed: %s"
+msgstr "Import fehlgeschlagen: %s"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1783
+msgid ""
+"Importing replaces /etc/config/aurora, applies all settings, and reloads the "
+"page. Uploaded images stay on disk."
+msgstr ""
+"Das Importieren ersetzt /etc/config/aurora, wendet alle Einstellungen an und "
+"lädt die Seite neu. Hochgeladene Bilder verbleiben auf dem Datenträger."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1804
+msgid "Importing..."
+msgstr "Wird importiert..."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:165
+msgid "Info"
+msgstr "Info"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:273
+msgid "Info Surface"
+msgstr "Info-Oberfläche"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:206
+msgid "Inset layer for inputs, code blocks, table headers, and badges."
+msgstr ""
+"Eingebettete Ebene für Eingabefelder, Codeblöcke, Tabellenköpfe und Badges."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:111
+msgid "Installation Details"
+msgstr "Installationsdetails"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:395
+msgid "Installed Version"
+msgstr "Installierte Version"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:78
+msgid "Installing update packages..."
+msgstr "Update-Pakete werden installiert..."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:350
+msgid "Interface Hierarchy"
+msgstr "Schnittstellenhierarchie"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:890
+msgid "Invalid color expression."
+msgstr "Ungültiger Farbausdruck."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:533
+msgid "Invalid, missing, or cyclic color expression."
+msgstr "Ungültiger, fehlender oder zyklischer Farbausdruck."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2533
+msgid "JPG · PNG · WebP · AVIF · SVG · GIF · ICO"
+msgstr "JPG · PNG · WebP · AVIF · SVG · GIF · ICO"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:396
+msgid "Latest Version"
+msgstr "Neueste Version"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2019
+msgid "Layout"
+msgstr "Layout"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1994
+msgid "Layout & Typography"
+msgstr "Layout & Typografie"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2031
+msgid "Layout pattern for the primary navigation menu."
+msgstr "Layoutmuster für das primäre Navigationsmenü."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:264
+msgid "Leading color for progress meters."
+msgstr "Vordergrundfarbe für Fortschrittsanzeigen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2767
+msgid "Legacy ICO favicon fallback."
+msgstr "Fallback für veraltete ICO-Favicons."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2006
+msgid "Light Mode"
+msgstr "Hellmodus"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:313
+msgid "Light backdrop behind the expanded mega menu."
+msgstr "Heller Hintergrund hinter dem erweiterten Mega-Menü."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:160
+msgid "Link"
+msgstr "Link"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2806
+msgid "Login Background"
+msgstr "Login-Hintergrund"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2745
+msgid "Logo (SVG)"
+msgstr "Logo (SVG)"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:199
+msgid "Low-emphasis text for small labels, placeholders, and disabled hints."
+msgstr ""
+"Schwach betonter Text für kleine Beschriftungen, Platzhalter und "
+"deaktivierte Hinweise."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2069
+msgid "Maximum width of the centered content area."
+msgstr "Maximale Breite des zentrierten Inhaltsbereichs."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:192
+msgid "Medium-emphasis text for helper copy, metadata, and summaries."
+msgstr ""
+"Mittlerer betonter Text für Hilfetexte, Metadaten und Zusammenfassungen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2032
+msgid "Mega Menu"
+msgstr "Mega-Menü"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:307
+msgid "Mega Menu Background"
+msgstr "Mega-Menü-Hintergrund"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:312
+msgid "Mega Menu Scrim"
+msgstr "Mega-Menü-Abdunkelung"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1543
+msgid "Monochrome"
+msgstr "Monochrom"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2173
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2251
+msgid "Monospace"
+msgstr "Monospace"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2108
+msgid "Monospace Typeface"
+msgstr "Dicktengleiche Schriftart"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:190
+msgid "Muted Text"
+msgstr "Gedämpfter Text"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2029
+msgid "Navigation Style"
+msgstr "Navigationsstil"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2021
+msgid ""
+"Navigation, spacing, corner radius, and content width. Takes effect after "
+"Save & Apply."
+msgstr ""
+"Navigation, Abstände, Eckenradius und Inhaltsbreite. Wird nach dem Speichern "
+"& Anwenden wirksam."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2711
+msgid "No brand assets uploaded yet."
+msgstr "Noch keine Brand-Assets hochgeladen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2268
+msgid "No custom fonts uploaded."
+msgstr "Keine eigenen Schriftarten hochgeladen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1768
+msgid "No file selected or upload failed"
+msgstr "Keine Datei ausgewählt oder Upload fehlgeschlagen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:273
+msgid "No packages found. Please check your installation."
+msgstr "Keine Pakete gefunden. Bitte überprüfen Sie Ihre Installation."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2813
+msgid "None"
+msgstr "Keine"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:212
+msgid "Not installed"
+msgstr "Nicht installiert"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:155
+msgid "On-Brand Text"
+msgstr "Text auf Brand-Hintergrund"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2183
+msgid "Only .woff2 files up to 8MB are accepted."
+msgstr "Nur .woff2-Dateien bis 8 MB werden akzeptiert."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:308
+msgid "Opaque surface for the expanded mega menu and its header."
+msgstr ""
+"Undurchsichtige Oberfläche für das erweiterte Mega-Menü und dessen Kopfzeile."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:333
+msgid "Operational Status Accents"
+msgstr "Betriebsstatus-Akzente"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:211
+msgid "Overlay Surface"
+msgstr "Overlay-Oberfläche"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2756
+msgid "PNG fallback when SVG favicons are unsupported."
+msgstr "PNG-Fallback, wenn SVG-Favicons nicht unterstützt werden."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:394
+msgid "Package Name"
+msgstr "Paketname"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:129
+msgid "Page canvas behind the header, navigation, content, and login screen."
+msgstr ""
+"Seiten-Canvas hinter der Kopfzeile, Navigation, Inhalt und dem Login-"
+"Bildschirm."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2665
+msgid "Please wait…"
+msgstr "Bitte warten…"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2388
+msgid "Preparing Typography"
+msgstr "Typografie wird vorbereitet"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2385
+msgid "Preparing selected typefaces..."
+msgstr "Ausgewählte Schriftarten werden vorbereitet..."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1926
+msgid "Preset"
+msgstr "Preset"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1665
+msgid "Preset applied successfully."
+msgstr "Preset erfolgreich angewendet."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2113
+msgid ""
+"Primary font for all interface text — headings, body, menus, forms, and "
+"tables."
+msgstr ""
+"Primäre Schriftart für den gesamten Schnittstellentext — Überschriften, "
+"Textkörper, Menüs, Formulare und Tabellen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:268
+msgid "Progress End"
+msgstr "Fortschrittsende"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:263
+msgid "Progress Start"
+msgstr "Fortschrittsstart"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:212
+msgid "Raised layer for dropdowns, modals, and tooltips."
+msgstr "Erhöhte Ebene für Dropdowns, Modale und Tooltips."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:355
+msgid "Releases:"
+msgstr "Releases:"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:140
+msgid "Reload"
+msgstr "Neu laden"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1908
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1914
+msgid "Reset"
+msgstr "Zurücksetzen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1870
+msgid ""
+"Reset /etc/config/aurora to the packaged Default preset — colors, layout, "
+"typography, branding, navigation, and toolbar. Uploaded images stay on disk; "
+"custom selections not in the Default preset are cleared."
+msgstr ""
+"Setzt /etc/config/aurora auf das mitgelieferte Standard-Preset zurück — "
+"Farben, Layout, Typografie, Branding, Navigation und Symbolleiste. "
+"Hochgeladene Bilder verbleiben auf dem Datenträger; benutzerdefinierte "
+"Auswahlen, die nicht im Standard-Preset enthalten sind, werden gelöscht."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1863
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1865
+msgid "Reset All Aurora Settings"
+msgstr "Alle Aurora-Einstellungen zurücksetzen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1881
+msgid "Resetting..."
+msgstr "Wird zurückgesetzt..."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:746
+msgid "Resolved color"
+msgstr "Aufgelöste Farbe"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:756
+msgid "Resolved color cannot be shown by the picker."
+msgstr "Aufgelöste Farbe kann in der Farbauswahl nicht angezeigt werden."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:974
+msgid "Resolved preview color - click to pick"
+msgstr "Aufgelöste Vorschaufarbe - zum Auswählen klicken"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1882
+msgid "Restoring..."
+msgstr "Wird wiederhergestellt..."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2746
+msgid "SVG mark for the browser tab and login page."
+msgstr "SVG-Zeichen für den Browser-Tab und die Login-Seite."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1544
+msgid "Sage Green"
+msgstr "Salbeigrün"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2172
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2251
+msgid "Sans-Serif"
+msgstr "Serifenlos"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2108
+msgid "Sans-Serif Typeface"
+msgstr "Serifenlose Schriftart"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2084
+msgid "Sans-serif and monospace typefaces used across the theme. Pick a curated webfont — downloaded once after saving, from pinned, checksum-verified sources, then served locally — or upload your own .woff2 files."
+msgstr "Serifenlose und Monospace-Schriften für das gesamte Theme. Wählen Sie einen kuratierten Webfont — nach dem Speichern einmalig aus versionsfixierten, per Prüfsumme verifizierten Quellen geladen und anschließend lokal ausgeliefert — oder laden Sie eigene .woff2-Dateien hoch."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:960
+msgid "Saved or preset value"
+msgstr "Gespeicherter oder voreingestellter Wert"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:302
+msgid "Scrim"
+msgstr "Abdunkelung"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:224
+msgid "Separators, dividers, and input or card borders."
+msgstr "Trennlinien, Teiler und Rahmen für Eingabefelder oder Karten."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1891
+msgid "Settings reset successfully."
+msgstr "Einstellungen erfolgreich zurückgesetzt."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2911
+msgid "Shortcut Label"
+msgstr "Verknüpfungsbeschriftung"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2875
+msgid "Shortcut Toolbar"
+msgstr "Verknüpfungs-Symbolleiste"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2917
+msgid "Shortcut URL"
+msgstr "Verknüpfungs-URL"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2885
+msgid "Show Shortcut Toolbar"
+msgstr "Verknüpfungs-Symbolleiste anzeigen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2887
+msgid "Show the floating launcher on all pages."
+msgstr "Schwebenden Starter auf allen Seiten anzeigen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2034
+msgid "Sidebar"
+msgstr "Seitenleiste"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2738
+msgid "Site Branding"
+msgstr "Website-Branding"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1546
+msgid "Sky Blue"
+msgstr "Himmelblau"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2185
+msgid "Slot"
+msgstr "Verwendung"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1038
+msgid "Source Color Tokens"
+msgstr "Quellfarben-Tokens"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2041
+msgid "Spacing Scale"
+msgstr "Abstandsskala"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:400
+msgid "Status"
+msgstr "Status"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:357
+msgid "Status Message Surfaces"
+msgstr "Statusmeldungs-Oberflächen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:242
+msgid "Subtle Brand"
+msgstr "Dezente Brand-Farbe"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:249
+msgid "Subtle Brand Hover"
+msgstr "Dezente Brand-Farbe"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:197
+msgid "Subtle Text"
+msgstr "Dezenter Text"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:175
+msgid "Success"
+msgstr "Erfolg"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:285
+msgid "Success Surface"
+msgstr "Erfolgs-Oberfläche"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:204
+msgid "Sunken Surface"
+msgstr "Vertiefte Oberfläche"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:134
+msgid "Surface"
+msgstr "Oberfläche"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1592
+msgid "System Mono"
+msgstr "System-Monospace"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:321
+msgid "System Surfaces"
+msgstr "System-Oberflächen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:141
+msgid "Text"
+msgstr "Text"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:156
+msgid "Text and icons shown on filled brand backgrounds."
+msgstr ""
+"Text und Icons, die auf ausgefüllten Brand-Hintergründen angezeigt werden."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:326
+msgid "Text, Links & Brand"
+msgstr "Text, Links & Brand"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1040
+msgid ""
+"The 10 source tokens that drive the theme. Changes preview here instantly; "
+"Save or Save & Apply persists them."
+msgstr ""
+"Die 10 Quell-Tokens, die das Theme steuern. Änderungen werden hier sofort in "
+"der Vorschau angezeigt; Speichern oder Speichern & Anwenden macht sie "
+"dauerhaft."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:363
+msgid "Theme"
+msgstr "Theme"
+
+#: applications/luci-app-aurora-config/root/usr/share/luci/menu.d/luci-app-aurora.json:13
+msgid "Theme Settings"
+msgstr "Theme-Einstellungen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:455
+msgid "Theme stylesheet resolver timed out."
+msgstr "Zeitüberschreitung beim Auflösen des Theme-Stylesheets."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1961
+msgid "Theme:"
+msgstr "Theme:"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:1054
+msgid ""
+"Tokens computed from the source colors. Leave a field empty to keep its "
+"automatic value; enter a color only to override it. Changes preview here "
+"instantly; Save or Save & Apply persists them."
+msgstr ""
+"Tokens, die aus den Quellfarben berechnet werden. Lassen Sie ein Feld leer, "
+"um seinen automatischen Wert beizubehalten; geben Sie nur eine Farbe ein, um "
+"ihn zu überschreiben. Änderungen werden hier sofort in der Vorschau "
+"angezeigt; Speichern oder Speichern & Anwenden macht sie dauerhaft."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2896
+msgid "Toolbar Shortcuts"
+msgstr "Symbolleisten-Verknüpfungen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:269
+msgid "Trailing color for progress meters."
+msgstr "Hintergrundfarbe für Fortschrittsanzeigen."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2365
+msgid ""
+"Typeface download failed after retries — the system font stack is in effect. "
+"Save again to retry."
+msgstr ""
+"Schriftart-Download nach mehreren Versuchen fehlgeschlagen – es wird die "
+"Systemschrift verwendet. Zum erneuten Versuch nochmals speichern."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2082
+msgid "Typography"
+msgstr "Typografie"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2409
+msgid "Typography preparation failed:"
+msgstr "Typografie-Vorbereitung fehlgeschlagen:"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:991
+msgid "Unable to convert the selected color."
+msgstr "Die ausgewählte Farbe kann nicht konvertiert werden."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:475
+msgid "Unable to create the theme color resolver."
+msgstr "Der Theme-Farbauflöser kann nicht erstellt werden."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:811
+msgid "Unable to generate the automatic derived value."
+msgstr "Der automatisch abgeleitete Wert kann nicht generiert werden."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:21
+msgid "Unable to load %s."
+msgstr "%s kann nicht geladen werden."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:484
+msgid "Unable to load the Aurora stylesheet."
+msgstr "Das Aurora-Stylesheet kann nicht geladen werden."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:826
+msgid "Unable to resolve color expressions."
+msgstr "Farbausdrücke können nicht aufgelöst werden."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2154
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:177
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:192
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:193
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:213
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:217
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:238
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:243
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:244
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:247
+msgid "Unknown"
+msgstr "Unbekannt"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:195
+msgid "Up to date"
+msgstr "Aktuell"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:59
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:191
+msgid "Update"
+msgstr "Aktualisieren"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:33
+msgid "Update Package"
+msgstr "Paket aktualisieren"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:124
+msgid ""
+"Update complete. Reload to apply the changes. If the old version persists, "
+"clear your browser cache or use a private window."
+msgstr ""
+"Aktualisierung abgeschlossen. Neu laden, um die Änderungen zu übernehmen. "
+"Wenn die alte Version weiterhin angezeigt wird, löschen Sie Ihren Browser-"
+"Cache oder verwenden Sie ein privates Fenster."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:151
+msgid "Update failed: %s"
+msgstr "Aktualisierung fehlgeschlagen: %s"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:66
+msgid "Updating Package"
+msgstr "Paket wird aktualisiert"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2429
+msgid ""
+"Upload and manage images for icons, favicons, PWA assets, and the login "
+"background. Files are stored in <code>/www/luci-static/aurora/images/</code>."
+msgstr ""
+"Bilder für Icons, Favicons, PWA-Assets und den Login-Hintergrund hochladen "
+"und verwalten. Dateien werden in <code>/www/luci-static/aurora/images/</"
+"code> gespeichert."
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/utils/asset-upload.js:1
+msgid "Upload failed"
+msgstr "Upload fehlgeschlagen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/utils/asset-upload.js:1
+msgid "Upload failed (HTTP %s)"
+msgstr "Upload fehlgeschlagen (HTTP %s)"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2223
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2577
+msgid "Upload failed: %s"
+msgstr "Upload fehlgeschlagen: %s"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/version.js:347
+#: applications/luci-app-aurora-config/root/usr/share/luci/menu.d/luci-app-aurora.json:21
+msgid "Version Management"
+msgstr "Versionsverwaltung"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:170
+msgid "Warning"
+msgstr "Warnung"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:280
+msgid "Warning Surface"
+msgstr "Warnungs-Oberfläche"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2913
+msgid "e.g., Network Interfaces"
+msgstr "z. B. Netzwerkschnittstellen"
+
+#: applications/luci-app-aurora-config/htdocs/luci-static/resources/view/aurora/theme.js:2393
+msgid "unknown error"
+msgstr "unbekannter Fehler"

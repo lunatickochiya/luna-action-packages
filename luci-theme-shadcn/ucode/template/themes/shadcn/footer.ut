@@ -1,0 +1,22 @@
+{#
+ luci-theme-shadcn: footer template
+ Copyright 2025 eamonxg <eamonxiong@gmail.com>
+ Licensed to the public under the Apache License 2.0.
+-#}
+    {% if (!blank_page): %}
+      </div>{# /maincontent #}
+    </div>{# /content-card #}
+    </div>{# /main-wrapper #}
+
+    <script>
+      window.ShadcnSidebar = null;
+      document.addEventListener('shadcn-sidebar-ready', function () {
+        L.require('sidebar-shadcn').then(function (m) {
+          window.ShadcnSidebar = m;
+        });
+      }, { once: true });
+      L.require('menu-shadcn');
+    </script>
+    {% endif %}
+  </body>
+</html>
