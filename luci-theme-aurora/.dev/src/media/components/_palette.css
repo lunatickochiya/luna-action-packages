@@ -1,14 +1,22 @@
 /**
- * Header route search — Spotlight-style palette, available in all three nav
- * types (sidebar / mega-menu / dropdown). The toggle sits at the header's
- * right edge next to #indicators; ⌘K / Ctrl+K toggles the panel globally.
+ * Command palette (⌘K) — Spotlight-style, available in all three nav types
+ * (sidebar / mega-menu / dropdown). The trigger sits at the header's right
+ * edge next to #indicators; ⌘K / Ctrl+K toggles the panel globally. Class
+ * names mirror luci-theme-shadcn's palette so the two themes stay legible
+ * side by side.
  *
  * The panel is built lazily by menu-aurora.js on first open; its index is
- * the navigation model the menus already render from (no extra requests).
+ * the navigation model the menus already render from (no extra requests)
+ * plus three theme-mode command rows. An empty query browses the whole
+ * index; typed queries rank via a fuzzy subsequence scorer; a leading ">"
+ * (or full-width "＞") scopes the list to the command rows.
  */
 
-.header-search-toggle {
-  @apply text-text relative mr-4 grid size-8 shrink-0 cursor-pointer place-items-center rounded-lg border-0 bg-transparent p-0 shadow-none transition-colors duration-150;
+.cmdk-trigger {
+  /* Hover is a scale nudge with no plate behind it — the header's own
+     language, set by .navigation-toggle and shared with #indicators. The
+     size-8 box stays as the touch target; it just never paints. */
+  @apply text-text relative mr-4 grid size-8 shrink-0 cursor-pointer place-items-center rounded-lg border-0 bg-transparent p-0 shadow-none transition-transform duration-150;
 
   /* Non-sidebar headers have no mr-auto crumb absorbing the slack — pull the
      toggle right so it docks next to #indicators instead of landing in the
@@ -17,12 +25,20 @@
     @apply ml-auto;
   }
 
+  /* size-5 (not the button's own size): the same box #indicators gives its
+     glyphs, so the shared 24×24 Tabler canvas scales identically and the
+     search icon carries the same stroke weight as the poll/changes ones
+     sitting next to it. */
   &::before {
-    @apply size-4.5 bg-current content-[''] [mask:url('@assets/icons/search.svg')_center/contain_no-repeat];
+    @apply size-5 bg-current content-[''] [mask:url('@assets/icons/search.svg')_center/contain_no-repeat];
   }
 
   &:hover {
-    @apply bg-hover-faint;
+    @apply scale-105;
+  }
+
+  &:active {
+    @apply scale-95;
   }
 
   &:focus-visible {
@@ -30,7 +46,7 @@
   }
 }
 
-.header-search-panel {
+.cmdk-panel {
   @apply border-hairline bg-surface/85 fixed top-24 left-1/2 z-120 w-[min(36rem,calc(100vw-2.5rem))] -translate-x-1/2 overflow-hidden rounded-2xl border shadow-xl backdrop-blur-xl backdrop-saturate-150 transition-[opacity,translate] duration-150 ease-out starting:-translate-y-2 starting:opacity-0;
 
   /* <md: the same panel becomes a full-screen takeover (Algolia DocSearch
@@ -38,7 +54,7 @@
      input bar pinned top with a Cancel exit, results fill the rest. */
   @apply max-md:top-0 max-md:right-0 max-md:bottom-0 max-md:left-0 max-md:flex max-md:w-auto max-md:translate-none max-md:flex-col max-md:rounded-none max-md:border-0 max-md:bg-bg max-md:shadow-none max-md:backdrop-blur-none max-md:backdrop-saturate-100;
 
-  & .header-search-box {
+  & .cmdk-inputrow {
     @apply flex items-center gap-3 px-5 py-3.5;
     @apply max-md:border-hairline max-md:bg-surface max-md:border-b max-md:px-4 max-md:py-2.5;
 
@@ -46,27 +62,45 @@
       @apply text-text-subtle size-5 shrink-0 bg-current content-[''] [mask:url('@assets/icons/search.svg')_center/contain_no-repeat];
     }
 
-    & .header-search-input {
+    & .cmdk-input {
       @apply text-text placeholder-text-subtle w-full min-w-0 flex-1 rounded-none border-0 bg-transparent p-0 text-base shadow-none focus:ring-0 focus:outline-none;
     }
 
-    & .header-search-cancel {
+    /* Shown only while the field holds a query: :placeholder-shown is true
+       exactly when the input is empty, so the state needs no JS mirror. */
+    & .cmdk-clear {
+      @apply text-text-subtle grid size-5 shrink-0 cursor-pointer place-items-center rounded-md border-0 bg-transparent p-0 shadow-none transition-colors duration-150;
+
+      &::before {
+        @apply size-4 bg-current content-[''] [mask:url('@assets/icons/x.svg')_center/contain_no-repeat];
+      }
+
+      &:hover {
+        @apply text-text;
+      }
+
+      .cmdk-input:placeholder-shown ~ & {
+        @apply hidden;
+      }
+    }
+
+    & .cmdk-cancel {
       @apply text-brand hidden shrink-0 cursor-pointer border-0 bg-transparent p-1 text-sm shadow-none max-md:block;
     }
   }
 
-  & .header-search-results {
+  & .cmdk-list {
     @apply border-hairline max-h-80 overflow-y-auto border-t p-2 empty:hidden;
     @apply max-md:max-h-none max-md:flex-1 max-md:overscroll-contain;
 
-    & .header-search-result {
+    & .cmdk-row {
       @apply text-text flex items-center gap-3 rounded-lg px-3 py-2 text-sm no-underline;
 
-      & .result-title {
+      & .cmdk-title {
         @apply min-w-0 truncate;
       }
 
-      & .result-group {
+      & .cmdk-group-name {
         @apply text-text-subtle ml-auto shrink-0 text-xs;
       }
 
@@ -77,21 +111,21 @@
       &.is-selected {
         @apply bg-brand-subtle;
 
-        & .result-title {
+        & .cmdk-title {
           @apply text-brand font-medium;
         }
       }
     }
 
-    & .header-search-empty {
+    & .cmdk-empty {
       @apply text-text-subtle px-3 py-6 text-center text-sm;
     }
   }
 
-  & .header-search-hint {
+  & .cmdk-footer {
     @apply border-hairline text-text-subtle flex items-center gap-4 border-t px-4 py-2 text-xs max-md:hidden;
 
-    & .header-search-hint-key {
+    & .cmdk-hint-close {
       @apply ml-auto;
     }
 
@@ -103,13 +137,13 @@
 
 /* The frost is decorative — both degradation paths go opaque. */
 @supports not (backdrop-filter: blur(1px)) {
-  .header-search-panel {
+  .cmdk-panel {
     @apply bg-surface;
   }
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  .header-search-panel {
+  .cmdk-panel {
     @apply bg-surface;
   }
 }
