@@ -9,12 +9,12 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=ppp
-PKG_RELEASE:=19
+PKG_RELEASE:=20
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/paulusmack/ppp
 PKG_SOURCE_DATE:=2021-01-04
-PKG_SOURCE_VERSION:=3bf289c6e4c4638a61bbd5808617ab9719ce6f8c
+PKG_SOURCE_VERSION:=d012c8bf502f9e5eedd81c853d714c362d580bf5
 PKG_MIRROR_HASH:=skip
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 PKG_LICENSE:=BSD-4-Clause
