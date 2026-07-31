@@ -1,20 +1,18 @@
 #
-# Copyright (C) 2015-2016 OpenWrt.org
-# Copyright (C) 2026 jjm2473@gmail.com
+# Copyright (C) 2026
 #
 # This is free software, licensed under the GNU General Public License v3.
 #
 
 include $(TOPDIR)/rules.mk
 
-PKG_ARCH_baidudrive:=$(ARCH)
-
-PKG_NAME:=baidudrive
-PKG_VERSION:=0.4.0
+PKG_NAME:=virtualdog
+PKG_VERSION:=0.0.4
 PKG_RELEASE:=1
+# Point this at the released binary tarball when you publish builds.
 PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/Carseason/openwrt-packages/releases/download/prebuilt/
-PKG_HASH:=ed9bbedd82ad4504cf6462c2b4a73ebb6f1cd0b9f24e53f26ed830f0b369e1ae
+PKG_HASH:=skip
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_VERSION)
 
 PKG_BUILD_PARALLEL:=1
@@ -22,21 +20,23 @@ PKG_USE_MIPS16:=0
 
 include $(INCLUDE_DIR)/package.mk
 
+PKG_ARCH_virtualdog:=$(ARCH)
+
 define Package/$(PKG_NAME)
 	SECTION:=net
 	CATEGORY:=Network
 	SUBMENU:=Web Servers/Proxies
-	TITLE:=BaiduDrive
-	DEPENDS:=@(x86_64||aarch64)
-	URL:=https://github.com/linkease/istore-packages
+	TITLE:=VirtualDog
+	DEPENDS:=@(x86_64||aarch64) +qemu-x86_64-softmmu +qemu-aarch64-softmmu +qemu-img +qemu-bridge-helper +kmod-tun +virtualdog-efi
+	URL:=https://example.invalid/virtualdog
 endef
 
 define Package/$(PKG_NAME)/description
-  BaiduDrive provides a Baidu Netdisk Web UI for iStoreOS.
+  VirtualDog provides a web UI and API for managing QEMU/KVM virtual machines on OpenWrt.
 endef
 
 define Package/$(PKG_NAME)/conffiles
-/etc/config/baidudrive
+/etc/config/virtualdog
 endef
 
 define Build/Configure
@@ -47,10 +47,10 @@ endef
 
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/init.d $(1)/etc/uci-defaults $(1)/etc/config
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/baidudrive.$(PKG_ARCH_baidudrive) $(1)/usr/sbin/baidudrive
-	$(INSTALL_BIN) ./files/baidudrive.init $(1)/etc/init.d/baidudrive
-	$(INSTALL_BIN) ./files/baidudrive.uci-default $(1)/etc/uci-defaults/09-baidudrive
-	$(INSTALL_CONF) ./files/baidudrive.config $(1)/etc/config/baidudrive
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/virtualdogd.$(PKG_ARCH_virtualdog) $(1)/usr/sbin/virtualdogd
+	$(INSTALL_BIN) ./files/virtualdog.init $(1)/etc/init.d/virtualdog
+	$(INSTALL_BIN) ./files/virtualdog.uci-default $(1)/etc/uci-defaults/09-virtualdog
+	$(INSTALL_CONF) ./files/virtualdog.config $(1)/etc/config/virtualdog
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
