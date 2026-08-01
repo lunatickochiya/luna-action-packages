@@ -37,7 +37,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0
         token: ${{ github.token }}
@@ -50,70 +50,23 @@ jobs:
     - name: Sync upstream
       run: bash .github/scripts/sync-upstream.sh
 
-    - name: Delete duplicated packages
-      run: |
-        shopt -s extglob
-        mv -n luciapp/!(luci-app-noddos|luci-app-cshark|luci-app-dnscrypt-proxy|luci-app-https-dns-proxy|luci-app-ssr-mudb-server|luci-app-ledtrig-*) ./ ; rm -Rf luciapp
-        mv -n lean/* ./ ; rm -Rf lean
-        mv -n liep/* ./ ; rm -Rf liep
-        mv -n wwan/*/* ./; rm -rf wwan
-        mv shortcut-fe shortcut-fe-mod
-        mv -n shortcut-fe-mod/* ./; rm -rf shortcut-fe-mod
-        mv -n openwrt-app-actions/applications/* ./;rm -rf openwrt-app-actions
-        rm -Rf */.git */.svn
-        for pkg in $(ls -d .github/diy/packages/*); do
-          mv -f $pkg/Makefile.k $pkg/Makefile >/dev/null 2>&1 || true
-        done
-        cp -rf .github/diy/packages/* ./ || true
-        for pkg in $(ls -d .github/diy/packages/*); do
-          mv -f $pkg/Makefile $pkg/Makefile.k >/dev/null 2>&1 || true
-        done
-
+    - name: Prepare packages
+      run: bash .github/scripts/prepare-packages.sh
 
     - name: SSH connection to Actions
       uses: kiddin9/debugger-action@master
       if: github.event.inputs.ssh == 'true'
 
     - name: Apply patches
-      run: |
-        while IFS= read -r -d '' patch_file; do
-          patch -d ./ -p1 -E --forward --no-backup-if-mismatch < "$patch_file"
-        done < <(find .github/diy/patches -type f -name '*.patch' -print0 | sort -z)
+      run: bash .github/scripts/apply-patches.sh
 
     - name: Modify
       env:
         GH_TOKEN: ${{ github.token }}
       run: bash .github/scripts/modify-packages.sh
 
-    - name: Apply
-      run: |
-        commit_message="Sync upstream $(date '+%Y-%m-%d %H:%M:%S')"
-        git add --all
-
-        if git diff --cached --quiet; then
-          echo "No upstream changes to commit."
-          exit 0
-        fi
-
-        git commit -m "$commit_message"
-
-        mapfile -t changed_packages < <(
-          git diff-tree --no-commit-id --name-only -r HEAD |
-            cut -d/ -f1 |
-            sort -u
-        )
-        for pkg in "${changed_packages[@]}"; do
-          makefile="$pkg/Makefile"
-          if [[ -f "$makefile" ]] && grep -q '^PKG_RELEASE:=' "$makefile"; then
-            release="$(git rev-list --count HEAD -- "$pkg")"
-            sed -i "s/^PKG_RELEASE:=.*/PKG_RELEASE:=$release/" "$makefile"
-          fi
-        done
-
-        git reset --soft HEAD^
-        git add --all
-        git commit -m "$commit_message"
-        git push --force-with-lease
+    - name: Commit and push
+      run: bash .github/scripts/commit-changes.sh
 
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@main

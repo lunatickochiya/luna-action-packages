@@ -91,6 +91,8 @@ readonly SOURCE_UPDATE_EXCLUDES=(
 
 declare -A REPOSITORY_METADATA_CACHE=()
 REPOSITORY_METADATA_RESULT=''
+CURRENT_STAGE='startup'
+CURRENT_ITEM=''
 
 log() {
   printf '[modify-packages] %s\n' "$*"
@@ -98,6 +100,31 @@ log() {
 
 warn() {
   printf '[modify-packages] WARNING: %s\n' "$*" >&2
+  printf '::warning title=Modify warning::%s\n' "$*" >&2
+}
+
+handle_error() {
+  local status="$1"
+  local line="$2"
+  local command="$3"
+
+  trap - ERR
+  printf '::error title=Modify failed::stage=%s; item=%s; line=%s; exit=%s; command=%q\n' \
+    "$CURRENT_STAGE" "${CURRENT_ITEM:-n/a}" "$line" "$status" "$command" >&2
+  exit "$status"
+}
+
+run_stage() {
+  local stage="$1"
+  shift
+
+  CURRENT_STAGE="$stage"
+  CURRENT_ITEM=''
+  printf '::group::Modify - %s\n' "$stage"
+  log "START: ${stage}"
+  "$@"
+  log "DONE: ${stage}"
+  printf '::endgroup::\n'
 }
 
 require_command() {
@@ -166,11 +193,26 @@ version_lt() {
   [[ "$current" != "$newest" ]]
 }
 
+normalize_release_tag() {
+  local version="$1"
+
+  version="${version##*/}"
+  version="${version#release-}"
+  version="${version#v}"
+  version="${version#V}"
+  printf '%s\n' "$version"
+}
+
+escape_sed_replacement() {
+  printf '%s' "$1" | sed 's/[&|\\]/\\&/g'
+}
+
 replace_legacy_ifname() {
   log 'Replacing legacy network *.ifname references'
 
   local file
   while IFS= read -r -d '' file; do
+    CURRENT_ITEM="$file"
     sed -i -E 's/(network\..*)\.ifname/\1.device/g' "$file"
   done < <(
     find . \
@@ -187,13 +229,14 @@ update_package_sources() {
   log 'Updating GitHub-backed package versions'
 
   local makefile package repository metadata
-  local default_oid current_version latest_version release_oid
+  local default_oid current_version latest_version release_oid escaped_version
 
   for makefile in */Makefile; do
     package="${makefile%%/*}"
     is_source_update_excluded "$package" && continue
 
     repository="$(extract_github_repository "$makefile")" || continue
+    CURRENT_ITEM="${package} (${repository})"
     get_repository_metadata "$repository" || continue
     metadata="$REPOSITORY_METADATA_RESULT"
 
@@ -202,22 +245,20 @@ update_package_sources() {
       sed -i "s/^PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$default_oid/" "$makefile"
     fi
 
-    current_version="$(
+    current_version="$(normalize_release_tag "$(
       sed -nE 's/^PKG_VERSION:=(.*)$/\1/p' "$makefile" |
-        head -n 1 |
-        sed -E 's/^(v|release-)//'
-    )"
+        head -n 1
+    )")"
     [[ "$current_version" =~ [0-9] ]] || continue
 
-    latest_version="$(
-      jq -r '.data.repository.latestRelease.tagName // empty' <<<"$metadata" |
-        sed -E 's/^(v|release-)//'
-    )"
+    latest_version="$(normalize_release_tag "$(
+      jq -r '.data.repository.latestRelease.tagName // empty' <<<"$metadata"
+    )")"
     [[ "$latest_version" =~ [0-9] ]] || continue
     [[ "$latest_version" != *'('* ]] || continue
 
-    log "${repository}: ${current_version} -> ${latest_version}"
     version_lt "$current_version" "$latest_version" || continue
+    log "Updating ${package} from ${repository}: ${current_version} -> ${latest_version}"
 
     release_oid="$(
       jq -r '
@@ -228,11 +269,17 @@ update_package_sources() {
     )"
     [[ -n "$release_oid" ]] || continue
 
-    sed -i \
-      -e "s/^PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$release_oid/" \
-      -e "s/^PKG_VERSION:=.*/PKG_VERSION:=$latest_version/" \
-      "$makefile"
+    escaped_version="$(escape_sed_replacement "$latest_version")"
+    if ! sed -i \
+      -e "s|^PKG_SOURCE_VERSION:=.*|PKG_SOURCE_VERSION:=$release_oid|" \
+      -e "s|^PKG_VERSION:=.*|PKG_VERSION:=$escaped_version|" \
+      "$makefile"; then
+      printf '::error file=%s,title=Package version update failed::repository=%s; version=%s\n' \
+        "$makefile" "$repository" "$latest_version" >&2
+      return 1
+    fi
   done
+  CURRENT_ITEM=''
 }
 
 normalize_luci_packages() {
@@ -244,6 +291,7 @@ normalize_luci_packages() {
   for package in luci-*/; do
     makefile="${package}Makefile"
     [[ -f "$makefile" ]] || continue
+    CURRENT_ITEM="$package"
 
     if grep -q 'luci\.mk' "$makefile"; then
       sed -i -E '/^(PKG_VERSION|PKG_RELEASE):=/d' "$makefile"
@@ -255,6 +303,7 @@ normalize_luci_packages() {
     grep -q '_("NAS")' "${controllers[@]}" && continue
     sed -i 's/ index()/ index()\n\tentry({"admin", "nas"}, firstchild(), _("NAS") , 45).dependent = false/' "${controllers[@]}"
   done
+  CURRENT_ITEM=''
 }
 
 run_diy_helpers() {
@@ -265,10 +314,12 @@ run_diy_helpers() {
     .github/diy/create_acl_for_luci.sh \
     .github/diy/convert_translation.sh \
     .github/diy/generate_ucitrack.sh; do
+    CURRENT_ITEM="$helper"
     if ! bash "$helper" -a >/dev/null 2>&1; then
       warn "Helper did not complete cleanly: ${helper}"
     fi
   done
+  CURRENT_ITEM=''
 }
 
 sed_if_exists() {
@@ -276,7 +327,12 @@ sed_if_exists() {
   shift
 
   if [[ -f "$file" ]]; then
-    sed -i "$@" "$file"
+    CURRENT_ITEM="$file"
+    if ! sed -i "$@" "$file"; then
+      printf '::error file=%s,title=File modification failed::sed arguments: %s\n' \
+        "$file" "$*" >&2
+      return 1
+    fi
   else
     warn "Skipping missing file: ${file}"
   fi
@@ -287,6 +343,7 @@ append_if_exists() {
   local line="$2"
 
   if [[ -f "$file" ]]; then
+    CURRENT_ITEM="$file"
     printf '%s\n' "$line" >>"$file"
   else
     warn "Skipping missing file: ${file}"
@@ -345,6 +402,7 @@ apply_package_overrides() {
 
   local makefile
   for makefile in */Makefile; do
+    CURRENT_ITEM="$makefile"
     sed -i \
       -e 's?include \.\./\.\./\(lang\|devel\)?include $(TOPDIR)/feeds/packages/\1?' \
       -e 's/\(\(^\|[[:space:]]\)\(PKG_HASH\|PKG_MD5SUM\|PKG_MIRROR_HASH\|HASH\):=\).*/\1skip/' \
@@ -354,6 +412,7 @@ apply_package_overrides() {
       -e 's/+docker /+docker +dockerd /g' \
       "$makefile"
   done
+  CURRENT_ITEM=''
 }
 
 set_package_releases() {
@@ -362,6 +421,7 @@ set_package_releases() {
   local makefile package release
   for makefile in */Makefile; do
     package="${makefile%%/*}"
+    CURRENT_ITEM="$makefile"
 
     if grep -q '^PKG_VERSION:=' "$makefile" && ! grep -q '^PKG_RELEASE:=' "$makefile"; then
       sed -i '/^PKG_VERSION:=/a PKG_RELEASE:=' "$makefile"
@@ -371,20 +431,7 @@ set_package_releases() {
     release="$(git rev-list --count HEAD -- "$package")"
     sed -i "s/^PKG_RELEASE:=.*/PKG_RELEASE:=$release/" "$makefile"
   done
-}
-
-wait_for_tasks() {
-  local failed=0
-  local task pid
-
-  for task in "$@"; do
-    pid="${task#*:}"
-    if ! wait "$pid"; then
-      warn "Task failed: ${task%%:*}"
-      failed=1
-    fi
-  done
-  ((failed == 0))
+  CURRENT_ITEM=''
 }
 
 main() {
@@ -398,19 +445,14 @@ main() {
   require_command git
   require_command jq
 
-  replace_legacy_ifname
+  trap 'handle_error "$?" "$LINENO" "$BASH_COMMAND"' ERR
 
-  update_package_sources &
-  local source_pid=$!
-  normalize_luci_packages &
-  local luci_pid=$!
-  wait_for_tasks \
-    "update-package-sources:${source_pid}" \
-    "normalize-luci-packages:${luci_pid}"
-
-  run_diy_helpers
-  apply_package_overrides
-  set_package_releases
+  run_stage 'replace legacy network options' replace_legacy_ifname
+  run_stage 'update GitHub package versions' update_package_sources
+  run_stage 'normalize LuCI packages' normalize_luci_packages
+  run_stage 'run DIY generators' run_diy_helpers
+  run_stage 'apply package overrides' apply_package_overrides
+  run_stage 'refresh package releases' set_package_releases
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

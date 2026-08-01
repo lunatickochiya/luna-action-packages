@@ -4,53 +4,130 @@ set -Eeuo pipefail
 shopt -s extglob nullglob
 
 readonly MAX_PARALLEL_GROUPS="${MAX_PARALLEL_GROUPS:-8}"
+readonly CLONE_ATTEMPTS="${CLONE_ATTEMPTS:-2}"
+
+CURRENT_GROUP='main'
+CURRENT_OPERATION='startup'
 
 log() {
   printf '[sync-upstream] %s\n' "$*"
 }
 
+warn() {
+  printf '[sync-upstream] WARNING: %s\n' "$*" >&2
+  printf '::warning title=Upstream warning::group=%s; %s\n' "$CURRENT_GROUP" "$*" >&2
+}
+
+handle_source_error() {
+  local status="$1"
+  local line="$2"
+  local command="$3"
+
+  trap - ERR
+  printf '::error title=Upstream source failed::group=%s; operation=%s; line=%s; exit=%s; command=%q\n' \
+    "$CURRENT_GROUP" "$CURRENT_OPERATION" "$line" "$status" "$command" >&2
+  exit "$status"
+}
+
 git_clone() {
   local url="$1"
   local destination="${2:-${url##*/}}"
+  local attempt status=1
   destination="${destination%.git}"
 
-  log "Cloning ${url}"
-  git clone --depth 1 --filter=blob:none --no-tags "$url" "$destination"
+  CURRENT_OPERATION="git clone ${url} -> ${destination}"
+  for ((attempt = 1; attempt <= CLONE_ATTEMPTS; attempt++)); do
+    log "Clone [${CURRENT_GROUP}] ${url} -> ${destination} (attempt ${attempt}/${CLONE_ATTEMPTS})"
+    if git clone --depth 1 --filter=blob:none --no-tags "$url" "$destination"; then
+      CURRENT_OPERATION="post-process ${destination}"
+      return 0
+    else
+      status=$?
+    fi
+    warn "clone attempt ${attempt} failed: repository=${url}; destination=${destination}; exit=${status}"
+    rm -rf "$destination"
+  done
+
+  printf '::error title=Git clone failed::group=%s; repository=%s; destination=%s; attempts=%s; exit=%s\n' \
+    "$CURRENT_GROUP" "$url" "$destination" "$CLONE_ATTEMPTS" "$status" >&2
+  return "$status"
 }
 
 git_clone_branch() {
   local url="$1"
   local branch="$2"
   local destination="${3:-${url##*/}}"
+  local attempt status=1
   destination="${destination%.git}"
 
-  log "Cloning ${url} (${branch})"
-  git clone --branch "$branch" --depth 1 --filter=blob:none --no-tags "$url" "$destination"
+  CURRENT_OPERATION="git clone ${url}@${branch} -> ${destination}"
+  for ((attempt = 1; attempt <= CLONE_ATTEMPTS; attempt++)); do
+    log "Clone [${CURRENT_GROUP}] ${url}@${branch} -> ${destination} (attempt ${attempt}/${CLONE_ATTEMPTS})"
+    if git clone --branch "$branch" --depth 1 --filter=blob:none --no-tags "$url" "$destination"; then
+      CURRENT_OPERATION="post-process ${destination}"
+      return 0
+    else
+      status=$?
+    fi
+    warn "clone attempt ${attempt} failed: repository=${url}; branch=${branch}; destination=${destination}; exit=${status}"
+    rm -rf "$destination"
+  done
+
+  printf '::error title=Git clone failed::group=%s; repository=%s; branch=%s; destination=%s; attempts=%s; exit=%s\n' \
+    "$CURRENT_GROUP" "$url" "$branch" "$destination" "$CLONE_ATTEMPTS" "$status" >&2
+  return "$status"
 }
 
 git_sparse_clone() {
   local branch="$1"
   local url="$2"
   local destination="$3"
+  local attempt status=1
   shift 3
 
-  log "Sparse cloning ${url} (${branch}): $*"
-  git clone --branch "$branch" --depth 1 --filter=blob:none --sparse --no-tags "$url" "$destination"
-  git -C "$destination" sparse-checkout set -- "$@"
+  CURRENT_OPERATION="sparse clone ${url}@${branch} -> ${destination}"
+  for ((attempt = 1; attempt <= CLONE_ATTEMPTS; attempt++)); do
+    log "Sparse clone [${CURRENT_GROUP}] ${url}@${branch} -> ${destination} (attempt ${attempt}/${CLONE_ATTEMPTS}): $*"
+    if git clone --branch "$branch" --depth 1 --filter=blob:none --sparse --no-tags "$url" "$destination"; then
+      status=0
+      break
+    else
+      status=$?
+    fi
+    warn "sparse clone attempt ${attempt} failed: repository=${url}; branch=${branch}; destination=${destination}; exit=${status}"
+    rm -rf "$destination"
+  done
+  if ((status != 0)); then
+    printf '::error title=Git sparse clone failed::group=%s; repository=%s; branch=%s; destination=%s; attempts=%s; exit=%s\n' \
+      "$CURRENT_GROUP" "$url" "$branch" "$destination" "$CLONE_ATTEMPTS" "$status" >&2
+    return "$status"
+  fi
+
+  CURRENT_OPERATION="sparse checkout ${url}@${branch}: $*"
+  if git -C "$destination" sparse-checkout set -- "$@"; then
+    :
+  else
+    status=$?
+    printf '::error title=Git sparse-checkout failed::group=%s; repository=%s; branch=%s; paths=%s; exit=%s\n' \
+      "$CURRENT_GROUP" "$url" "$branch" "$*" "$status" >&2
+    return "$status"
+  fi
 
   local path moved=0
   for path in "$@"; do
     if [[ ! -e "$destination/$path" ]]; then
-      printf '[sync-upstream] WARNING: sparse path no longer exists: %s (%s)\n' "$path" "$url" >&2
+      warn "sparse path no longer exists: repository=${url}; branch=${branch}; path=${path}"
       continue
     fi
+    CURRENT_OPERATION="move sparse path ${destination}/${path}"
     mv -n "$destination/$path" ./
     ((moved += 1))
   done
   rm -rf "$destination"
 
   ((moved > 0)) || {
-    printf 'None of the requested sparse paths exist in %s\n' "$url" >&2
+    printf '::error title=All sparse paths missing::group=%s; repository=%s; branch=%s; requested=%s\n' \
+      "$CURRENT_GROUP" "$url" "$branch" "$*" >&2
     return 1
   }
 }
@@ -59,8 +136,9 @@ mvdir() {
   local source="$1"
   local directories=("$source"/*/)
 
+  CURRENT_OPERATION="move package directories from ${source}"
   ((${#directories[@]} > 0)) || {
-    printf 'No package directories found in %s\n' "$source" >&2
+    printf '::error title=Package directory empty::group=%s; source=%s\n' "$CURRENT_GROUP" "$source" >&2
     return 1
   }
   mv -n "${directories[@]}" ./
@@ -71,8 +149,9 @@ move_contents() {
   local source="$1"
   local entries=("$source"/*)
 
+  CURRENT_OPERATION="move package contents from ${source}"
   ((${#entries[@]} > 0)) || {
-    printf 'No files found in %s\n' "$source" >&2
+    printf '::error title=Package source empty::group=%s; source=%s\n' "$CURRENT_GROUP" "$source" >&2
     return 1
   }
   mv -n "${entries[@]}" ./
@@ -550,7 +629,7 @@ source_group_26() {
     net/speedtest-cli net/dns-forwarder net/ipset-lists net/ShadowVPN net/cloudflared \
     net/nps net/naiveproxy lang/lua-maxminddb libs/jpcre2 libs/wxbase \
     libs/rapidjson libs/libcron libs/libcryptopp libs/quickjspp libs/toml11 \
-    libs/libtorrent-rasterbar libs/libdouble-conversion libs/qt6base libs/cxxopts \
+    libs/libtorrent-rasterbar libs/libdouble-conversion libs/qt6base \
     libs/alac sound/spotifyd utils/qt6tools utils/cpulimit utils/filebrowser \
     utils/cups-bjnp utils/joker net/udp2raw net/msd_lite multimedia/you-get \
     multimedia/lux multimedia/ykdl multimedia/gallery-dl devel/go-rice admin/gotop
@@ -568,7 +647,7 @@ source_group_27() {
     package/firmware/wireless-regdb
   git_sparse_clone openwrt-23.05 https://github.com/immortalwrt/immortalwrt immortal1 \
     package/kernel/r8168 package/kernel/r8125 package/kernel/rtl8188eu \
-    package/kernel/rtl8192eu package/kernel/rtl8821cu package/kernel/rtl8812au-ac \
+    package/kernel/rtl8192eu package/kernel/rtl8812au-ac \
     package/kernel/rtl8189es
 }
 
@@ -596,44 +675,72 @@ run_source_groups() {
     source_group_{01..28}
   )
   local staging_root="$PWD/.sync-upstream"
-  local group running=0 failed=0
+  local group running=0 failed=0 status
+  local log_file status_file
 
   rm -rf "$staging_root"
   mkdir -p "$staging_root"
 
   for group in "${groups[@]}"; do
     mkdir -p "$staging_root/$group"
+    log_file="$staging_root/${group}.log"
+    status_file="$staging_root/${group}.status"
+    log "Starting ${group}"
     (
+      set -Eeuo pipefail
+      CURRENT_GROUP="$group"
+      CURRENT_OPERATION="initialize ${group}"
+      trap 'status=$?; printf "%s\n" "$status" >"$status_file"' EXIT
+      trap 'handle_source_error "$?" "$LINENO" "$BASH_COMMAND"' ERR
       cd "$staging_root/$group"
       "$group"
-    ) &
+    ) >"$log_file" 2>&1 &
     ((running += 1))
 
     if ((running >= MAX_PARALLEL_GROUPS)); then
-      if ! wait -n; then
-        failed=1
-      fi
+      wait -n || true
       running=$((running - 1))
     fi
   done
 
   while ((running > 0)); do
-    if ! wait -n; then
-      failed=1
-    fi
+    wait -n || true
     running=$((running - 1))
   done
 
-  ((failed == 0)) || {
-    printf 'One or more upstream source groups failed.\n' >&2
+  for group in "${groups[@]}"; do
+    log_file="$staging_root/${group}.log"
+    status_file="$staging_root/${group}.status"
+    printf '::group::Upstream - %s\n' "$group"
+    [[ -f "$log_file" ]] && cat "$log_file"
+    printf '::endgroup::\n'
+
+    if [[ ! -f "$status_file" ]]; then
+      printf '::error title=Upstream group status missing::group=%s; the worker exited without recording a status\n' "$group" >&2
+      failed=1
+      continue
+    fi
+
+    status="$(<"$status_file")"
+    if [[ "$status" != 0 ]]; then
+      printf '::error title=Upstream group failed::group=%s; exit=%s; expand the group above for the exact command\n' \
+        "$group" "$status" >&2
+      failed=1
+    else
+      log "Completed ${group}"
+    fi
+  done
+
+  if ((failed != 0)); then
+    printf '::error title=Upstream synchronization failed::One or more source groups failed; successful groups were not merged.\n' >&2
     return 1
-  }
+  fi
 
   local entries
   for group in "${groups[@]}"; do
     entries=("$staging_root/$group"/*)
     ((${#entries[@]} > 0)) || {
-      printf 'Upstream source group produced no files: %s\n' "$group" >&2
+      printf '::error title=Upstream group produced no files::group=%s\n' "$group" >&2
       return 1
     }
     mv -n "${entries[@]}" ./
@@ -661,7 +768,12 @@ main() {
     printf 'MAX_PARALLEL_GROUPS must be a positive integer.\n' >&2
     return 1
   }
+  [[ "$CLONE_ATTEMPTS" =~ ^[1-9][0-9]*$ ]] || {
+    printf 'CLONE_ATTEMPTS must be a positive integer.\n' >&2
+    return 1
+  }
 
+  trap 'handle_source_error "$?" "$LINENO" "$BASH_COMMAND"' ERR
   clean_old_packages
   run_source_groups
 
