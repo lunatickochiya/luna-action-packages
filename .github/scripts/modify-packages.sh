@@ -3,9 +3,97 @@
 set -Eeuo pipefail
 shopt -s nullglob
 
+readonly GRAPHQL_QUERY='query($owner: String!, $name: String!) {
+  repository(owner: $owner, name: $name) {
+    defaultBranchRef {
+      target { ... on Commit { oid } }
+    }
+    latestRelease {
+      tagName
+      tagCommit { oid }
+    }
+    refs(
+      refPrefix: "refs/tags/"
+      last: 1
+      orderBy: { field: TAG_COMMIT_DATE, direction: ASC }
+    ) {
+      nodes {
+        name
+        target { oid }
+      }
+    }
+  }
+}'
+
+readonly SOURCE_UPDATE_EXCLUDES=(
+  3proxy
+  accel-ppp
+  aic8800
+  amule
+  aria2
+  brook
+  chinadns-ng
+  cloudflared
+  containerd
+  coremark
+  curl
+  daed
+  ddns-go
+  filebrowser
+  frp
+  fullconenat
+  homebox
+  joker
+  libcron
+  libcryptopp
+  libtorrent-rasterbar
+  libwxwidgets
+  mbedtls
+  miniupnpd-nft
+  mmdvm-host
+  msd_lite
+  mt76
+  n2n_v2
+  naiveproxy
+  natter
+  netmaker
+  netdata
+  nexttrace
+  nikki
+  openlist
+  oscam
+  pppwn-cpp
+  qBittorrent-Enhanced-Edition
+  quickjspp
+  r8152
+  r8168
+  rtl8188eu
+  rtl8189es
+  rtl8192eu
+  rtl8812au-ac
+  rtl8821cu
+  rtl88x2bu
+  shadowsocks-libev
+  shadowsocksr-libev
+  softethervpn5
+  sub-web
+  subconverter
+  tailscale
+  tuic-server
+  ua2f
+  udp2raw
+  upx
+  v2raya
+  wxbase
+  xtables-wgobfs
+  ysf-clients
+)
+
 CURRENT_STAGE='startup'
 CURRENT_ITEM=''
 declare -A ORIGINAL_PKG_VERSIONS=()
+declare -A REPOSITORY_METADATA_CACHE=()
+REPOSITORY_METADATA_RESULT=''
 
 log() {
   printf '[modify-packages] %s\n' "$*"
@@ -47,6 +135,83 @@ require_command() {
   }
 }
 
+is_source_update_excluded() {
+  local package="$1"
+  local excluded
+
+  [[ "$package" == luci-* ]] && return 0
+  for excluded in "${SOURCE_UPDATE_EXCLUDES[@]}"; do
+    [[ "$package" == "$excluded" ]] && return 0
+  done
+  return 1
+}
+
+extract_github_repository() {
+  local makefile="$1"
+  local repository
+
+  repository="$(
+    grep -m1 'PKG_SOURCE_URL.*github' "$makefile" |
+      sed -nE 's|.*github\.com[/:]([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)(\.git)?.*|\1/\2|p'
+  )"
+  repository="${repository%.git}"
+
+  [[ "$repository" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || return 1
+  printf '%s\n' "$repository"
+}
+
+latest() {
+  local repository="$1"
+  local owner="${repository%%/*}"
+  local name="${repository#*/}"
+
+  gh api graphql \
+    --raw-field owner="$owner" \
+    --raw-field name="$name" \
+    --raw-field query="$GRAPHQL_QUERY"
+}
+
+get_repository_metadata() {
+  local repository="$1"
+  local metadata
+
+  if [[ ${REPOSITORY_METADATA_CACHE[$repository]+cached} ]]; then
+    REPOSITORY_METADATA_RESULT="${REPOSITORY_METADATA_CACHE[$repository]}"
+    return 0
+  fi
+
+  if ! metadata="$(latest "$repository")"; then
+    warn "Unable to query ${repository}; keeping its existing version."
+    return 1
+  fi
+
+  REPOSITORY_METADATA_CACHE["$repository"]="$metadata"
+  REPOSITORY_METADATA_RESULT="$metadata"
+}
+
+version_lt() {
+  local current="$1"
+  local candidate="$2"
+  local newest
+
+  newest="$(printf '%s\n%s\n' "$current" "$candidate" | sort -V | tail -n 1)"
+  [[ "$current" != "$newest" ]]
+}
+
+normalize_release_tag() {
+  local version="$1"
+
+  version="${version##*/}"
+  version="${version#release-}"
+  version="${version#v}"
+  version="${version#V}"
+  printf '%s\n' "$version"
+}
+
+escape_sed_replacement() {
+  printf '%s' "$1" | sed 's/[&|\\]/\\&/g'
+}
+
 read_package_version() {
   sed -nE \
     's/^[[:space:]]*PKG_VERSION[[:space:]]*[:?+]?=[[:space:]]*(.*)$/\1/p' \
@@ -54,7 +219,7 @@ read_package_version() {
 }
 
 snapshot_package_versions() {
-  log 'Recording upstream PKG_VERSION values'
+  log 'Recording PKG_VERSION values immediately before latest updates'
 
   local makefile
   for makefile in */Makefile; do
@@ -64,8 +229,8 @@ snapshot_package_versions() {
   CURRENT_ITEM=''
 }
 
-skip_hashes_for_modified_versions() {
-  log 'Checking whether Modify changed any PKG_VERSION values'
+skip_hashes_for_latest_version_changes() {
+  log 'Checking which PKG_VERSION values were changed by latest updates'
 
   local makefile original_version current_version hash_field_count
   local version_changes=0
@@ -79,7 +244,7 @@ skip_hashes_for_modified_versions() {
     [[ "$current_version" != "$original_version" ]] || continue
 
     ((version_changes += 1))
-    log "PKG_VERSION changed in ${makefile}: ${original_version:-<empty>} -> ${current_version:-<empty>}"
+    log "latest changed PKG_VERSION in ${makefile}: ${original_version:-<empty>} -> ${current_version:-<empty>}"
 
     hash_field_count="$(
       grep -Ec '^[[:space:]]*PKG_(HASH|MIRROR_HASH)[[:space:]]*[:?+]?=' "$makefile" || true
@@ -96,7 +261,61 @@ skip_hashes_for_modified_versions() {
   done
 
   CURRENT_ITEM=''
-  log "Detected ${version_changes} modified PKG_VERSION file(s); updated ${hash_changes} PKG_HASH field(s)"
+  log "latest changed ${version_changes} PKG_VERSION file(s); updated ${hash_changes} hash field(s)"
+}
+
+update_package_sources() {
+  log 'Updating GitHub-backed package versions with latest release metadata'
+
+  local makefile package repository metadata
+  local default_oid current_version latest_version release_oid escaped_version
+
+  for makefile in */Makefile; do
+    package="${makefile%%/*}"
+    is_source_update_excluded "$package" && continue
+
+    repository="$(extract_github_repository "$makefile")" || continue
+    CURRENT_ITEM="${package} (${repository})"
+    get_repository_metadata "$repository" || continue
+    metadata="$REPOSITORY_METADATA_RESULT"
+
+    default_oid="$(jq -r '.data.repository.defaultBranchRef.target.oid // empty' <<<"$metadata")"
+    if [[ -n "$default_oid" ]] && grep -q '^PKG_SOURCE_VERSION:=' "$makefile"; then
+      sed -i "s/^PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$default_oid/" "$makefile"
+    fi
+
+    current_version="$(normalize_release_tag "$(read_package_version "$makefile")")"
+    [[ "$current_version" =~ [0-9] ]] || continue
+
+    latest_version="$(normalize_release_tag "$(
+      jq -r '.data.repository.latestRelease.tagName // empty' <<<"$metadata"
+    )")"
+    [[ "$latest_version" =~ [0-9] ]] || continue
+    [[ "$latest_version" != *'('* ]] || continue
+
+    version_lt "$current_version" "$latest_version" || continue
+    log "Updating ${package} from ${repository}: ${current_version} -> ${latest_version}"
+
+    release_oid="$(
+      jq -r '
+        .data.repository.latestRelease.tagCommit.oid //
+        .data.repository.refs.nodes[-1].target.oid //
+        empty
+      ' <<<"$metadata"
+    )"
+    [[ -n "$release_oid" ]] || continue
+
+    escaped_version="$(escape_sed_replacement "$latest_version")"
+    if ! sed -i \
+      -e "s|^PKG_SOURCE_VERSION:=.*|PKG_SOURCE_VERSION:=$release_oid|" \
+      -e "s|^PKG_VERSION:=.*|PKG_VERSION:=$escaped_version|" \
+      "$makefile"; then
+      printf '::error file=%s,title=Package version update failed::repository=%s; version=%s\n' \
+        "$makefile" "$repository" "$latest_version" >&2
+      return 1
+    fi
+  done
+  CURRENT_ITEM=''
 }
 
 replace_legacy_ifname() {
@@ -247,16 +466,21 @@ main() {
   repository_root="$(git rev-parse --show-toplevel)"
   cd "$repository_root"
 
+  export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+  : "${GH_TOKEN:?GH_TOKEN must contain the built-in GitHub Actions token}"
+  require_command gh
   require_command git
+  require_command jq
 
   trap 'handle_error "$?" "$LINENO" "$BASH_COMMAND"' ERR
 
-  run_stage 'record upstream package versions' snapshot_package_versions
   run_stage 'replace legacy network options' replace_legacy_ifname
+  run_stage 'record versions before latest' snapshot_package_versions
+  run_stage 'update GitHub package versions' update_package_sources
+  run_stage 'update hashes changed by latest' skip_hashes_for_latest_version_changes
   run_stage 'normalize LuCI controllers' normalize_luci_controllers
   run_stage 'run DIY generators' run_diy_helpers
   run_stage 'apply package overrides' apply_package_overrides
-  run_stage 'update hashes for modified versions' skip_hashes_for_modified_versions
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
