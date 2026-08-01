@@ -138,7 +138,7 @@ jobs:
         ) &
         (
         git_clone https://github.com/destan19/OpenAppFilter && mvdir OpenAppFilter
-        git_clone https://github.com/destan19/luci-app-harbor-file && mvdir luci-app-harbor-file
+        git_clone https://github.com/destan19/luci-app-harbor-file
         #git_clone https://github.com/jjm2473/OpenAppFilter && mvdir OpenAppFilter
         git_clone https://github.com/laipeng668/luci-app-gecoosac && mvdir openwrt-gecoosac
         git_clone https://github.com/lvqier/luci-app-dnsmasq-ipset
