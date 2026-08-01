@@ -1,0 +1,11 @@
+{
+	"luci-app-harbor-file": {
+		"description": "Grant UCI access for luci-app-harbor-file",
+		"read": {
+			"uci": [ "harbor_file" ]
+		},
+		"write": {
+			"uci": [ "harbor_file" ]
+		}
+	}
+}
