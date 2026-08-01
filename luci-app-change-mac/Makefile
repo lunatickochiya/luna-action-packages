@@ -5,6 +5,7 @@
 include $(TOPDIR)/rules.mk
 
 LUCI_NAME:=luci-app-change-mac
+#PKG_RELEASE:=2
 
 LUCI_TITLE:=LuCI for MAC address randomizer
 LUCI_DEPENDS:=+bash +rgmac +getopt

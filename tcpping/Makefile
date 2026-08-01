@@ -6,6 +6,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=tcpping
 PKG_VERSION:=0.2
+PKG_RELEASE:=2
 PKG_RELEASE=2
 
 PKG_SOURCE_PROTO:=git
