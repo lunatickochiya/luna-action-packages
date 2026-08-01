@@ -40,7 +40,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        token: ${{ secrets.TOKEN_KIDDIN9 || github.token }}
+        token: ${{ github.token }}
 
     - name: Set git identity
       run: |
@@ -81,112 +81,9 @@ jobs:
         done < <(find .github/diy/patches -type f -name '*.patch' -print0 | sort -z)
 
     - name: Modify
-      run: |
-        shopt -s extglob
-        set +e
-        sed -i \
-        -e "s/\(network\..*\)\.ifname/\1.device/g" \
-        `find \( -path "*/root/*" -o -path "*/files/*" -o -path "*/luasrc/*" \) ! -path "./base-files/*" ! -path "./dnsmasq/*" ! -path "./luci-base/*" ! -path "./ppp/*" -type f` &
-        (
-        function latest() {
-          (curl -gs -H 'Content-Type: application/json' \
-             -H "Authorization: Bearer ${{ secrets.TOKEN_KIDDIN9 || github.token }}" \
-             -X POST -d '{ "query": "query {repository(owner: \"'"$1"'\", name: \"'"$2"'\"){latestRelease{tagName tagCommit{oid}}refs(refPrefix:\"refs/tags/\",last:1,orderBy:{field:TAG_COMMIT_DATE,direction:ASC}){edges{node{name target{oid}}}}defaultBranchRef{target{...on Commit {oid}}}}}"}' https://api.github.com/graphql)
-        }
-        for pkg in $(ls !(luci-*|cloudflared|joker|aria2|frp|wxbase|ddns-go|libtorrent-rasterbar|ua2f|homebox|xtables-wgobfs|nexttrace|tuic-server|subconverter|softethervpn5|shadowsocksr-libev|mt76|sub-web|mmdvm-host|openlist|curl|qBittorrent-Enhanced-Edition|libwxwidgets|ysf-clients|natter|fullconenat|v2raya|r8152|amule|brook|chinadns-ng|3proxy|containerd|oscam|netmaker|n2n_v2|naiveproxy|miniupnpd-nft|upx|netdata|tailscale|r8168|coremark|mbedtls|rtl8821cu|rtl8188eu|rtl8812au-ac|rtl88x2bu|rtl8189es|rtl8192eu|rtl8188eu|rtl8812au-ac|aic8800|quickjspp|accel-ppp|udp2raw|msd_lite|pppwn-cpp|libcryptopp|libcron|shadowsocks-libev|nikki|daed|filebrowser)/Makefile); do
-          repo="$(grep PKG_SOURCE_URL $pkg | grep github | cut -f 4-5 -d '/' | sed -e 's/.git//' | grep -E '[0-9a-zA-Z_-]+$')" || true
-          if [ "$repo" ]; then
-            owner="$(echo $repo | cut -f 1 -d '/')"
-            name="$(echo $repo | cut -f 2 -d '/')"
-            latest="$(latest $owner $name)"
-            sed -i "s/PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$(echo $latest | jq -r '.data.repository.defaultBranchRef.target.oid')/" $pkg || true
-            over="$(grep -E PKG_VERSION:=.*$ $pkg | cut -f 2 -d '=' | sed -e 's/^\(v\|release-\)//' | grep -E "[0-9]")" || true
-            if [ "$over" ]; then
-              ver="$(echo $latest | jq -r '.data.repository.latestRelease.tagName' | sed -e 's/^\(v\|release-\)//' | grep -E "^[^()]*$" | grep -E "[0-9]")" || true
-              echo "$repo-$over-$ver"
-              if [ "$ver" ]; then
-                function version_lt() { test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" != "$1"; }
-                if version_lt "$over" "$ver"; then
-                  latest="$(echo $latest | jq -r '.data.repository.latestRelease.tagCommit.oid' || echo $latest | jq -r '.data.repository.refs.edges[-1].node.target.oid')"
-                  sed -i -e "s/PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$latest/" \
-                         -e "s/PKG_VERSION:=.*/PKG_VERSION:=$ver/" $pkg || true
-                fi || true
-              fi
-            fi
-          fi
-        done
-        ) &
-
-        (
-        for pkg in $(find -maxdepth 1 -type d -name "luci-*" ! -name "luci-app-dockerman" ! -name "luci-app-store" ! -name "luci-app-passwall" ! -name "luci-app-passwall2"); do
-          if [ "$(grep "luci.mk" $pkg/Makefile)" ]; then
-            sed -i '/\(PKG_VERSION\|PKG_RELEASE\):=/d' $pkg/Makefile
-          fi
-          grep -q '"nas",' $pkg/luasrc/controller/*.lua && ! grep -q '_("NAS")' $pkg/luasrc/controller/*.lua &&
-            sed -i 's/ index()/ index()\n\tentry({"admin", "nas"}, firstchild(), _("NAS") , 45).dependent = false/' $pkg/luasrc/controller/*.lua
-        done
-        ) &
-
-        (
-        for pkg in $(ls -d */); do
-          if [[ "$(grep "PKG_VERSION" $pkg/Makefile)" && ! "$(grep "PKG_RELEASE" $pkg/Makefile)" ]]; then
-            sed -i "s/\(PKG_VERSION:=.*\)/\1\nPKG_RELEASE:=/" $pkg/Makefile || true
-          fi
-          if [ "$(grep "PKG_RELEASE" $pkg/Makefile)" ]; then
-            sed -i "s/PKG_RELEASE:=.*/PKG_RELEASE:=$(git rev-list --count HEAD -- "$pkg")/" $pkg/Makefile || true
-          fi
-        done
-        ) &
-
-        (
-        rm -rf luci-app-partexp/po/zh_Hans
-        bash .github/diy/create_acl_for_luci.sh -a >/dev/null 2>&1 || true
-        bash .github/diy/convert_translation.sh -a >/dev/null 2>&1 || true
-        bash .github/diy/generate_ucitrack.sh -a >/dev/null 2>&1 || true
-
-        sed -i "/minisign:minisign/d" luci-app-dnscrypt-proxy2/Makefile
-        sed -i 's/+libstdcpp/+libstdcpp +zlib/' ngrokc/Makefile
-        sed -i 's/+rclone\( \|$\)/+rclone +fuse-utils\1/g' luci-app-rclone/Makefile
-        sed -i 's/+libcap /+libcap +libcap-bin /' luci-app-openclash/Makefile
-        sed -i 's/\(+luci-compat\)/\1 +luci-theme-argon/' luci-app-argon-config/Makefile
-        sed -i 's/+vsftpd$/+vsftpd-alt/' luci-app-vsftpd/Makefile
-        sed -i 's/ +uhttpd-mod-ubus//' luci-app-packet-capture/Makefile
-        sed -i '/boot()/,+2d' ddns-scripts/files/etc/init.d/ddns
-        sed -i "/DISTRIB_DESCRIPTION/c\DISTRIB_DESCRIPTION=\"%D %C by Kiddin'\"" base-files/files/etc/openwrt_release
-        sed -i "s/PKG_VERSION:=2/PKG_VERSION:=3/" mwan3/Makefile
-        sed -i "/+uhttpd/d" ariang/Makefile
-        sed -i -e '$a /etc/bench.log' \
-        -e '/\/etc\/profile/d' \
-        -e '/\/etc\/shinit/d' \
-        base-files/files/lib/upgrade/keep.d/base-files-essential
-        sed -i -e '/^\/etc\/profile/d' \
-        -e '/^\/etc\/shinit/d' \
-        base-files/Makefile
-        sed -i '$a cgi-timeout = 300' uwsgi/files-luci-support/luci-webui.ini
-        sed -i '$a cgi-timeout = 90' uwsgi/files-luci-support/luci-cgi_io.ini
-        sed -i '/limit-as/c\limit-as = 5000' uwsgi/files-luci-support/luci-webui.ini
-        sed -i 's/procd_set_param stderr 1/procd_set_param stderr 0/' uwsgi/files/uwsgi.init
-        sed -i 's/	ip.neighbors/	luci.ip.neighbors/' luci-app-wifidog/luasrc/model/cbi/wifidog/wifidog_cfg.lua
-        sed -i 's/ if aarch64||arm||i386||x86_64//' luci-app-ssr-plus/Makefile
-        sed -i 's/transmission-daemon$/transmission-daemon +transmission-web-control/' luci-app-transmission/Makefile
-        mkdir -p luci-app-passwall/root/www/luci-static/passwall luci-app-passwall2/root/www/luci-static/passwall2 luci-app-ssr-plus/root/www/luci-static/shadowsocksr
-        cp -rf luci-app-bypass/root/www/luci-static/bypass/* luci-app-passwall/root/www/luci-static/passwall/
-        cp -rf luci-app-bypass/root/www/luci-static/bypass/* luci-app-passwall2/root/www/luci-static/passwall2/
-        cp -rf luci-app-bypass/root/www/luci-static/bypass/* luci-app-ssr-plus/root/www/luci-static/shadowsocksr/
-        echo "#page>div[data-v-d324f700]:first-child{display:none}
-        button.btn_styles.color1[data-v-0d223b54]:last-child{display:none}" >>luci-app-quickstart/htdocs/luci-static/quickstart/style.css
-
-        sed -i \
-          -e 's?include \.\./\.\./\(lang\|devel\)?include $(TOPDIR)/feeds/packages/\1?' \
-          -e "s/\(\(^\| \|	\)\(PKG_HASH\|PKG_MD5SUM\|PKG_MIRROR_HASH\|HASH\):=\).*/\1skip/" \
-          -e 's?\.\./\.\./luci.mk?$(TOPDIR)/feeds/luci/luci.mk?' \
-          -e 's/+ca-certificates/+ca-bundle/' \
-          -e 's/php7/php8/g' \
-          -e 's/+docker /+docker +dockerd /g' \
-          */Makefile
-        ) &
-
-        wait
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: bash .github/scripts/modify-packages.sh
 
     - name: Apply
       run: |

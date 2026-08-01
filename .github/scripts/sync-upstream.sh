@@ -38,15 +38,21 @@ git_sparse_clone() {
   git clone --branch "$branch" --depth 1 --filter=blob:none --sparse --no-tags "$url" "$destination"
   git -C "$destination" sparse-checkout set -- "$@"
 
-  local path
+  local path moved=0
   for path in "$@"; do
-    [[ -e "$destination/$path" ]] || {
-      printf 'Missing sparse-checkout path: %s/%s\n' "$destination" "$path" >&2
-      return 1
-    }
+    if [[ ! -e "$destination/$path" ]]; then
+      printf '[sync-upstream] WARNING: sparse path no longer exists: %s (%s)\n' "$path" "$url" >&2
+      continue
+    fi
     mv -n "$destination/$path" ./
+    ((moved += 1))
   done
   rm -rf "$destination"
+
+  ((moved > 0)) || {
+    printf 'None of the requested sparse paths exist in %s\n' "$url" >&2
+    return 1
+  }
 }
 
 mvdir() {
@@ -374,7 +380,6 @@ source_group_16() {
     https://github.com/gSpotx2f/luci-app-cpu-status
   git_clone https://github.com/Carseason/openwrt-packages Carseason
   mv -n Carseason/*/* ./
-  mv -n services/routergo ./
   rm -rf Carseason
   git_clone https://github.com/Carseason/openwrt-themedog
   move_contents openwrt-themedog/luci
@@ -543,7 +548,7 @@ source_group_26() {
     net/ua2f net/qBittorrent-Enhanced-Edition net/tinyportmapper net/tinyfecvpn \
     net/nexttrace net/pcap-dnsproxy net/rustdesk-server net/tuic-server net/speedtest-go \
     net/speedtest-cli net/dns-forwarder net/ipset-lists net/ShadowVPN net/cloudflared \
-    net/nps net/naiveproxy lang/lua-maxminddb net/pdnsd-alt libs/jpcre2 libs/wxbase \
+    net/nps net/naiveproxy lang/lua-maxminddb libs/jpcre2 libs/wxbase \
     libs/rapidjson libs/libcron libs/libcryptopp libs/quickjspp libs/toml11 \
     libs/libtorrent-rasterbar libs/libdouble-conversion libs/qt6base libs/cxxopts \
     libs/alac sound/spotifyd utils/qt6tools utils/cpulimit utils/filebrowser \
@@ -553,7 +558,7 @@ source_group_26() {
 
 source_group_27() {
   git_sparse_clone develop https://github.com/Ysurac/openmptcprouter-feeds openmptcp \
-    luci-app-snmpd luci-app-packet-capture luci-app-mail msmtp luci-app-iperf atinout
+    luci-app-packet-capture luci-app-mail msmtp luci-app-iperf atinout
   git_sparse_clone master https://github.com/xiaoqingfengATGH/feeds-xiaoqingfeng xiaoqingfeng \
     homeredirect luci-app-homeredirect
   git_sparse_clone master https://github.com/immortalwrt/immortalwrt immortal \
@@ -608,7 +613,7 @@ run_source_groups() {
       if ! wait -n; then
         failed=1
       fi
-      ((running -= 1))
+      running=$((running - 1))
     fi
   done
 
@@ -616,7 +621,7 @@ run_source_groups() {
     if ! wait -n; then
       failed=1
     fi
-    ((running -= 1))
+    running=$((running - 1))
   done
 
   ((failed == 0)) || {
@@ -678,4 +683,6 @@ main() {
   done
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi
