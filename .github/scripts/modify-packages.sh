@@ -3,94 +3,6 @@
 set -Eeuo pipefail
 shopt -s nullglob
 
-readonly GRAPHQL_QUERY='query($owner: String!, $name: String!) {
-  repository(owner: $owner, name: $name) {
-    defaultBranchRef {
-      target { ... on Commit { oid } }
-    }
-    latestRelease {
-      tagName
-      tagCommit { oid }
-    }
-    refs(
-      refPrefix: "refs/tags/"
-      last: 1
-      orderBy: { field: TAG_COMMIT_DATE, direction: ASC }
-    ) {
-      nodes {
-        name
-        target { oid }
-      }
-    }
-  }
-}'
-
-readonly SOURCE_UPDATE_EXCLUDES=(
-  3proxy
-  accel-ppp
-  aic8800
-  amule
-  aria2
-  brook
-  chinadns-ng
-  cloudflared
-  containerd
-  coremark
-  curl
-  daed
-  ddns-go
-  filebrowser
-  frp
-  fullconenat
-  homebox
-  joker
-  libcron
-  libcryptopp
-  libtorrent-rasterbar
-  libwxwidgets
-  mbedtls
-  miniupnpd-nft
-  mmdvm-host
-  msd_lite
-  mt76
-  n2n_v2
-  naiveproxy
-  natter
-  netmaker
-  netdata
-  nexttrace
-  nikki
-  openlist
-  oscam
-  pppwn-cpp
-  qBittorrent-Enhanced-Edition
-  quickjspp
-  r8152
-  r8168
-  rtl8188eu
-  rtl8189es
-  rtl8192eu
-  rtl8812au-ac
-  rtl8821cu
-  rtl88x2bu
-  shadowsocks-libev
-  shadowsocksr-libev
-  softethervpn5
-  sub-web
-  subconverter
-  tailscale
-  tuic-server
-  ua2f
-  udp2raw
-  upx
-  v2raya
-  wxbase
-  xtables-wgobfs
-  ysf-clients
-)
-
-declare -A REPOSITORY_METADATA_CACHE=()
-REPOSITORY_METADATA_RESULT=''
 CURRENT_STAGE='startup'
 CURRENT_ITEM=''
 
@@ -134,79 +46,6 @@ require_command() {
   }
 }
 
-is_source_update_excluded() {
-  local package="$1"
-  local excluded
-
-  [[ "$package" == luci-* ]] && return 0
-  for excluded in "${SOURCE_UPDATE_EXCLUDES[@]}"; do
-    [[ "$package" == "$excluded" ]] && return 0
-  done
-  return 1
-}
-
-extract_github_repository() {
-  local makefile="$1"
-  local repository
-
-  repository="$(
-    grep -m1 'PKG_SOURCE_URL.*github' "$makefile" |
-      sed -nE 's|.*github\.com[/:]([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)(\.git)?.*|\1/\2|p'
-  )"
-  repository="${repository%.git}"
-
-  [[ "$repository" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || return 1
-  printf '%s\n' "$repository"
-}
-
-get_repository_metadata() {
-  local repository="$1"
-  local owner="${repository%%/*}"
-  local name="${repository#*/}"
-  local metadata
-
-  if [[ ${REPOSITORY_METADATA_CACHE[$repository]+cached} ]]; then
-    REPOSITORY_METADATA_RESULT="${REPOSITORY_METADATA_CACHE[$repository]}"
-    return 0
-  fi
-
-  if ! metadata="$(
-    gh api graphql \
-      --raw-field owner="$owner" \
-      --raw-field name="$name" \
-      --raw-field query="$GRAPHQL_QUERY"
-  )"; then
-    warn "Unable to query ${repository}; keeping its existing version."
-    return 1
-  fi
-
-  REPOSITORY_METADATA_CACHE["$repository"]="$metadata"
-  REPOSITORY_METADATA_RESULT="$metadata"
-}
-
-version_lt() {
-  local current="$1"
-  local candidate="$2"
-  local newest
-
-  newest="$(printf '%s\n%s\n' "$current" "$candidate" | sort -V | tail -n 1)"
-  [[ "$current" != "$newest" ]]
-}
-
-normalize_release_tag() {
-  local version="$1"
-
-  version="${version##*/}"
-  version="${version#release-}"
-  version="${version#v}"
-  version="${version#V}"
-  printf '%s\n' "$version"
-}
-
-escape_sed_replacement() {
-  printf '%s' "$1" | sed 's/[&|\\]/\\&/g'
-}
-
 replace_legacy_ifname() {
   log 'Replacing legacy network *.ifname references'
 
@@ -225,77 +64,14 @@ replace_legacy_ifname() {
   )
 }
 
-update_package_sources() {
-  log 'Updating GitHub-backed package versions'
+normalize_luci_controllers() {
+  log 'Adding missing LuCI NAS menu entries'
 
-  local makefile package repository metadata
-  local default_oid current_version latest_version release_oid escaped_version
-
-  for makefile in */Makefile; do
-    package="${makefile%%/*}"
-    is_source_update_excluded "$package" && continue
-
-    repository="$(extract_github_repository "$makefile")" || continue
-    CURRENT_ITEM="${package} (${repository})"
-    get_repository_metadata "$repository" || continue
-    metadata="$REPOSITORY_METADATA_RESULT"
-
-    default_oid="$(jq -r '.data.repository.defaultBranchRef.target.oid // empty' <<<"$metadata")"
-    if [[ -n "$default_oid" ]] && grep -q '^PKG_SOURCE_VERSION:=' "$makefile"; then
-      sed -i "s/^PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$default_oid/" "$makefile"
-    fi
-
-    current_version="$(normalize_release_tag "$(
-      sed -nE 's/^PKG_VERSION:=(.*)$/\1/p' "$makefile" |
-        head -n 1
-    )")"
-    [[ "$current_version" =~ [0-9] ]] || continue
-
-    latest_version="$(normalize_release_tag "$(
-      jq -r '.data.repository.latestRelease.tagName // empty' <<<"$metadata"
-    )")"
-    [[ "$latest_version" =~ [0-9] ]] || continue
-    [[ "$latest_version" != *'('* ]] || continue
-
-    version_lt "$current_version" "$latest_version" || continue
-    log "Updating ${package} from ${repository}: ${current_version} -> ${latest_version}"
-
-    release_oid="$(
-      jq -r '
-        .data.repository.latestRelease.tagCommit.oid //
-        .data.repository.refs.nodes[-1].target.oid //
-        empty
-      ' <<<"$metadata"
-    )"
-    [[ -n "$release_oid" ]] || continue
-
-    escaped_version="$(escape_sed_replacement "$latest_version")"
-    if ! sed -i \
-      -e "s|^PKG_SOURCE_VERSION:=.*|PKG_SOURCE_VERSION:=$release_oid|" \
-      -e "s|^PKG_VERSION:=.*|PKG_VERSION:=$escaped_version|" \
-      "$makefile"; then
-      printf '::error file=%s,title=Package version update failed::repository=%s; version=%s\n' \
-        "$makefile" "$repository" "$latest_version" >&2
-      return 1
-    fi
-  done
-  CURRENT_ITEM=''
-}
-
-normalize_luci_packages() {
-  log 'Normalizing LuCI package metadata'
-
-  local package makefile
+  local package
   local controllers
 
   for package in luci-*/; do
-    makefile="${package}Makefile"
-    [[ -f "$makefile" ]] || continue
     CURRENT_ITEM="$package"
-
-    if grep -q 'luci\.mk' "$makefile"; then
-      sed -i -E '/^(PKG_VERSION|PKG_RELEASE):=/d' "$makefile"
-    fi
 
     controllers=("${package}luasrc/controller/"*.lua)
     ((${#controllers[@]} > 0)) || continue
@@ -364,7 +140,6 @@ apply_package_overrides() {
   sed_if_exists luci-app-packet-capture/Makefile 's/ +uhttpd-mod-ubus//'
   sed_if_exists ddns-scripts/files/etc/init.d/ddns '/boot()/,+2d'
   sed_if_exists base-files/files/etc/openwrt_release "/DISTRIB_DESCRIPTION/c\\DISTRIB_DESCRIPTION=\"%D %C by Kiddin'\""
-  sed_if_exists mwan3/Makefile 's/PKG_VERSION:=2/PKG_VERSION:=3/'
   sed_if_exists ariang/Makefile '/+uhttpd/d'
 
   sed_if_exists base-files/files/lib/upgrade/keep.d/base-files-essential \
@@ -405,7 +180,6 @@ apply_package_overrides() {
     CURRENT_ITEM="$makefile"
     sed -i \
       -e 's?include \.\./\.\./\(lang\|devel\)?include $(TOPDIR)/feeds/packages/\1?' \
-      -e 's/\(\(^\|[[:space:]]\)\(PKG_HASH\|PKG_MD5SUM\|PKG_MIRROR_HASH\|HASH\):=\).*/\1skip/' \
       -e 's?\.\./\.\./luci.mk?$(TOPDIR)/feeds/luci/luci.mk?' \
       -e 's/+ca-certificates/+ca-bundle/' \
       -e 's/php7/php8/g' \
@@ -415,44 +189,19 @@ apply_package_overrides() {
   CURRENT_ITEM=''
 }
 
-set_package_releases() {
-  log 'Refreshing package release numbers'
-
-  local makefile package release
-  for makefile in */Makefile; do
-    package="${makefile%%/*}"
-    CURRENT_ITEM="$makefile"
-
-    if grep -q '^PKG_VERSION:=' "$makefile" && ! grep -q '^PKG_RELEASE:=' "$makefile"; then
-      sed -i '/^PKG_VERSION:=/a PKG_RELEASE:=' "$makefile"
-    fi
-
-    grep -q '^PKG_RELEASE:=' "$makefile" || continue
-    release="$(git rev-list --count HEAD -- "$package")"
-    sed -i "s/^PKG_RELEASE:=.*/PKG_RELEASE:=$release/" "$makefile"
-  done
-  CURRENT_ITEM=''
-}
-
 main() {
   local repository_root
   repository_root="$(git rev-parse --show-toplevel)"
   cd "$repository_root"
 
-  export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
-  : "${GH_TOKEN:?GH_TOKEN must contain the GitHub Actions token}"
-  require_command gh
   require_command git
-  require_command jq
 
   trap 'handle_error "$?" "$LINENO" "$BASH_COMMAND"' ERR
 
   run_stage 'replace legacy network options' replace_legacy_ifname
-  run_stage 'update GitHub package versions' update_package_sources
-  run_stage 'normalize LuCI packages' normalize_luci_packages
+  run_stage 'normalize LuCI controllers' normalize_luci_controllers
   run_stage 'run DIY generators' run_diy_helpers
   run_stage 'apply package overrides' apply_package_overrides
-  run_stage 'refresh package releases' set_package_releases
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

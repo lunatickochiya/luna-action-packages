@@ -17,8 +17,7 @@ handle_error() {
 }
 
 main() {
-  local repository_root commit_message package makefile release branch status
-  local changed_packages=()
+  local repository_root commit_message branch status
 
   repository_root="$(git rev-parse --show-toplevel)"
   cd "$repository_root"
@@ -33,30 +32,7 @@ main() {
     return 0
   fi
 
-  CURRENT_OPERATION='create temporary release-count commit'
-  git commit -m "$commit_message"
-
-  CURRENT_OPERATION='collect changed packages'
-  mapfile -t changed_packages < <(
-    git diff-tree --no-commit-id --name-only -r HEAD |
-      cut -d/ -f1 |
-      sort -u
-  )
-
-  CURRENT_OPERATION='update changed package release numbers'
-  for package in "${changed_packages[@]}"; do
-    makefile="$package/Makefile"
-    CURRENT_ITEM="$makefile"
-    if [[ -f "$makefile" ]] && grep -q '^PKG_RELEASE:=' "$makefile"; then
-      release="$(git rev-list --count HEAD -- "$package")"
-      sed -i "s/^PKG_RELEASE:=.*/PKG_RELEASE:=$release/" "$makefile"
-    fi
-  done
-
-  CURRENT_ITEM=''
-  CURRENT_OPERATION='replace temporary commit with final commit'
-  git reset --soft HEAD^
-  git add --all
+  CURRENT_OPERATION='commit synchronized files'
   git commit -m "$commit_message"
 
   CURRENT_OPERATION='push synchronized packages'
