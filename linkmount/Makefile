@@ -10,7 +10,7 @@ PKG_ARCH_LINKEASE:=$(ARCH)
 PKG_NAME:=linkmount
 # use PKG_SOURCE_DATE instead of PKG_VERSION for compitable
 PKG_SOURCE_DATE:=1.0.3
-PKG_RELEASE:=4
+PKG_RELEASE:=3
 ARCH_HEXCODE:=
 ifeq ($(ARCH),x86_64)
 ARCH_HEXCODE=8664
@@ -24,7 +24,7 @@ endif
 PKG_SOURCE_VERSION:=$(ARCH_HEXCODE)
 PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_SOURCE_DATE).tar.gz
 PKG_SOURCE_URL:=https://dl.istoreos.com/binary/LinkEase/AutoUpgrade/linkmount/
-PKG_HASH:=skip
+PKG_HASH:=b8a5b99751cdd3dd84ac75c94e3cff5b898f910c86f12b4c7ec74dc8b3c510cb
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_SOURCE_DATE)
 

@@ -10,11 +10,11 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=libnftnl
 PKG_CPE_ID:=cpe:/a:netfilter:libnftnl
 PKG_VERSION:=1.3.1
-PKG_RELEASE:=2
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://netfilter.org/projects/$(PKG_NAME)/files
-PKG_HASH:=skip
+PKG_HASH:=607da28dba66fbdeccf8ef1395dded9077e8d19f2995f9a4d45a9c2f0bcffba8
 
 PKG_MAINTAINER:=Steven Barth <steven@midlink.org>
 PKG_LICENSE:=GPL-2.0-or-later

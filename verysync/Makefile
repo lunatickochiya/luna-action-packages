@@ -35,12 +35,12 @@ endif
 
 PKG_NAME:=verysync
 PKG_VERSION:=2.21.3
-PKG_RELEASE:=2
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-linux-$(PKG_ARCH_VERYSYNC)-v$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://dl.verysync.com/releases/v$(PKG_VERSION)/ \
 		http://dl-cn.verysync.com/releases/v$(PKG_VERSION)/
-PKG_HASH:=skip
+PKG_HASH:=$(PKG_HASH_VERYSYNC)
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-linux-$(PKG_ARCH_VERYSYNC)-v$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk

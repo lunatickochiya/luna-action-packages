@@ -7,7 +7,7 @@ PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/Syllo/$(PKG_NAME)/tar.gz/$(PKG_VERSION)?
-PKG_HASH:=skip
+PKG_HASH:=d26df685455023cedc4dda033862dcddb67402fbdb685da70da78492f73c41d0
 
 PKG_MAINTAINER:=jjm2473 <jjm2473@gmail.com>
 PKG_LICENSE:=GPL-3.0+

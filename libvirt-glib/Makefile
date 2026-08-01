@@ -8,7 +8,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://libvirt.org/sources/glib/
-PKG_HASH:=skip
+PKG_HASH:=9bfec346382416a3575d87299bc641b2a464aa519fd9b1287e318aa43a2f3b8b
 
 PKG_MAINTAINER:=jjm2473 <jjm2473@gmail.com>
 PKG_LICENSE:=LGPL-2.1-or-later

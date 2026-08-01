@@ -10,10 +10,10 @@ PKG_ARCH_kaiplus:=$(ARCH)
 
 PKG_NAME:=kaiplus
 PKG_VERSION:=1.0.5
-PKG_RELEASE:=3
+PKG_RELEASE:=1
 PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/linkease/istore-packages/releases/download/kaiplus/
-PKG_HASH:=skip
+PKG_HASH:=58e480a191e8e3c08ed7814df368c79109d2def1fd1b0734d9054fd5b364ee99
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_VERSION)
 
 PKG_BUILD_PARALLEL:=1

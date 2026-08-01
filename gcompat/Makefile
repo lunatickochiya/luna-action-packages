@@ -8,7 +8,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://git.adelielinux.org/adelie/gcompat/-/archive/$(PKG_VERSION)/
-PKG_HASH:=skip
+PKG_HASH:=82e56d2ecda3f11a93efe61001394a6e5db39c91127d0812d7ad5b0bda558010
 
 PKG_MAINTAINER:=jjm2473 <jjm2473@gmail.com>
 PKG_LICENSE:=NCSA

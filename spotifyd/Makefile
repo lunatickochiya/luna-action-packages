@@ -1,12 +1,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=spotifyd
-PKG_VERSION:=0.4.2
-PKG_RELEASE:=2
+PKG_VERSION:=0.4.1
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/Spotifyd/spotifyd/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=skip
+PKG_HASH:=fdbf93c51232d85a0ef29813a02f3c23aacf733444eacf898729593e8837bcfc
 
 PKG_LICENSE:=GPL-3.0-only
 PKG_LICENSE_FILES:=LICENSE

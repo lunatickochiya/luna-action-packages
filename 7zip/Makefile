@@ -8,7 +8,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE:=7z$(PKG_REV)-src.tar.xz
 PKG_SOURCE_URL:=https://7-zip.org/a/
-PKG_HASH:=skip
+PKG_HASH:=ed087f83ee789c1ea5f39c464c55a5c9d4008deb0efe900814f2df262b82c36e
 PKG_MAINTAINER:=jjm2473 <jjm2473@gmail.com>
 
 PKG_LICENSE:=LGPL-2.0-only

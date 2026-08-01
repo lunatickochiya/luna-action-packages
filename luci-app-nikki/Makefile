@@ -1,5 +1,6 @@
 include $(TOPDIR)/rules.mk
 
+PKG_VERSION:=1.26.1
 
 LUCI_TITLE:=LuCI Support for nikki
 LUCI_DEPENDS:=+luci-base +nikki

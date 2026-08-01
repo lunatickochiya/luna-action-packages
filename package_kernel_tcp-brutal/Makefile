@@ -7,7 +7,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/apernet/tcp-brutal/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=skip
+PKG_HASH:=a52f004f70bba072c2d8bb3774071e91aab25d0fe33cd6a7b76e1d6d9e664a7f
 
 PKG_LICENSE:=GPL-3.0
 PKG_LICENSE_FILES:=LICENSE

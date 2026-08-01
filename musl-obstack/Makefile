@@ -9,7 +9,7 @@ PKG_RELEASE:=1
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL_FILE:=v$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/void-linux/musl-obstack/archive/
-PKG_HASH:=skip
+PKG_HASH:=9ffb3479b15df0170eba4480e51723c3961dbe0b461ec289744622db03a69395
 
 PKG_MAINTAINER:=jjm2473 <jjm2473@gmail.com>
 PKG_LICENSE:=GPL-2.0-or-later

@@ -6,7 +6,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rgmac
 PKG_VERSION:=1.5.1
-PKG_RELEASE:=2
+PKG_RELEASE:=20240803
 
 PKG_MAINTAINER:=Anya Lin <hukk1996@gmail.com>
 PKG_LICENSE:=MIT
@@ -14,7 +14,7 @@ PKG_LICENSE_FILES:=LICENSE
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/muink/rgmac/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=skip
+PKG_HASH:=434869135973930de4aaa3e303d146eb438652b736a1fa9d9cdb4e218d2bcaaf
 PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/package.mk

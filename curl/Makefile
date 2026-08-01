@@ -10,14 +10,14 @@ include $(INCLUDE_DIR)/nls.mk
 
 PKG_NAME:=curl
 PKG_VERSION:=8.7.1
-PKG_RELEASE:=2
+PKG_RELEASE:=r1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=https://github.com/curl/curl/releases/download/curl-$(subst .,_,$(PKG_VERSION))/ \
 	https://dl.uxnr.de/mirror/curl/ \
 	https://curl.askapache.com/download/ \
 	https://curl.se/download/
-PKG_HASH:=skip
+PKG_HASH:=05bbd2b698e9cfbab477c33aa5e99b4975501835a41b7ca6ca71de03d8849e76
 
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=COPYING

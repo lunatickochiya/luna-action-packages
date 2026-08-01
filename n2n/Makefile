@@ -6,7 +6,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=n2n
 PKG_VERSION:=3.1.1
-PKG_RELEASE:=28
+PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -14,7 +14,7 @@ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 # These are defaults for compiling without any environmental overrides
 # (eg, the github action calculates the correct overrides for each build)
 PKG_SOURCE_URL:=https://github.com/ntop/n2n
-PKG_SOURCE_VERSION:=854fbbe01bbf131bf4cb88f8450d7084267668e1
+PKG_SOURCE_VERSION:=dev
 PKG_MIRROR_HASH:=skip
 
 # Apply overrides from the build environment

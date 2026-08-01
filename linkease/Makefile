@@ -26,7 +26,7 @@ endif
 PKG_SOURCE_VERSION:=$(ARCH_HEXCODE)
 PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_SOURCE_DATE).tar.gz
 PKG_SOURCE_URL:=http://dl.istoreos.com/binary/LinkEase/LinuxStorage/
-PKG_HASH:=skip
+PKG_HASH:=f3ae319974d940f5741cd9fbd295a3a378164e7df82665defa99935608fe733a
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_SOURCE_DATE)
 

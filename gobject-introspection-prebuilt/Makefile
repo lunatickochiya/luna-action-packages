@@ -6,7 +6,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE:=gobject-introspection-prebuilt-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/jjm2473/openwrt-apps/releases/download/prebuilt/
-PKG_HASH:=skip
+PKG_HASH:=8fedec012cdaf0e8138ad5ef6cda34d5aa05572024a66781a010329d7d74dc82
 
 PKG_MAINTAINER:=jjm2473 <jjm2473@gmail.com>
 PKG_LICENSE:=LGPL-2.0-or-later AND GPL-2.0-or-later AND MIT

@@ -5,13 +5,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=antileech
-PKG_RELEASE:=2
+PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_DATE:=2021-12-05
 PKG_SOURCE_URL:=https://github.com/persmule/amule-dlp.antiLeech.git
 PKG_SOURCE_VERSION:=1b14ed828ed227933333de31ffb8e24e6c10451c
-PKG_MIRROR_HASH:=skip
+PKG_MIRROR_HASH:=36b49ab37dbde3a97d4b55f6c1c4f8ab13fd76705dc724eb4bc05e986ff68ad0
 
 PKG_FIXUP:=autoreconf
 PKG_BUILD_DEPENDS:=libgd

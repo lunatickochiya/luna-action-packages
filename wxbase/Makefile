@@ -9,11 +9,11 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wxbase
 PKG_VERSION:=3.2.8
-PKG_RELEASE:=2
+PKG_RELEASE:=1
 
 PKG_SOURCE:=wxWidgets-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=https://github.com/wxWidgets/wxWidgets/releases/download/v$(PKG_VERSION)
-PKG_HASH:=skip
+PKG_HASH:=c74784904109d7229e6894c85cfa068f1106a4a07c144afd78af41f373ee0fe6
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/wxWidgets-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0

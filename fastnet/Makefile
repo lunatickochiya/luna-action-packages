@@ -11,11 +11,11 @@ PKG_ARCH_FASTNET:=$(ARCH)
 PKG_NAME:=fastnet
 # use PKG_SOURCE_DATE instead of PKG_VERSION for compatible
 PKG_SOURCE_DATE:=0.7.2
-PKG_RELEASE:=3
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_SOURCE_DATE).tar.gz
 PKG_SOURCE_URL:=http://dl.istoreos.com/binary/fastnet/
-PKG_HASH:=skip
+PKG_HASH:=aa8c0a3aa6885536d0ab9efc25df4191de78e3d0bc1077607874f64100d82f98
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_SOURCE_DATE)
 

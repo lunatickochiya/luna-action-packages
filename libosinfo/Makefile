@@ -8,7 +8,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-v$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://gitlab.com/libosinfo/libosinfo/-/archive/v$(PKG_VERSION)/
-PKG_HASH:=skip
+PKG_HASH:=3c52fb542d65d1ec5a10f87126d7513c2bd115eaa2f87fb91b15ba588708fc7b
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-v$(PKG_VERSION)
 
 PKG_MAINTAINER:=jjm2473 <jjm2473@gmail.com>

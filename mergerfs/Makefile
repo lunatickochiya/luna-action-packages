@@ -2,12 +2,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mergerfs
-PKG_VERSION:=2.42.0
-PKG_RELEASE:=3
+PKG_VERSION:=2.40.2
+PKG_RELEASE:=5
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/trapexit/mergerfs/releases/download/$(PKG_VERSION)/
-PKG_HASH:=skip
+PKG_HASH:=595a7a108f5a20e0cd20b6d08a360b283940d81b1a66b118d27dfa93540878b0
 
 PKG_MAINTAINER:=jjm2473 <jjm2473@gmail.com>
 PKG_LICENSE:=ISC

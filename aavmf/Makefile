@@ -6,7 +6,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE:=aavmf-prebuilt-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/jjm2473/openwrt-apps/releases/download/prebuilt/
-PKG_HASH:=skip
+PKG_HASH:=23c2f87e95f1ccf9f4be5b4fb4ad16e02b63ba17c958a96d6f7fc2d3ad3bf3b4
 
 PKG_MAINTAINER:=jjm2473 <jjm2473@gmail.com>
 PKG_LICENSE:=BSD-2-Clause-Patent

@@ -4,11 +4,11 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=zip
 PKG_VERSION:=3.0
 PKG_REV:=$(subst .,,$(PKG_VERSION))
-PKG_RELEASE:=2
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)$(PKG_REV).tar.gz
 PKG_SOURCE_URL:=http://downloads.sourceforge.net/infozip/
-PKG_HASH:=skip
+PKG_HASH:=f0e8bb1f9b7eb0b01285495a2699df3a4b766784c1765a8f1aeedf63c0806369
 PKG_MAINTAINER:=jjm2473 <jjm2473@gmail.com>
 
 PKG_LICENSE:=LicenseRef-Info-ZIP

@@ -7,7 +7,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://releases.pagure.org/virt-manager/
-PKG_HASH:=skip
+PKG_HASH:=bc89ae46e0c997bd754ed62a419ca39c6aadec27e3d8b850cea5282f0083f84a
 
 PKG_MAINTAINER:=jjm2473 <jjm2473@gmail.com>
 PKG_LICENSE:=LGPL-2.1-or-later

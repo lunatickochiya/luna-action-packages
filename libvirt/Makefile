@@ -4,11 +4,11 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libvirt
 PKG_VERSION:=11.10.0
-PKG_RELEASE:=1
+PKG_RELEASE:=5
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://libvirt.org/sources/
-PKG_HASH:=skip
+PKG_HASH:=66154fee836235678b712676b2589c45f66e3d6a8721ee0697c9f20a66cad0d8
 
 PKG_MAINTAINER:=jjm2473 <jjm2473@gmail.com>
 PKG_LICENSE:=LGPL-2.1-or-later

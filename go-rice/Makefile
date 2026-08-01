@@ -6,11 +6,11 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=go.rice
 PKG_VERSION:=1.0.2
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/GeertJohan/go.rice/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=skip
+PKG_HASH:=2eed960aa9531a87c82d2379677723bc0129bc9e387dc0dbb3bb70b78c928dd0
 
 PKG_LICENSE:=BSD-2-Clause
 PKG_LICENSE_FILES:=LICENSE

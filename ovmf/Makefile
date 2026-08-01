@@ -6,7 +6,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE:=ovmf-prebuilt-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/jjm2473/openwrt-apps/releases/download/prebuilt/
-PKG_HASH:=skip
+PKG_HASH:=32232d2e05e4137979927e62d55fdfa6798c8b2c77cdad7d65f93b15f6425bd4
 
 PKG_MAINTAINER:=jjm2473 <jjm2473@gmail.com>
 PKG_LICENSE:=BSD-2-Clause-Patent

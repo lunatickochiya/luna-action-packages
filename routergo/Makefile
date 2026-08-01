@@ -11,10 +11,10 @@ PKG_ARCH_routergo:=$(ARCH)
 
 PKG_NAME:=routergo
 PKG_VERSION:=0.14.10
-PKG_RELEASE:=2
+PKG_RELEASE:=
 PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/Carseason/openwrt-packages/releases/download/prebuilt/
-PKG_HASH:=skip
+PKG_HASH:=5d405c7baf342b0a48d11fe9faac372966e459cefdfcb28f7aef424b9aa520a1
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_VERSION)
 
 PKG_BUILD_PARALLEL:=1

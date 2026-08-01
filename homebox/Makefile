@@ -6,20 +6,20 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=homebox
 PKG_VERSION:=1.0.1
-PKG_RELEASE:=5
+PKG_RELEASE:=1
 
 ifeq ($(ARCH),aarch64)
   PKG_ARCH:=arm64
-  PKG_HASH:=skip
+  PKG_HASH:=e645229b4cffef9ab1d4b3989f1b9523f487bf3f570c4391c4b62522de3e6b7f
 else ifeq ($(ARCH),arm)
   PKG_ARCH:=armv7
-  PKG_HASH:=skip
+  PKG_HASH:=879159fad956cf368b2c933bf871576a212379698245a91a2e5256d0dc17f8b3
 else ifeq ($(ARCH),i386)
   PKG_ARCH:=386
-  PKG_HASH:=skip
+  PKG_HASH:=ab3e875988506706b63420f4f3dcd959fdfb1777d836ada1d776a074a0aa561a
 else ifeq ($(ARCH),x86_64)
   PKG_ARCH:=amd64
-  PKG_HASH:=skip
+  PKG_HASH:=5640b5a93846f26a07cfbbb2d6ca9b27efd3ad2d210b327a7c3832beaf8a3e62
 endif
 
 PKG_LICENSE:=Proprietary
