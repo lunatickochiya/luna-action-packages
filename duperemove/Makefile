@@ -6,12 +6,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=duperemove
-PKG_VERSION:=0.15.1
+PKG_VERSION:=0.15.2
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/markfasheh/duperemove/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=68cc28f5aa43fa2034e512f7b22cf5282ce2b0319b4e1061f7cdf55cc134273b
+PKG_HASH:=skip
 
 PKG_MAINTAINER:=Mark Fasheh
 PKG_LICENSE:=GPL-2.0

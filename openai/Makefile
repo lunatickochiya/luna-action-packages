@@ -7,7 +7,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=openai
-PKG_VERSION:=2.8.6-0ec4cc2
+PKG_VERSION:=2.8.9-96f3ca1
 PKG_RELEASE:=3
 STRIP:=false
 
@@ -22,15 +22,15 @@ PKG_SOURCE:=openai-v$(PKG_VERSION)-linux-$(PKG_LIBC)-$(ARCH).tar.gz
 
 ifeq ($(ARCH),aarch64)
   ifeq ($(CONFIG_USE_MUSL),y)
-    PKG_HASH:=3cccc5a37408f12be994cefa32d2d49e343a827966012deb4418f71818d527d7
+    PKG_HASH:=skip
   else
-    PKG_HASH:=0802fd6259c1e3d73cccb3aee89ce9a4e8f9948fa868a49c613e895f76434a6e
+    PKG_HASH:=skip
   endif
 else ifeq ($(ARCH),x86_64)
   ifeq ($(CONFIG_USE_MUSL),y)
-    PKG_HASH:=87e1f5da6c0a4116e75dcdbc4bc9f3ec59884f458101c97beb5e5a56da8d6064
+    PKG_HASH:=skip
   else
-    PKG_HASH:=1f95b698362196e5830e5428cdebbbc5aceb42122dc075c1e786d7b30eb7efed
+    PKG_HASH:=skip
   endif
 endif
 

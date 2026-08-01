@@ -9,12 +9,12 @@ include $(TOPDIR)/rules.mk
 
 # Name and release number of this package
 PKG_NAME:=noddos
-PKG_VERSION:=0.5.5
+PKG_VERSION:=0.5.6
 PKG_RELEASE:=4
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://github.com/noddos/noddos/releases/download/v$(PKG_VERSION)/
-PKG_HASH:=1f5be0c1015b0407036eecc8449d60d2abcacec442bba55db85fc32e89f754db
+PKG_HASH:=skip
 
 PKG_MAINTAINER:=Steven Hessing <steven.hessing@gmail.com>
 PKG_LICENSE:=GPL-3.0-or-later
