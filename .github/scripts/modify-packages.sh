@@ -5,6 +5,7 @@ shopt -s nullglob
 
 CURRENT_STAGE='startup'
 CURRENT_ITEM=''
+declare -A ORIGINAL_PKG_VERSIONS=()
 
 log() {
   printf '[modify-packages] %s\n' "$*"
@@ -44,6 +45,58 @@ require_command() {
     printf 'Required command not found: %s\n' "$1" >&2
     return 1
   }
+}
+
+read_package_version() {
+  sed -nE \
+    's/^[[:space:]]*PKG_VERSION[[:space:]]*[:?+]?=[[:space:]]*(.*)$/\1/p' \
+    "$1"
+}
+
+snapshot_package_versions() {
+  log 'Recording upstream PKG_VERSION values'
+
+  local makefile
+  for makefile in */Makefile; do
+    CURRENT_ITEM="$makefile"
+    ORIGINAL_PKG_VERSIONS["$makefile"]="$(read_package_version "$makefile")"
+  done
+  CURRENT_ITEM=''
+}
+
+skip_hashes_for_modified_versions() {
+  log 'Checking whether Modify changed any PKG_VERSION values'
+
+  local makefile original_version current_version hash_field_count
+  local version_changes=0
+  local hash_changes=0
+
+  for makefile in */Makefile; do
+    [[ ${ORIGINAL_PKG_VERSIONS[$makefile]+recorded} ]] || continue
+    CURRENT_ITEM="$makefile"
+    original_version="${ORIGINAL_PKG_VERSIONS[$makefile]}"
+    current_version="$(read_package_version "$makefile")"
+    [[ "$current_version" != "$original_version" ]] || continue
+
+    ((version_changes += 1))
+    log "PKG_VERSION changed in ${makefile}: ${original_version:-<empty>} -> ${current_version:-<empty>}"
+
+    hash_field_count="$(
+      grep -Ec '^[[:space:]]*PKG_(HASH|MIRROR_HASH)[[:space:]]*[:?+]?=' "$makefile" || true
+    )"
+    if ((hash_field_count > 0)); then
+      sed -i -E \
+        's/^([[:space:]]*PKG_(HASH|MIRROR_HASH)[[:space:]]*[:?+]?=[[:space:]]*)[^#]*([[:space:]]*#.*)?$/\1skip\3/' \
+        "$makefile"
+      ((hash_changes += hash_field_count))
+      log "Set ${hash_field_count} existing PKG_HASH/PKG_MIRROR_HASH field(s) to skip in ${makefile}"
+    else
+      log "No PKG_HASH/PKG_MIRROR_HASH exists in ${makefile}; leaving hash fields unchanged"
+    fi
+  done
+
+  CURRENT_ITEM=''
+  log "Detected ${version_changes} modified PKG_VERSION file(s); updated ${hash_changes} PKG_HASH field(s)"
 }
 
 replace_legacy_ifname() {
@@ -198,10 +251,12 @@ main() {
 
   trap 'handle_error "$?" "$LINENO" "$BASH_COMMAND"' ERR
 
+  run_stage 'record upstream package versions' snapshot_package_versions
   run_stage 'replace legacy network options' replace_legacy_ifname
   run_stage 'normalize LuCI controllers' normalize_luci_controllers
   run_stage 'run DIY generators' run_diy_helpers
   run_stage 'apply package overrides' apply_package_overrides
+  run_stage 'update hashes for modified versions' skip_hashes_for_modified_versions
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
