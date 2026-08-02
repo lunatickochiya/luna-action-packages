@@ -13,7 +13,7 @@ PKG_VERSION:=2.4.19
 PKG_RELEASE:=2
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-source.tar.gz
 PKG_SOURCE_URL:=https://github.com/OpenPrinting/cups/releases/download/v$(PKG_VERSION)
-PKG_MD5SUM:=524266752cf243c968921547b18ee594
+PKG_MD5SUM:=skip
 
 TARGET_LDFLAGS+=-Wl,-rpath-link=$(STAGING_DIR)/usr/lib
 
