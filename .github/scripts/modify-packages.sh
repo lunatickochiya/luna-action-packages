@@ -247,16 +247,16 @@ skip_hashes_for_latest_version_changes() {
     log "latest changed PKG_VERSION in ${makefile}: ${original_version:-<empty>} -> ${current_version:-<empty>}"
 
     hash_field_count="$(
-      grep -Ec '^[[:space:]]*PKG_(HASH|MIRROR_HASH)[[:space:]]*[:?+]?=' "$makefile" || true
+      grep -Ec '^[[:space:]]*PKG_(HASH|MIRROR_HASH|MD5SUM)[[:space:]]*[:?+]?=' "$makefile" || true
     )"
     if ((hash_field_count > 0)); then
       sed -i -E \
-        's/^([[:space:]]*PKG_(HASH|MIRROR_HASH)[[:space:]]*[:?+]?=[[:space:]]*)[^#]*([[:space:]]*#.*)?$/\1skip\3/' \
+        's/^([[:space:]]*PKG_(HASH|MIRROR_HASH|MD5SUM)[[:space:]]*[:?+]?=[[:space:]]*)[^#]*([[:space:]]*#.*)?$/\1skip\3/' \
         "$makefile"
       ((hash_changes += hash_field_count))
-      log "Set ${hash_field_count} existing PKG_HASH/PKG_MIRROR_HASH field(s) to skip in ${makefile}"
+      log "Set ${hash_field_count} existing PKG_HASH/PKG_MIRROR_HASH/PKG_MD5SUM field(s) to skip in ${makefile}"
     else
-      log "No PKG_HASH/PKG_MIRROR_HASH exists in ${makefile}; leaving hash fields unchanged"
+      log "No PKG_HASH/PKG_MIRROR_HASH/PKG_MD5SUM exists in ${makefile}; leaving hash fields unchanged"
     fi
   done
 
