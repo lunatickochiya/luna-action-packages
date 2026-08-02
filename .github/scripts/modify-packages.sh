@@ -56,6 +56,7 @@ readonly SOURCE_UPDATE_EXCLUDES=(
   n2n_v2
   naiveproxy
   natter
+  natflow
   netmaker
   netdata
   nexttrace
