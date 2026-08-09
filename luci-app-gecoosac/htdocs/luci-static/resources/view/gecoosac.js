@@ -14,6 +14,7 @@ const DEFAULT_PID_DIR = '/var/run';
 const CONFIG_BACKUP_DIR = '/etc/gecoosac';
 const DB_DIR_PREFIXES = [ '/etc/gecoosac', '/tmp/gecoosac', '/var/lib/gecoosac' ];
 const PID_DIR_PREFIXES = [ '/var/run', '/tmp/gecoosac' ];
+const CLEAR_STAGE_PATH_ERROR = _('Paths under .gecoosac-clear.* are reserved for upload cleanup.');
 
 let statusPollRegistered = false;
 
@@ -29,6 +30,34 @@ const callClearUpload = rpc.declare({
 	method: 'clear_upload',
 	expect: { '': {} }
 });
+
+const callPathPolicy = rpc.declare({
+	object: 'luci.gecoosac',
+	method: 'path_policy',
+	expect: { '': {} },
+	reject: true
+});
+
+const RPC_ERROR_MESSAGES = {
+	'Unable to query service status': _('Unable to query service status'),
+	'Invalid service status response': _('Invalid service status response'),
+	'Expecting an absolute path': _('Expecting an absolute path'),
+	'Only Gecoos upload directories can be cleared': _('Only Gecoos upload directories can be cleared'),
+	'Upload directory contains a mount point': _('Upload directory contains a mount point'),
+	'Upload directory or its parent is not root-owned and private': _('Upload directory or its parent is not root-owned and private'),
+	'Unable to resolve upload directory': _('Unable to resolve upload directory'),
+	'Unable to read Gecoos configuration': _('Unable to read Gecoos configuration'),
+	'Gecoos configuration changed during cleanup': _('Gecoos configuration changed during cleanup'),
+	'Unable to prepare upload directory cleanup': _('Unable to prepare upload directory cleanup'),
+	'Unable to validate upload cleanup stage': _('Unable to validate upload cleanup stage'),
+	'Upload cleanup stage contains a configured protected path': _('Upload cleanup stage contains a configured protected path'),
+	'Unable to validate configured paths': _('Unable to validate configured paths'),
+	'Upload directory contains a configured protected path': _('Upload directory contains a configured protected path'),
+	'Unable to recreate upload directory': _('Unable to recreate upload directory'),
+	'Unable to remove upload directory contents': _('Unable to remove upload directory contents'),
+	'Unable to remove upload cleanup stage': _('Unable to remove upload cleanup stage'),
+	'Unable to resolve managed path policy': _('Unable to resolve managed path policy')
+};
 
 function validPort(value, defaultValue) {
 	const port = Number(value || defaultValue);
@@ -64,7 +93,12 @@ function validateCertificatePath(section_id, value, singlePortOption, httpsOptio
 	if (singlePortOption.formvalue(section_id) !== '0' || httpsOption.formvalue(section_id) !== '1' || !value)
 		return true;
 
-	return String(value).charAt(0) === '/' ? true : _('Expecting an absolute path');
+	if (String(value).charAt(0) !== '/')
+		return _('Expecting an absolute path');
+
+	return usesClearStagePath(value)
+		? CLEAR_STAGE_PATH_ERROR
+		: true;
 }
 
 function triggerActiveValidation(section_id, options) {
@@ -106,10 +140,54 @@ function normalizePath(value) {
 	return '/' + parts.join('/');
 }
 
-function validUploadDir(value) {
+function usesClearStagePath(value) {
+	const path = normalizePath(value);
+	const segments = path === null ? [] : path.split('/');
+
+	for (const segment of segments)
+		if (segment.indexOf('.gecoosac-clear.') === 0)
+			return true;
+
+	return false;
+}
+
+function managedPath(value, policy) {
 	const path = normalizePath(value);
 
-	return path !== null && path.endsWith('/gecoosac/upload') && !pathInDir(path, CONFIG_BACKUP_DIR);
+	if (path === null)
+		return null;
+
+	if (path === '/var/run' || path.indexOf('/var/run/') === 0) {
+		if (!policy || policy.ok !== true || policy.var_run_root !== '/tmp/run')
+			return null;
+
+		return policy.var_run_root + path.substring('/var/run'.length);
+	}
+
+	if (path === '/var' || path.indexOf('/var/') === 0) {
+		if (!policy || policy.ok !== true || (policy.var_root !== '/var' && policy.var_root !== '/tmp'))
+			return null;
+
+		return policy.var_root + path.substring('/var'.length);
+	}
+
+	return path;
+}
+
+function usesManagedPath(value) {
+	const path = normalizePath(value);
+
+	return path === '/var' || path === '/var/run' ||
+		(path !== null && (path.indexOf('/var/') === 0 || path.indexOf('/var/run/') === 0));
+}
+
+function validUploadDir(value, policy) {
+	const path = normalizePath(value);
+	const physical = managedPath(value, policy);
+
+	return path !== null && physical !== null && path.endsWith('/gecoosac/upload') &&
+		physical.endsWith('/gecoosac/upload') && !pathInDir(path, CONFIG_BACKUP_DIR) &&
+		!pathInDir(physical, CONFIG_BACKUP_DIR);
 }
 
 function validPathPrefix(value, prefixes) {
@@ -132,12 +210,22 @@ function pathInDir(value, dir) {
 	return path !== null && root !== null && root !== '/' && (path === root || path.indexOf(root + '/') === 0);
 }
 
-function validDbDir(value, uploadDir) {
-	return validPathPrefix(value, DB_DIR_PREFIXES) && !pathInDir(value, uploadDir || DEFAULT_UPLOAD_DIR);
+function validDbDir(value, uploadDir, policy) {
+	const upload = uploadDir || DEFAULT_UPLOAD_DIR;
+	const physical = managedPath(value, policy);
+	const physicalUpload = managedPath(upload, policy);
+
+	return validPathPrefix(value, DB_DIR_PREFIXES) && physical !== null && physicalUpload !== null &&
+		!pathInDir(value, upload) && !pathInDir(physical, physicalUpload);
 }
 
-function validPidDir(value, uploadDir) {
-	return validPathPrefix(value, PID_DIR_PREFIXES) && !pathInDir(value, uploadDir || DEFAULT_UPLOAD_DIR);
+function validPidDir(value, uploadDir, policy) {
+	const upload = uploadDir || DEFAULT_UPLOAD_DIR;
+	const physical = managedPath(value, policy);
+	const physicalUpload = managedPath(upload, policy);
+
+	return validPathPrefix(value, PID_DIR_PREFIXES) && physical !== null && physicalUpload !== null &&
+		!pathInDir(value, upload) && !pathInDir(physical, physicalUpload);
 }
 
 function serviceRunning(status) {
@@ -176,27 +264,29 @@ function clientHost() {
 	return host;
 }
 
-function clientUrl() {
-	const singlePort = uci.get('gecoosac', 'config', 'isonlyoneprot') !== '0';
-	const https = uci.get('gecoosac', 'config', 'https') === '1';
-	const port = singlePort
-		? validPort(uci.get('gecoosac', 'config', 'port'), '60650')
-		: validPort(uci.get('gecoosac', 'config', 'm_port'), '8080');
+function clientUrl(status) {
+	const protocol = status && status.protocol;
+	const port = validPort(status && status.port, null);
 
-	return (singlePort || !https ? 'http://' : 'https://') + clientHost() + ':' + port;
+	if ((protocol === 'http' || protocol === 'https') && port !== null)
+		return protocol + '://' + clientHost() + ':' + port;
+
+	return null;
 }
 
 function renderStatusContent(status) {
 	if (status && status.error)
-		return E('p', { 'class': 'gecoosac-stopped' }, _('Service status unavailable') + ': ' + _(status.error));
+		return E('p', { 'class': 'gecoosac-stopped' }, _('Service status unavailable') + ': ' +
+			(RPC_ERROR_MESSAGES[status.error] || _('Unable to query service status')));
 
 	const running = serviceRunning(status);
+	const url = running ? clientUrl(status) : null;
 	const text = running
 		? _('The GecoosAC service is running.')
 		: _('The GecoosAC service is not running.');
 	const state = E('span', { 'class': running ? 'gecoosac-running' : 'gecoosac-stopped' }, text);
 
-	if (!running)
+	if (!running || !url)
 		return E('p', {}, state);
 
 	return E('p', {}, [
@@ -204,7 +294,7 @@ function renderStatusContent(status) {
 		E('button', {
 			'class': 'cbi-button cbi-button-reload',
 			'click': function() {
-				const client = window.open(clientUrl(), '_blank', 'noopener');
+				const client = window.open(url, '_blank', 'noopener');
 				if (client)
 					client.opener = null;
 			}
@@ -225,7 +315,9 @@ function updateStatus(status) {
 }
 
 function clearUploadError(res) {
-	return res && res.error ? _(res.error) : _('Upload directory was not cleared');
+	return res && res.error && RPC_ERROR_MESSAGES[res.error]
+		? RPC_ERROR_MESSAGES[res.error]
+		: _('Upload directory was not cleared');
 }
 
 return view.extend({
@@ -234,6 +326,9 @@ return view.extend({
 			uci.load('gecoosac'),
 			callServiceStatus().catch(function() {
 				return statusFailure();
+			}),
+			callPathPolicy().catch(function() {
+				return { ok: false };
 			})
 		]);
 	},
@@ -242,6 +337,7 @@ return view.extend({
 		let m, s, o, uploadDirOption;
 		let portOption, managementPortOption, singlePortOption;
 		let httpsOption, certificateOption, keyOption;
+		const pathPolicy = data[2] && data[2].ok === true ? data[2] : null;
 
 		m = new form.Map('gecoosac', _('Gecoos AC'),
 			_('Only supports Gecoos AP firmware 7.6 and above.') + '<br />' +
@@ -362,7 +458,12 @@ return view.extend({
 		o.datatype = 'directory';
 		o.rmempty = false;
 		o.validate = function(section_id, value) {
-			return validUploadDir(value)
+			if (usesManagedPath(value) && !pathPolicy)
+				return _('Unable to validate /var paths on this system.');
+			if (usesClearStagePath(value))
+				return CLEAR_STAGE_PATH_ERROR;
+
+			return validUploadDir(value, pathPolicy)
 				? true
 				: _('Upload directory must be an absolute path ending with /gecoosac/upload and must not be under /etc/gecoosac.');
 		};
@@ -375,11 +476,15 @@ return view.extend({
 		o.rmempty = false;
 		o.validate = function(section_id, value) {
 			const uploadDir = uploadDirOption.formvalue(section_id) || DEFAULT_UPLOAD_DIR;
+			if ((usesManagedPath(value) || usesManagedPath(uploadDir)) && !pathPolicy)
+				return _('Unable to validate /var paths on this system.');
+			if (usesClearStagePath(value))
+				return CLEAR_STAGE_PATH_ERROR;
 
 			if (!validPathPrefix(value, DB_DIR_PREFIXES))
 				return _('Database directory must be under /etc/gecoosac, /tmp/gecoosac, or /var/lib/gecoosac.');
 
-			return validDbDir(value, uploadDir)
+			return validDbDir(value, uploadDir, pathPolicy)
 				? true
 				: _('Database directory must not be the upload directory or inside it.');
 		};
@@ -392,11 +497,15 @@ return view.extend({
 		o.rmempty = false;
 		o.validate = function(section_id, value) {
 			const uploadDir = uploadDirOption.formvalue(section_id) || DEFAULT_UPLOAD_DIR;
+			if ((usesManagedPath(value) || usesManagedPath(uploadDir)) && !pathPolicy)
+				return _('Unable to validate /var paths on this system.');
+			if (usesClearStagePath(value))
+				return CLEAR_STAGE_PATH_ERROR;
 
 			if (!validPathPrefix(value, PID_DIR_PREFIXES))
 				return _('PID directory must be under /var/run or /tmp/gecoosac.');
 
-			return validPidDir(value, uploadDir)
+			return validPidDir(value, uploadDir, pathPolicy)
 				? true
 				: _('PID directory must not be the upload directory or inside it.');
 		};
@@ -433,6 +542,8 @@ return view.extend({
 					ui.addNotification(null, E('p', {}, _('Saved upload directory cleared')));
 				else
 					ui.addNotification(null, E('p', {}, clearUploadError(arguments[0])), 'danger');
+			}).catch(function() {
+				ui.addNotification(null, E('p', {}, _('Upload directory was not cleared')), 'danger');
 			});
 		};
 

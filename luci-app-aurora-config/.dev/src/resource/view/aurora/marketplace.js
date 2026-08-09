@@ -45,7 +45,7 @@ const SWATCH_KEYS = ["bg", "surface", "text", "brand"];
 // LuCI cache-busts the resources it `require`s itself; this fetch is ours, so
 // it has to carry its own stamp. Same reason theme.js appends
 // ?v=TOKENS_ENGINE_VERSION to the token engine.
-const PRESETS_VERSION = "d685cb2b";
+const PRESETS_VERSION = "97884ace";
 
 // Filenames the theme package itself ships into
 // /www/luci-static/aurora/images. Nothing under one of these names is ever
@@ -182,12 +182,15 @@ const callApplyThemePreset = rpc.declare({
 // both a card (preview) and the drawer (full payload), and neither can
 // describe the same configuration differently.
 //
-// Three shapes have to be handled, newest first:
-//   1. `item.preview`   -- a list row from a hub with the projection
+// Two shapes have to be handled:
+//   1. `item.preview`   -- a list row, from browse or from /api/v1/me
 //   2. `item.payload`   -- a detail row (always complete)
-//   3. `item.palette`   -- a list row from a hub without the projection.
-//      DEPRECATED on the hub side and kept only so a new client still works
-//      against an old one.
+//
+// There used to be a third, `item.palette`, in a nested shape of its own. The
+// hub no longer emits it anywhere: /api/v1/me was its last producer and now
+// carries the same `preview` the browse list does. One set of colors, one
+// shape -- while there were two, a card and the hub's own site could draw the
+// same configuration differently depending on which one they read.
 const previewOf = (item) => {
   const preview = item && item.preview;
   return preview && typeof preview === "object" && !Array.isArray(preview)
@@ -209,7 +212,6 @@ const paletteOf = (item) => {
       }, {});
     return { light: pick("light"), dark: pick("dark") };
   }
-  if (item && item.palette) return item.palette;
   return { light: {}, dark: {} };
 };
 
@@ -343,6 +345,7 @@ const ASSET_LABELS = {
   siteIcon: _("Site Icon"),
   appIcon: _("App Icon"),
   loginBg: _("Login Background"),
+  mainBg: _("Main Background"),
 };
 
 // typography.font_sans is a preset id ("geist-sans"); struct_font_sans is the
@@ -440,6 +443,19 @@ const buildLegacyCardTiles = (item) => {
 //
 // 返回 null 表示这行来自没有 preview 投影的老 hub,调用方退回
 // buildLegacyCardTiles;返回空数组表示这份配置确实只带了颜色。
+// 背景 tile 的 meta:体积 + 随包发出的观感参数(不透明度/磨砂/遮罩,存的
+// 就是带单位的 CSS 值,原样展示)。参数缺席 = 接收端走主题默认,不占版面。
+const bgTileMeta = (item, kindList, layout, prefix) => {
+  const parts = [sizeLabel(assetBytesOf(item, kindList))];
+  const tune = [
+    layout[prefix + "_alpha"],
+    layout[prefix + "_blur"],
+    layout[prefix + "_scrim"],
+  ].filter(Boolean);
+  if (tune.length) parts.push(tune.join(" / "));
+  return parts.filter(Boolean).join(" · ");
+};
+
 const tileEntriesFor = (item) => {
   const preview = previewOf(item);
   const source = preview || (item && item.payload);
@@ -467,6 +483,9 @@ const tileEntriesFor = (item) => {
         (firstFontFamily(typography.struct_font_mono)
           ? " · " + firstFontFamily(typography.struct_font_mono)
           : ""),
+      // 名册字体不随附文件 —— 体积为 0,meta 空串;buildBundledTiles 靠它把
+      // "随附了字体文件"和"应用后路由器自己下载"分开。卡片不画 meta,零影响。
+      meta: sizeLabel(assetBytesOf(item, ["font_sans", "font_mono"])),
     });
 
   const radius = radiusLabel(layout.struct_radius_base);
@@ -493,7 +512,16 @@ const tileEntriesFor = (item) => {
       glyph: "▣",
       label: ASSET_LABELS.loginBg,
       title: _("Custom login page background"),
-      meta: sizeLabel(assetBytesOf(item, ["login_bg"])),
+      meta: bgTileMeta(item, ["login_bg"], layout, "struct_login_bg"),
+    });
+
+  if (kinds.indexOf("main_bg") !== -1)
+    entries.push({
+      kind: "mainBg",
+      glyph: "▣",
+      label: ASSET_LABELS.mainBg,
+      title: _("Custom admin interface background"),
+      meta: bgTileMeta(item, ["main_bg"], layout, "struct_main_bg"),
     });
 
   if (kinds.some((kind) => SITE_ICON_KINDS.indexOf(kind) !== -1))
@@ -548,17 +576,41 @@ const buildCardGlyphs = (item) => {
   );
 };
 
-// 抽屉的"随附内容"。字体和圆角在"布局与排版"那张表里已经写了值,快捷方式
-// 自己占一整节 —— 在这里再画一遍就是同一句话说三次。
-const BUNDLED_KINDS = ["logo", "loginBg", "siteIcon", "appIcon"];
+// 抽屉的"随附内容"。圆角在"布局与排版"那张表里已经写了值,快捷方式自己占
+// 一整节 —— 在这里再画一遍就是同一句话说三次。字体的名字也在那张表里,但
+// 随附的字体文件有多大只有这块 tile 说:名册字体不带文件(应用后路由器自己
+// 下载,由"需下载字体"脚注负责),所以只有 meta 里真有体积的字体才算随附。
+const BUNDLED_KINDS = ["font", "logo", "loginBg", "mainBg", "siteIcon", "appIcon"];
+
+// 自定义工具栏图标随配置走(toolbar_icon_<k>),字节要用户实打实下载,却一直
+// 只被并进"图片共 X"那句合计。这块 tile 是抽屉专属的,在这里合成而不进
+// tileEntriesFor:卡片 glyph 用的仍是共享的 toolbar entry(它说"有几条快捷
+// 方式"),这里说的是"随附了几张图标、共多大" —— 两个不同的问题。
+const toolbarIconsTile = (item) => {
+  const count = assetsOf(item).filter(
+    (asset) => asset && TOOLBAR_ICON_KINDS.indexOf(asset.kind) !== -1,
+  ).length;
+  if (!count) return null;
+  return {
+    kind: "toolbarIcons",
+    glyph: "⌘",
+    label: _("Toolbar icons ×%d").format(count),
+    title: _("Custom toolbar icons"),
+    meta: sizeLabel(assetBytesOf(item, TOOLBAR_ICON_KINDS)),
+  };
+};
 
 const buildBundledTiles = (item) => {
   const entries = tileEntriesFor(item);
   if (!entries) return buildLegacyCardTiles(item);
   if (!entries.length) return buildBuiltinTiles();
   const bundled = entries.filter(
-    (entry) => BUNDLED_KINDS.indexOf(entry.kind) !== -1,
+    (entry) =>
+      BUNDLED_KINDS.indexOf(entry.kind) !== -1 &&
+      (entry.kind !== "font" || entry.meta),
   );
+  const iconsTile = toolbarIconsTile(item);
+  if (iconsTile) bundled.push(iconsTile);
   return bundled.length ? buildTiles(bundled) : null;
 };
 
@@ -884,7 +936,7 @@ const buildDetailBody = (item) => {
   // 这一句只算图片。
   const imageBytes = assetBytesOf(
     item,
-    ["logo_svg", "login_bg"].concat(SITE_ICON_KINDS, APP_ICON_KINDS, TOOLBAR_ICON_KINDS),
+    ["logo_svg", "login_bg", "main_bg"].concat(SITE_ICON_KINDS, APP_ICON_KINDS, TOOLBAR_ICON_KINDS),
   );
   if (imageBytes > 0)
     children.push(
@@ -1041,16 +1093,55 @@ const DELETE_ERROR_COPY = {
 const deleteErrorMessage = (code) =>
   DELETE_ERROR_COPY[code] || _("Unable to delete this share right now.");
 
-const buildConfirmActions = (onConfirm, confirmLabel) =>
-  E("div", { class: "right", style: "margin-top:1em;" }, [
-    E("button", { class: "btn", click: ui.hideModal }, _("Cancel")),
+// 等待反馈只有这一种:LuCI 自带的 .spinning(文字前一个转圈)加上 disabled。
+// 没有第二套 loading 组件 —— 页面上已经在用 .spinning 的地方(应用、抽屉、
+// 社区列表)读起来就该和这里一模一样。
+//
+// disabled 不只是观感:hub_set_nickname / hub_import_key / hub_delete 都是一次
+// 跨太平洋往返,期间按钮活着就等于允许发第二遍。
+const withBusy = (btn, promise) => {
+  btn.disabled = true;
+  btn.classList.add("spinning");
+  const done = () => {
+    // 成功路径经常在这之前就把模态关了,此时按钮已脱离文档 —— 还原它无害。
+    btn.disabled = false;
+    btn.classList.remove("spinning");
+  };
+  return promise.then(
+    (value) => {
+      done();
+      return value;
+    },
+    (err) => {
+      done();
+      throw err;
+    },
+  );
+};
+
+// onConfirm 返回 thenable 时确认键自己进入 busy;返回 undefined 的同步路径
+// (应用预设、应用配置 —— 它们当场换成一个 spinner 模态)行为一个字不变。
+const buildConfirmActions = (onConfirm, confirmLabel) => {
+  const cancelBtn = E("button", { class: "btn", click: ui.hideModal }, _("Cancel"));
+  const confirmBtn = E(
+    "button",
+    { class: "btn cbi-button-action important" },
+    confirmLabel,
+  );
+  confirmBtn.addEventListener("click", () => {
+    const pending = onConfirm();
+    if (!pending || typeof pending.then !== "function") return;
+    cancelBtn.disabled = true;
+    withBusy(confirmBtn, pending).catch(() => {}).then(() => {
+      cancelBtn.disabled = false;
+    });
+  });
+  return E("div", { class: "right", style: "margin-top:1em;" }, [
+    cancelBtn,
     " ",
-    E(
-      "button",
-      { class: "btn cbi-button-action important", click: onConfirm },
-      confirmLabel,
-    ),
+    confirmBtn,
   ]);
+};
 
 const buildSimpleApplyConfirm = (onConfirm) => [
   E(
@@ -1268,17 +1359,25 @@ const STORE_CSS =
   ".aurora-store-why summary{cursor:pointer;color:var(--brand,#333);" +
   "font-weight:600;list-style:none;}" +
   ".aurora-store-why summary::-webkit-details-marker{display:none;}" +
-  ".aurora-store-empty{margin-top:1em;padding:1.3em 1.4em;border-radius:12px;" +
-  "border:1px dashed var(--hairline,rgba(0,0,0,0.2));}" +
-  ".aurora-store-empty h4{margin:0 0 0.4em;font-size:1.02em;}" +
-  ".aurora-store-empty p{margin:0;color:var(--text-muted,#777);" +
-  "font-size:0.9em;max-width:56ch;}" +
-  ".aurora-store-empty .row{display:flex;gap:0.8em;align-items:center;" +
-  "flex-wrap:wrap;margin-top:1.1em;}" +
-  // 两处文字链:身份卡折叠说明里的"恢复身份",和空态引导卡里的那条。
-  ".aurora-store-why .lnk,.aurora-store-empty .lnk{" +
+  // 「还没发过」曾经是一张虚线卡:标题、一段说明、两个按钮。它整块删掉了 ——
+  // 那张卡劝人去别处发布,而发布入口现在就在它上面那条横幅上。空态回到商店
+  // 别处一直在用的写法(见 buildOnlineGrid 的 "No themes match your search."):
+  // 一行灰字,说完就完。
+  ".aurora-store-none{color:var(--text-muted,#777);font-size:0.9em;padding:1.2em 0.2em;}" +
+  // 身份卡上的"改名"和"恢复"。以前只有折叠说明里那一条文字链,而"恢复"同时
+  // 还在空态卡里出现了第二次 —— 两条都指向同一个对话框。现在只剩这里一处。
+  ".aurora-store-why .lnk,.aurora-store-idcard .lnk{" +
   "background:none;border:0;padding:0;cursor:pointer;font:inherit;" +
   "color:var(--brand,#333);text-decoration:underline;}" +
+  // 「我的配置」那条横幅。外框直接用 .aurora-store-share(发布面板的容器),
+  // 这里只多一个三列栅格:缩略图 / 说明 / 动作。窄屏塌成一列,动作排回一行。
+  ".aurora-store-mine{display:grid;grid-template-columns:200px 1fr auto;" +
+  "gap:1.2em;align-items:center;}" +
+  ".aurora-store-mine .sum{margin:0.35em 0 0;color:var(--text-muted,#777);" +
+  "font-size:0.88em;}" +
+  ".aurora-store-mine .acts{display:flex;flex-direction:column;gap:0.5em;}" +
+  "@media (max-width:700px){.aurora-store-mine{grid-template-columns:1fr;}" +
+  ".aurora-store-mine .acts{flex-direction:row;}}" +
   ".aurora-store-keybox{display:flex;align-items:center;gap:0.7em;margin:0.9em 0;" +
   "padding:0.7em 0.8em;border-radius:9px;" +
   "background:var(--surface-sunken,rgba(0,0,0,0.04));" +
@@ -1575,7 +1674,7 @@ return view.extend({
           "p",
           {},
           _(
-            "Apply the '%s' preset now? It is saved immediately and the page reloads. A preset carries a whole look — colors, navigation, spacing, corner radius, content width and fonts. Your shortcuts, logo, icons and login background are left as they are.",
+            "Apply the '%s' preset now? It is saved immediately and the page reloads. A preset carries a whole look — colors, navigation, spacing, corner radius, content width, fonts and shortcuts. Whatever the theme you are wearing now brought with it is replaced; images you uploaded yourself stay as they are.",
           ).format(preset.label),
         ),
         buildConfirmActions(() => {
@@ -1594,7 +1693,12 @@ return view.extend({
             } else {
               ui.addNotification(
                 null,
-                E("p", _("Apply failed: %s").format((ret && ret.error) || "Unknown")),
+                E(
+                  "p",
+                  _("Apply failed: %s").format(
+                    (ret && ret.error) || _("Unknown"),
+                  ),
+                ),
                 "error",
               );
             }
@@ -1655,6 +1759,13 @@ return view.extend({
         buildLayoutRows(preset.preview.layout || {}, typography),
       ];
 
+      const presetShortcuts = buildShortcutList(
+        preset,
+        preset.preview.toolbar,
+        preset.preview.layout || {},
+      );
+      if (presetShortcuts) body.push(...presetShortcuts);
+
       if (needsFontDownload(typography))
         body.push(
           E(
@@ -1671,7 +1782,7 @@ return view.extend({
           "p",
           { class: "aurora-store-dt-foot" },
           _(
-            "Your shortcuts, logo, icons and login background are left exactly as they are.",
+            "Applying replaces the shortcuts above and removes the logo, icons and backgrounds the current theme brought with it. Images you uploaded yourself stay as they are.",
           ),
         ),
       );
@@ -1893,6 +2004,102 @@ return view.extend({
       return E("div", { class: "aurora-store-grid" }, [buildCard(model)]);
     };
 
+    // 同一份配置,两种画法,按它在哪一页出场。
+    //
+    // 「全部」页上它是可浏览的一组里的一张卡(buildMineGrid),和内置、社区
+    // 那两组同一种形状。「我的」页上它是主角,所以摊成一条横幅:一张 252px
+    // 的卡孤零零待在一个为 N 件作品准备的 auto-fill 网格里,后面拖着几格空白
+    // —— 而这一格永远只有一件,因为它就是当前 uci 的投影。
+    //
+    // 横幅换来的宽度不是留白,是清单:发出去到底带什么,连体积一起。那份清单
+    // 直接调 shareManifestRows(),发布面板用的是同一个函数 —— 不复制,否则以
+    // 后加一项配置要改两处,两处必然会长歪。
+    const buildMineBanner = () => {
+      const model = buildMineModel();
+      if (!model) return null;
+
+      const prev = E("div", { class: "aurora-store-prev" }, [
+        buildDuo(model.palette, model.opts),
+        E("span", { class: "aurora-store-dots" }, [buildDotRow(model.palette)]),
+      ]);
+      if (model.current) prev.appendChild(buildCurrentPin());
+
+      const nm = E("div", { class: "aurora-store-nm" }, [
+        document.createTextNode(_("My configuration")),
+        E(
+          "span",
+          { class: "aurora-store-pill " + (modified ? "ok" : "") },
+          modified ? _("In use") : _("Not in use"),
+        ),
+      ]);
+      if (model.glyphs) nm.appendChild(model.glyphs);
+
+      // 主动作跟着这条横幅代表的东西走,不是跟着按钮的可用性走。改过 ->
+      // 它就是屏幕上正在发生的样子,发布发的就是它。没改过 -> 它是被商店
+      // 主题盖掉之前那份备份,而 build_share_payload 打包的是当前 uci,不是
+      // 这张预览 —— 那时"发布"会发出一份和画面上不符的东西,所以这里根本
+      // 不给这个按钮,而不是把它置灰了事。
+      const acts = modified
+        ? [
+            E(
+              "button",
+              {
+                type: "button",
+                class: "btn cbi-button-action important",
+                click: () => openSharePanel(),
+              },
+              _("Share to the store"),
+            ),
+            E(
+              "button",
+              { type: "button", class: "cbi-button", click: () => model.open() },
+              _("Details"),
+            ),
+          ]
+        : [
+            E(
+              "button",
+              {
+                type: "button",
+                class: "btn cbi-button-action important",
+                click: () => confirmRestore(),
+              },
+              _("Apply"),
+            ),
+            E(
+              "button",
+              { type: "button", class: "cbi-button", click: () => model.open() },
+              _("Details"),
+            ),
+          ];
+
+      return E("div", { class: "aurora-store-share aurora-store-mine" }, [
+        E("div", { class: "aurora-store-share-prev" }, [prev]),
+        E("div", {}, [
+          nm,
+          E(
+            "p",
+            { class: "sum" },
+            modified
+              ? _("The look this router is wearing right now.")
+              : _("How this router looked before you applied a theme from the store."),
+          ),
+          // 抽屉里那排「随附内容」用的同一个 buildTiles。清单本身来自
+          // shareManifestRows() —— 发布面板的那一份,一字不差,所以横幅上
+          // 写着要发什么,点下去发的就是什么。
+          buildTiles(
+            shareManifestRows().map((row) => ({
+              glyph: "·",
+              label: row.label,
+              meta: row.detail,
+              title: row.label + " — " + row.detail,
+            })),
+          ),
+        ]),
+        E("div", { class: "acts" }, acts),
+      ]);
+    };
+
     // ------------------------------------------------------------------
     // My shares
 
@@ -1912,12 +2119,27 @@ return view.extend({
     const refreshMyShares = () =>
       L.resolveDefault(hubApi.callHubMe(), null).then((res) => {
         if (res && res.result === 0) {
+          // 失败时刻意不置 myLoaded:一台冷启动就断网的路由器,我们并不知道
+          // 它有没有身份 —— 画那张"还没有创作者身份"的卡就是替 hub 编答案。
+          myLoaded = true;
+          myFailed = false;
           hubApi.meCache.set(res.data);
           applyMe(res.data);
+        } else {
+          myFailed = true;
+          // 保留上一帧的作品,但这一帧要重画:没有上一帧时它是"连不上 + 重试",
+          // 不是空态。
+          renderMyShares(myShares);
         }
+        // 身份卡是 renderContent 画的,而这次请求正是它等的那份数据 —— 加载态
+        // 与空态的切换只有在这里重画才看得见。
+        if (state.tab === "mine") renderContent();
       });
 
     const applyMe = (data) => {
+      // 缓存那一帧同样算"已加载":它是真数据,只是旧的。首屏靠它立刻成型,
+      // 不该被自己的 spinner 盖住。
+      if (data) myLoaded = true;
       profile = {
         id: (data && data.id) || null,
         nickname: (data && data.nickname) || null,
@@ -1940,7 +2162,24 @@ return view.extend({
       renderContent();
     };
 
-    const confirmDeleteShare = (item) => {
+    // 同一张面板的另一个入口,来自「我的配置」横幅。openUpdateForm 进来时
+    // 选中了一条已有分享("用当前配置替换它"),这里什么都不选("发一份新的")。
+    //
+    // 这一页此前一个发布入口都没有 —— studio.js 的注释记着为什么:页头按钮、
+    // 面板标题、空态卡按钮三个入口同时在场,说的都是同一句话,于是一起删掉了。
+    // 这次只加回来一个,而且挂在被发布的那个对象上。工作台那个入口保留,两处
+    // 落到同一张表单。
+    const openSharePanel = () => {
+      shareTarget = "";
+      shareOpen = true;
+      nameInput.value = "";
+      descInput.value = "";
+      renderContent();
+    };
+
+    // btn 是发起这次删除的那一行的 Delete 键:确认框关掉之后,hub_delete 加上
+    // 随后的 hub_me 还要走两趟网络,而这两趟里屏幕上原本什么都不会变。
+    const confirmDeleteShare = (item, btn) => {
       // Static message, deliberately not interpolating item.name: asset-upload's
       // confirmDelete renders opts.message as a bare E() child, which LuCI can
       // route through innerHTML, and the hub config name is attacker-controlled
@@ -1952,22 +2191,22 @@ return view.extend({
         })
         .then((confirmed) => {
           if (!confirmed) return;
-          return L.resolveDefault(hubApi.callHubDelete(item.id), null).then(
-            (res) => {
+          return withBusy(
+            btn,
+            L.resolveDefault(hubApi.callHubDelete(item.id), null).then((res) => {
               if (res && res.result === 0) {
                 ui.addNotification(null, E("p", {}, _("Deleted.")), "info");
-                refreshMyShares();
               } else {
                 ui.addNotification(
                   null,
                   E("p", {}, deleteErrorMessage(res && res.error)),
                   "warning",
                 );
-                // 失败也要重读一次。invalid_id 说的是"商店那边已经没有这件
-                // 作品了",此时留着那一行就是把用户再送回同一个 404。
-                refreshMyShares();
               }
-            },
+              // 失败也要重读一次。invalid_id 说的是"商店那边已经没有这件
+              // 作品了",此时留着那一行就是把用户再送回同一个 404。
+              return refreshMyShares();
+            }),
           );
         });
     };
@@ -2004,7 +2243,7 @@ return view.extend({
         {
           type: "button",
           class: "cbi-button cbi-button-remove",
-          click: () => confirmDeleteShare(item),
+          click: () => confirmDeleteShare(item, deleteBtn),
         },
         _("Delete"),
       );
@@ -2024,18 +2263,45 @@ return view.extend({
       // and a "Name"/"Downloads" line above each would only stutter.
       // 状态挂在名字底下,不占一列:这张表刚在 390px 上修过溢出,第四列会让
       // 它重演。而状态本来就是在说这一件作品,贴着它的名字最省一次目光移动。
+      // 一行色点走在名字前面。/api/v1/me 现在带回和商店列表同一份 preview,
+      // 所以这几个色值和别人在商店里看到的这件作品是同一批 —— 作者不必靠
+      // 名字回忆哪件是哪件。
       const nameCell = E("td", { class: "td", style: "word-break:break-word;" }, [
+        E(
+          "span",
+          { style: "display:inline-flex;vertical-align:middle;margin-right:8px;" },
+          [buildDotRow(paletteOf(item))],
+        ),
         document.createTextNode(item.name || _("Untitled theme")),
       ]);
-      const note = reviewNoteFor(item.assets_status);
-      if (note) {
+
+      // 被下架的那一行:它不是错误,是这件作品此刻唯一的真相,而这里是作者
+      // 唯一会被告知的地方 —— 公开的浏览接口按设计不会再列出它。
+      //
+      // 不给按钮,两个都不给。更新一件已经不在商店里的作品没有意义;而删除
+      // 走的 hub_delete 要求 status='active'(见 hub 的 requireOwnedConfig),
+      // 对着已下架的调过去只会拿到 404,而 404 在 shell 那边只能报成"连不上
+      // 商店" —— 那正是这张表以前那个"删了还在"的老毛病的后半段。
+      const takenDown = item.status === "removed";
+      if (takenDown) {
         nameCell.appendChild(
           E(
             "div",
-            { style: "margin-top:2px;font-size:0.84em;color:" + note.color + ";" },
-            note.text,
+            { style: "margin-top:2px;font-size:0.84em;color:var(--warning);" },
+            _("Taken down — no longer in the store. Nothing you can do from here."),
           ),
         );
+      } else {
+        const note = reviewNoteFor(item.assets_status);
+        if (note) {
+          nameCell.appendChild(
+            E(
+              "div",
+              { style: "margin-top:2px;font-size:0.84em;color:" + note.color + ";" },
+              note.text,
+            ),
+          );
+        }
       }
 
       return E("tr", { class: "tr" }, [
@@ -2044,12 +2310,18 @@ return view.extend({
           document.createTextNode(formatDownloads(item.downloads)),
         ]),
         E("td", { class: "td cbi-section-actions" }, [
-          E("div", {}, [updateBtn, " ", deleteBtn]),
+          E("div", {}, takenDown ? [] : [updateBtn, " ", deleteBtn]),
         ]),
       ]);
     };
 
     let myShares = [];
+
+    // hub_me 回来过没有,以及上一次是不是失败的。首屏之所以要分这两个状态:
+    // 没有它们,一台还在等 hub_me 的路由器画的是"还没有分享过" —— 一句在
+    // 数据到达前就说出口的、可能是假的话。
+    let myLoaded = false;
+    let myFailed = false;
 
     // Whoever this router publishes as. A null nickname means the creator
     // account exists but has never been named.
@@ -2097,7 +2369,9 @@ return view.extend({
 
     const KEY_MASK = "•".repeat(64);
 
-    const backupKeyPrompt = () => {
+    // 返回 promise:调用方(身份卡上那个按钮)拿它做 busy —— 取密钥要过一次
+    // ubus,弹窗在那之后才出现,中间这段静默正是用户会再点一次的地方。
+    const backupKeyPrompt = () =>
       L.resolveDefault(hubApi.callHubExportKey(), null).then((res) => {
         if (!res || res.result !== 0 || !res.key) {
           ui.addNotification(
@@ -2210,88 +2484,121 @@ return view.extend({
           ]),
         ]);
       });
-    };
 
     // "我的分享" 顶上的常驻卡片:这台路由器以谁的名义发布,身份备没备份,以及
-    // 三个身份动作都在这里。
+    // 身份的几个动作都在这里。
     //
     // 它取代了原来那条 keybar。keybar 的毛病不在样式,在于 profile.id 为空时
-    // 整条不渲染 —— 于是一台全新路由器看不到"备份"那一半,页面上唯一跟身份
-    // 有关的按钮就只剩"导入",一个还没有身份的人被要求先导入一个身份。这里
-    // 仍然在没有身份时返回 null,但引导态改由调用方给(见 renderMyShares),
-    // 那里说的是"发布",不是"导入"。
+    // 整条不渲染 —— 于是一台全新路由器看不到"备份"那一半。
+    //
+    // 一张卡两个状态,而不是两张卡:没有身份时它照画,只是名字换成"还没有创作
+    // 者身份",动作只剩「恢复…」。以前这里 return null,于是一台刚刷好的路由器
+    // 在「我的」页上只有一句"还没有分享过" —— 而带着备份文件从旧路由器过来的
+    // 人,恰恰要的就是这一屏上的恢复入口,却一个入口都没有。
+    //
+    // 加载未回来之前仍然返回 null:那时 profile 是空的,画空态就是先撒一次谎
+    // 再纠正。这一小段等待由下面 mySharesEl 里的 spinner 一并说了。
     //
     // 改名也搬到了这里。它以前只挂在发布面板内部那个 "Publish as" 字段的
     // Change 按钮上 —— 不点开发布面板就找不到,等于"想改个名得先假装去发个布"。
     const buildIdentityCard = () => {
-      if (!profile.id) return null;
+      if (!myLoaded) return null;
 
       const nameRow = [];
-      if (profile.nickname) {
-        nameRow.push(
-          E("strong", {}, [document.createTextNode(profile.nickname)]),
-        );
-      } else {
-        nameRow.push(
-          E("strong", { style: "color:var(--text-muted);" }, [
-            document.createTextNode(_("Not named yet")),
-          ]),
-        );
-      }
-      nameRow.push(
-        E("span", { class: "hid" }, [document.createTextNode("#" + profile.id)]),
-        E(
-          "span",
-          { class: "aurora-store-pill " + (keySaved ? "ok" : "risk") },
-          keySaved ? _("Backed up") : _("Not backed up"),
-        ),
-      );
-
+      const acts = [];
+      let meta;
       // 首字母做头像。昵称可以是任意 Unicode,取第一个 code point 而不是第一个
       // UTF-16 码元 —— 否则一个 emoji 昵称会被切成半个代理对,画出一个方块。
-      const initial = profile.nickname ? Array.from(profile.nickname)[0] : "#";
+      let initial = "#";
+
+      if (!profile.id) {
+        nameRow.push(
+          E("strong", { style: "color:var(--text-muted);" }, [
+            document.createTextNode(_("No creator identity yet")),
+          ]),
+        );
+        meta = _("Created the first time you publish — or restore one you backed up.");
+        // 唯一的动作,所以是实心的那个:这张卡此刻只剩一件事可做。
+        acts.push(
+          E(
+            "button",
+            {
+              type: "button",
+              class: "btn cbi-button-action",
+              click: () => restoreIdentityPrompt(),
+            },
+            _("Restore…"),
+          ),
+        );
+      } else {
+        if (profile.nickname) {
+          nameRow.push(
+            E("strong", {}, [document.createTextNode(profile.nickname)]),
+          );
+          initial = Array.from(profile.nickname)[0];
+        } else {
+          nameRow.push(
+            E("strong", { style: "color:var(--text-muted);" }, [
+              document.createTextNode(_("Not named yet")),
+            ]),
+          );
+        }
+        nameRow.push(
+          E("span", { class: "hid" }, [document.createTextNode("#" + profile.id)]),
+          E(
+            "span",
+            { class: "aurora-store-pill " + (keySaved ? "ok" : "risk") },
+            keySaved ? _("Backed up") : _("Not backed up"),
+          ),
+        );
+        meta = _("Signs everything you share. It lives only on this router.");
+        // 身份的三个动作全在这一处。备份是实心的那个(没备份时),改名和
+        // 恢复是文字链 —— 它们不是这张卡要人做的事,只是要人找得到的事。
+        //
+        // 「恢复」以前有两个入口:折叠说明里一条,空态引导卡里又一条,同屏
+        // 可见,指向同一个对话框。空态卡整张删掉了,说明里那条也删了,只剩
+        // 这一个。
+        acts.push(
+          E(
+            "button",
+            {
+              type: "button",
+              class: keySaved ? "cbi-button" : "btn cbi-button-action",
+              click: (ev) => withBusy(ev.currentTarget, backupKeyPrompt()),
+            },
+            _("Back up identity"),
+          ),
+          " ",
+          E(
+            "button",
+            { type: "button", class: "cbi-button", click: () => promptRename() },
+            _("Rename"),
+          ),
+          " ",
+          E(
+            "button",
+            { type: "button", class: "lnk", click: () => restoreIdentityPrompt() },
+            _("Restore…"),
+          ),
+        );
+      }
 
       return E("div", {}, [
         E("div", { class: "aurora-store-idcard" }, [
           E("div", { class: "av" }, [document.createTextNode(initial)]),
           E("div", { class: "who" }, [
             E("div", { class: "nm" }, nameRow),
-            E("div", { class: "meta" }, [
-              document.createTextNode(
-                _("Signs everything you share. It lives only on this router."),
-              ),
-            ]),
+            E("div", { class: "meta" }, [document.createTextNode(meta)]),
           ]),
-          E("div", { class: "acts" }, [
-            E(
-              "button",
-              {
-                type: "button",
-                class: keySaved ? "cbi-button" : "btn cbi-button-action",
-                click: () => backupKeyPrompt(),
-              },
-              _("Back up identity"),
-            ),
-            " ",
-            E(
-              "button",
-              { type: "button", class: "cbi-button", click: () => promptRename() },
-              _("Rename"),
-            ),
-          ]),
+          E("div", { class: "acts" }, acts),
         ]),
         E("details", { class: "aurora-store-why" }, [
           E("summary", {}, _("What is this? Where did it come from?")),
-          E("p", { style: "margin:0 0 0.6em;" }, [
+          E("p", { style: "margin:0;" }, [
             document.createTextNode(
               _("Created automatically the first time you publish — no sign-up, no password. It decides which configurations in the store are yours, and who can change or remove them. Backing it up saves an identity backup file; import that file after a reflash, or on a new router, and your work comes back to you."),
             ),
           ]),
-          E(
-            "button",
-            { type: "button", class: "lnk", click: () => restoreIdentityPrompt() },
-            _("Changed routers? Restore your identity"),
-          ),
         ]),
       ]);
     };
@@ -2329,6 +2636,8 @@ return view.extend({
         [document.createTextNode(_("Choose backup file…")), picker],
       );
 
+      // 返回 promise:导入加上随后那次 hub_me 是两趟往返,确认键要 busy 到
+      // 两趟都回来为止 —— 见 buildConfirmActions。
       const commit = () => {
         const key = input.value.trim().toLowerCase();
         if (!KEY_RE.test(key)) {
@@ -2336,7 +2645,7 @@ return view.extend({
           err.style.display = "block";
           return;
         }
-        L.resolveDefault(hubApi.callHubImportKey(key), null).then((res) => {
+        return L.resolveDefault(hubApi.callHubImportKey(key), null).then((res) => {
           if (!res || res.result !== 0) {
             err.textContent = _("Couldn't restore that identity. Check it and try again.");
             err.style.display = "block";
@@ -2347,8 +2656,9 @@ return view.extend({
           // "导入成功、随后 hub_me 失败"会把上一个账号的作品留在界面上,
           // 而 Task 2 之后失败路径不再自行清空。
           hubApi.meCache.clear();
+          myLoaded = false;
           applyMe(null);
-          refreshMyShares().then(() => {
+          return refreshMyShares().then(() => {
             keySaved = true;
             ui.addNotification(
               null,
@@ -2378,7 +2688,11 @@ return view.extend({
       ];
 
       // Replacing an identity that still owns published work is unrecoverable,
-      // so the current one gets one last chance to be saved first.
+      // so it gets said out loud before the button that does it.
+      //
+      // 这里曾经还挂着一个「先备份当前身份」按钮。备份入口在身份卡上就有一个,
+      // 这个框是恢复框 —— 一个对话框只做一件事,警告负责讲后果,不负责再开一
+      // 条通往别处的岔路。
       if (myShares.length) {
         body.splice(
           1,
@@ -2389,15 +2703,6 @@ return view.extend({
             _("This router already has shared configurations of its own. Switching to another identity gives them up for good — back up the current identity first if you still want them."),
           ),
         );
-        body.push(
-          E("div", { style: "margin-top:0.8em;" }, [
-            E(
-              "button",
-              { type: "button", class: "cbi-button", click: () => backupKeyPrompt() },
-              _("Back up the current identity first"),
-            ),
-          ]),
-        );
       }
 
       body.push(buildConfirmActions(commit, _("Restore")));
@@ -2407,50 +2712,56 @@ return view.extend({
     // The tab keeps the count of what is already published, so the number is
     // readable without opening the tab first.
     const renderMyShares = (items) => {
-      // 商店那边是软删除:一件作品删掉之后,/api/v1/me 仍然把它列出来,只是
-      // status 变成 "removed"。这是删除看起来"删不掉"的全部原因 —— 删成功了,
-      // 刷新一遍,那一行还在,于是用户再点一次,这次撞上 404,而 404 在 shell
-      // 那边只能报成"连不上商店"。这里滤掉,那一行就再也不会重新出现。
-      myShares = (items || []).filter((item) => item && item.status !== "removed");
+      // 这里曾经有一句 filter(status !== "removed")。当时商店的软删除让作者
+      // 自己删掉的作品继续出现在 /api/v1/me 里,只是 status 变成 removed ——
+      // 删成功了、刷新一遍那一行还在,用户再点一次就撞 404。滤掉是对的,代价
+      // 是被管理员下架的作品也一起被藏了,作者永远不知道自己被下架过。
+      //
+      // 现在 hub 那边分得清了(migration 0007 的 removed_by):作者自己删的根本
+      // 不再下发,而 status === "removed" 只剩一个意思 —— 被下架。所以这里不再
+      // 滤,那一行改由 buildMyShareRow 画成「已下架」。
+      myShares = (items || []).filter((item) => item);
       TABS.forEach(renderTabLabel);
       while (mySharesEl.firstChild) mySharesEl.removeChild(mySharesEl.firstChild);
-      if (!myShares.length) {
-        // 没有意图就不摆表单 —— 表单是个重家伙,凭空占满一整页就是原先那种
-        // 冗余(一张劝你发布的卡,底下再跟一张让你发布的面板)。这里只给一块
-        // 路标。按钮是路标,不是发布控件:它把人送回工作台,不在这一页发起
-        // 任何事。两种空态(从没发过 / 全删光了)合成一句话,因为改版之后它们
-        // 要说的下一步完全相同。
+
+      // 三个"没有表格"的理由,措辞各不相同,因为它们是三件事:问不到、还不
+      // 知道、确实没有。文案和转圈都跟社区网格用同一套 —— 同一页上同一种等待
+      // 不该长出第二种样子。
+      if (myFailed && !myShares.length) {
         mySharesEl.appendChild(
-          E("div", { class: "aurora-store-empty" }, [
-            E("h4", {}, _("Nothing shared yet")),
-            E("p", {}, [
-              document.createTextNode(
-                _("Sharing starts in the design studio: make the appearance what you want there, then publish from that page."),
-              ),
-            ]),
-            E("div", { class: "row" }, [
-              E(
-                "button",
-                {
-                  type: "button",
-                  class: "cbi-button",
-                  click: () => {
-                    window.location.href = L.url("admin/system/aurora/studio");
-                  },
-                },
-                _("Go to the design studio"),
-              ),
-              E(
-                "button",
-                {
-                  type: "button",
-                  class: "lnk",
-                  click: () => restoreIdentityPrompt(),
-                },
-                _("Shared on another router before? Restore my identity"),
-              ),
-            ]),
+          E("div", { class: "aurora-store-none" }, [
+            E("p", { style: "margin:0 0 0.6em;" }, _("Unable to reach the theme store right now.")),
+            E(
+              "button",
+              {
+                type: "button",
+                class: "cbi-button cbi-button-apply",
+                click: (ev) => withBusy(ev.currentTarget, refreshMyShares()),
+              },
+              _("Retry"),
+            ),
           ]),
+        );
+        return;
+      }
+      if (!myLoaded) {
+        mySharesEl.appendChild(
+          E("p", { class: "spinning", style: "padding:1.2em 0.2em;" }, _("Loading…")),
+        );
+        return;
+      }
+
+      if (!myShares.length) {
+        // 曾经是一张虚线卡:标题、一段说明、一个"去工作台"按钮,外加第二条
+        // "恢复身份"链接。三样东西现在都没有理由存在了 —— 发布入口就在这一
+        // 屏上方那条横幅上,身份的恢复入口在身份卡里。剩下要说的只有一句:
+        // 这里以后会长出什么。
+        mySharesEl.appendChild(
+          E(
+            "p",
+            { class: "aurora-store-none" },
+            _("Nothing shared yet. Publish the configuration above and it shows up here."),
+          ),
         );
         return;
       }
@@ -2464,14 +2775,8 @@ return view.extend({
           ...myShares.map((item) => buildMyShareRow(item)),
         ]),
       );
-      // 有作品的人也需要知道下一套从哪儿发 —— 这一页已经没有发布入口了。
-      mySharesEl.appendChild(
-        E(
-          "p",
-          { style: "font-size:0.84em;color:var(--text-subtle);margin:12px 0 0;" },
-          _("Want to publish another one? Set it up in the design studio and publish from there."),
-        ),
-      );
+      // 这里曾经跟着一句"想再发一套?去工作台发"。它存在的理由是这一页当时
+      // 没有发布入口 —— 现在这一屏上方就是那条横幅,再指一次路只是多一行字。
     };
 
     // ------------------------------------------------------------------
@@ -2542,6 +2847,7 @@ return view.extend({
         pwa_icon_192: ASSET_LABELS.appIcon,
         pwa_icon_512: ASSET_LABELS.appIcon,
         login_bg: ASSET_LABELS.loginBg,
+        main_bg: ASSET_LABELS.mainBg,
       };
       const imageRows = [];
       sharedImages.forEach((image) => {
@@ -2762,6 +3068,16 @@ return view.extend({
 
       errEl.style.display = "none";
       submitBtn.disabled = true;
+      submitBtn.classList.add("spinning");
+      // 进度行原先要等第一个资源开始上传才出现,而在那之前还有一次 claim 昵称
+      // 的往返 —— 那几秒里按钮已经按不动了,却没有一个字解释为什么。
+      renderShareProgress({ phase: "begin" });
+
+      // 三条收尾路径(昵称被拒、发布失败、发布成功刷新完)共用同一个还原。
+      const endSubmit = () => {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove("spinning");
+      };
 
       // Two calls on purpose. The signature is account state, so it is
       // claimed first and the publish itself carries no author at all. If the
@@ -2783,7 +3099,7 @@ return view.extend({
 
       claim.then((claimed) => {
         if (!claimed) {
-          submitBtn.disabled = false;
+          endSubmit();
           return;
         }
         hubApi
@@ -2832,11 +3148,11 @@ return view.extend({
                 nameInput.value = "";
                 descInput.value = "";
                 nicknameInput.value = "";
-                submitBtn.disabled = false;
+                endSubmit();
                 renderContent();
               });
             } else {
-              submitBtn.disabled = false;
+              endSubmit();
               showError(shareErrorMessage(res && res.error));
             }
           });
@@ -2874,12 +3190,12 @@ return view.extend({
             err.style.display = "block";
             return;
           }
-          L.resolveDefault(hubApi.callHubSetNickname(next), null).then((res) => {
+          // 返回给 buildConfirmActions 做 busy —— 改名要过 hub,不是本地操作。
+          return L.resolveDefault(hubApi.callHubSetNickname(next), null).then((res) => {
             const data = (res && res.result === 0 && res.data) || null;
             if (data && !data.error) {
               ui.hideModal();
-              refreshMyShares().then(renderContent);
-              return;
+              return refreshMyShares().then(renderContent);
             }
             err.textContent = data
               ? nicknameErrorMessage(data.error)
@@ -3266,7 +3582,10 @@ return view.extend({
 
       // 排在最前面:正在用的那张卡应该第一眼看见。既没改过、又没有可回去的
       // 配置时整段不出现 —— 那时用户还没有属于自己的东西。
-      if (state.tab === "all" || state.tab === "mine") {
+      //
+      // 「全部」页上它是一张卡:那一页是拿来逛的,内置和社区也是网格,它跟着
+      // 一样才读得顺。「我的」页在下面单独处理 —— 那里它是主角,画成横幅。
+      if (state.tab === "all") {
         const mineGrid = buildMineGrid();
         if (mineGrid) {
           push(buildSectionTitle(_("Mine"), _("On this router only")));
@@ -3298,12 +3617,16 @@ return view.extend({
           push(buildSharePanel());
           return;
         }
-        const identityCard = buildIdentityCard();
-        if (identityCard) {
-          push(buildSectionTitle(_("My creator identity"), ""));
-          push(identityCard);
+        // 一屏两个标题,不是三个。身份曾经占着和作品同一级的一个 section ——
+        // 它是设施,不是目的,现在并进「我的分享」:这台路由器以谁的名义发布,
+        // 说的本来就是下面那张表里的东西归谁。
+        const banner = buildMineBanner();
+        if (banner) {
+          push(buildSectionTitle(_("Mine"), _("On this router only")));
+          push(banner);
         }
         push(buildSectionTitle(_("My Shares"), ""));
+        push(buildIdentityCard());
         push(mySharesEl);
       }
     };

@@ -457,10 +457,12 @@ if singbox_tags:find("with_quic") then
 	o = s:option(Value, _n("hysteria2_down_mbps"), translate("Max download Mbps"))
 	o:depends({ [_n("protocol")] = "hysteria2" })
 
-	o = s:option(Value, _n("hysteria2_idle_timeout"), translate("Idle Timeout"), translate("Example:") .. "30s (4s~120s)")
+	o = s:option(Value, _n("hysteria2_idle_timeout"), translate("Idle Timeout"), translate("Units:seconds") .. " (4~120)")
+	o.datatype = "range(4,120)"
 	o:depends({ [_n("protocol")] = "hysteria2"})
 
-	o = s:option(Value, _n("hysteria2_keep_alive_period"), translate("QUIC KeepAlive interval"), translate("Example:") .. "10s (2s~60s)")
+	o = s:option(Value, _n("hysteria2_keep_alive_period"), translate("QUIC KeepAlive interval"), translate("Units:seconds") .. " (2~60)")
+	o.datatype = "range(2,60)"
 	o:depends({ [_n("protocol")] = "hysteria2"})
 
 	o = s:option(Flag, _n("hysteria2_disable_mtu_discovery"), translate("Disable MTU detection"))
@@ -572,6 +574,31 @@ o.validate = function(self, value)
 	return value
 end
 
+o = s:option(DynamicList, _n("cipherSuites"), translate("Cipher Suites"), '<a href="https://go.dev/src/crypto/tls/cipher_suites.go#L44" target="_blank">***</a>' .. " " .. translate("Configures the list of supported cipher suites."))
+o:value("TLS_AES_128_GCM_SHA256")
+o:value("TLS_AES_256_GCM_SHA384")
+o:value("TLS_CHACHA20_POLY1305_SHA256")
+o:value("TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA")
+o:value("TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA")
+o:value("TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA")
+o:value("TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA")
+o:value("TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256")
+o:value("TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384")
+o:value("TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256")
+o:value("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384")
+o:value("TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256")
+o:value("TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256")
+o:depends({ [_n("tls")] = true })
+function o.custom_write(self, section, value)
+	local new_t
+	if type(value) == "table" then
+		new_t = api.table_remove_duplicates(value)
+	else
+		new_t = { value }
+	end
+	m:set(section, self.option:sub(1 + #option_prefix), new_t)
+end
+
 o = s:option(Flag, _n("ech"), translate("ECH"))
 o.default = "0"
 o:depends({ [_n("tls")] = true, [_n("flow")] = "", [_n("reality")] = false })
@@ -628,6 +655,10 @@ if singbox_tags:find("with_utls") then
 	o = s:option(Value, _n("reality_shortId"), translate("Short Id"))
 	o:depends({ [_n("reality")] = true })
 end
+
+o = s:option(Flag, _n("anytls_disable_reuse"), translate("Disable TLS Reuse"))
+o.default = 0
+o:depends({ [_n("protocol")] = "anytls" })
 
 o = s:option(ListValue, _n("transport"), translate("Transport"))
 o:value("tcp", "TCP")
