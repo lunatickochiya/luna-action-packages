@@ -12,20 +12,21 @@
      uci -q batch <<-EOF
   		delete ucitrack.@passwall2[-1]
 
+
 --- a/luci-app-passwall2/luasrc/controller/passwall2.lua
 +++ b/luci-app-passwall2/luasrc/controller/passwall2.lua
-@@ -82,6 +82,7 @@ function index()
- 	entry({"admin", "services", appname, "subscribe_manual"}, call("subscribe_manual")).leaf = true
- 	entry({"admin", "services", appname, "subscribe_manual_all"}, call("subscribe_manual_all")).leaf = true
- 	entry({"admin", "services", appname, "flush_set"}, call("flush_set")).leaf = true
+@@ -32,6 +32,7 @@ function index()
+ 	end
+ 	e.dependent = true
+ 	e.acl_depends = { "luci-app-passwall2" }
 +	entry({"admin", "services", appname, "ip"}, call('check_ip')).leaf = true
-
- 	--[[Components update]]
- 	entry({"admin", "services", appname, "check_passwall2"}, call("app_check")).leaf = true
-@@ -89,6 +90,61 @@ local function http_write_json(content)
- 	http.write_json(content or {code = 1})
+ 	--[[ Client ]]
+ 	entry({"admin", "services", appname, "settings"}, cbi(appname .. "/client/global"), _("Basic Settings"), 1).dependent = true
+ 	entry({"admin", "services", appname, "node_list"}, cbi(appname .. "/client/node_list"), _("Node List"), 2).dependent = true
+@@ -137,6 +138,61 @@ local function http_write_json_error(data)
+ 	http.write(jsonStringify({code = 0, data = data}))
  end
-
+ 
 +function check_site(host, port)
 +    local nixio = require "nixio"
 +    local socket = nixio.socket("inet", "stream")
@@ -40,7 +41,7 @@
 +    local result = luci.sys.exec('curl --retry 3 -m 10 -LfsA "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36" http://ip-api.com/json/')
 +    local json = require "luci.jsonc"
 +    local info = json.parse(result)
-+
++    
 +    return {
 +        flag = string.lower(info.countryCode) or "un",
 +        country = get_country_name(info.countryCode) or "Unknown",
@@ -82,25 +83,25 @@
 +end
 +
  function reset_config()
- 	luci.sys.call('/etc/init.d/passwall2 stop')
- 	luci.sys.call('[ -f "/usr/share/passwall2/0_default_config" ] && cp -f /usr/share/passwall2/0_default_config /etc/config/passwall2')
+ 	uci:revert(appname)
+ 	luci.sys.call("echo '' > /tmp/log/passwall2.log")
 
 --- a/luci-app-passwall2/luasrc/model/cbi/passwall2/client/global.lua
 +++ b/luci-app-passwall2/luasrc/model/cbi/passwall2/client/global.lua
-@@ -411,5 +411,6 @@ for k, v in pairs(nodes_table) do
+@@ -387,5 +387,6 @@ footer.global_cfgid = global_cfgid
  footer.shunt_list = api.jsonc.stringify(shunt_list)
  
  m:append(footer)
 +m:append(Template(appname .. "/global/status_bottom"))
-
- return m
+ 
+ return api.return_map(m)
 
 diff --git a/luci-app-passwall2/luasrc/view/passwall2/global/status_bottom.htm b/luci-app-passwall2/luasrc/view/passwall2/global/status_bottom.htm
 new file mode 100644
 index 000000000000..a00fff9c79b3
 --- /dev/null
 +++ b/luci-app-passwall2/luasrc/view/passwall2/global/status_bottom.htm
-@@ -0,0 +1,128 @@
+@@ -0,0 +1,124 @@
 +<style>
 +.pure-img {
 +    max-height: 100%;
@@ -141,14 +142,10 @@ index 000000000000..a00fff9c79b3
 +    text-align: right;
 +}
 +
-+#cbi-passwall+.cbi-page-actions.control-group.fixed {
-+    bottom: 3.3rem;
++.pure-u-1-2, .pure-u-12-24 {
++    width: 50%;
 +}
-+
-+footer{
-+display:block !important;
-+}
-+
++    
 +@media screen and (max-width: 700px) {
 +.status-bar .icon-con {
 +    height: 2.5em;
@@ -159,15 +156,15 @@ index 000000000000..a00fff9c79b3
 +    <div class="inner">
 +        <div class="pure-g">
 +            <div class="pure-u-1-2">
-+                <span class="flag"><img src="/luci-static/passwall/flags/loading.svg" class="pure-img"></span> <span
++                <span class="flag"><img src="/luci-static/passwall2/flags/loading.svg" class="pure-img"></span> <span
 +                    class="status-info">获取中...</span>
 +            </div>
 +            <div class="pure-u-1-2">
 +                <div class="icon-con">
-+                    <img src="/luci-static/passwall/img/site_icon1_01.png" class="pure-img i1">
-+                    <img src="/luci-static/passwall/img/site_icon1_02.png" class="pure-img i2">
-+                    <img src="/luci-static/passwall/img/site_icon1_03.png" class="pure-img i3">
-+                    <img src="/luci-static/passwall/img/site_icon1_04.png" class="pure-img i4">
++                    <img src="/luci-static/passwall2/img/site_icon1_01.png" class="pure-img i1">
++                    <img src="/luci-static/passwall2/img/site_icon1_02.png" class="pure-img i2">
++                    <img src="/luci-static/passwall2/img/site_icon1_03.png" class="pure-img i3">
++                    <img src="/luci-static/passwall2/img/site_icon1_04.png" class="pure-img i4">
 +                </div>
 +            </div>
 +        </div>
@@ -175,14 +172,14 @@ index 000000000000..a00fff9c79b3
 +</div>
 +
 +<script>
-+const _ASSETS = '/luci-static/passwall/';
-+const CHECK_IP_URL = '<%=url([[admin]], [[services]], [[passwall]], [[ip]])%>';
++const _ASSETS = '/luci-static/passwall2/';
++const CHECK_IP_URL = '<%=url([[admin]], [[services]], [[passwall2]], [[ip]])%>';
 +
 +let wW = window.innerWidth;
 +
 +function resize() {
 +    wW = window.innerWidth;
-+    let lw = document.querySelector(".main-left").offsetWidth;
++    let lw = document.querySelector(".main-left")?.offsetWidth ?? 5;
 +    let statusBar = document.querySelector(".status-bar");
 +    statusBar.style.width = (wW - lw) + 'px';
 +    let flagElement = statusBar.querySelector(".flag");
