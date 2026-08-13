@@ -88,31 +88,27 @@ end
 
 s:append(Template(appname .. "/rule/rule_version"))
 
-local cfgname = "shunt_rules"
-s = m:section(TypedSection, cfgname, "Sing-Box/Xray " .. translate("Shunt Rule"), "<a style='color: red'>" .. translate("Please note attention to the priority, the higher the order, the higher the priority.") .. "</a>")
-s.template = "cbi/tblsection"
-s.anonymous = false
-s.addremove = true
-s.sortable = true
-s.extedit = api.url("shunt_rules", "%s")
-function s.create(e, t)
-	TypedSection.create(e, t)
-	luci.http.redirect(e.extedit:format(t))
-end
-function s.remove(e, t)
-	m.uci:foreach(appname, "nodes", function(s)
-		if s["protocol"] and s["protocol"] == "_shunt" then
-			m:del(s[".name"], t)
+if true then
+	local o = Template(appname .. "/rule/shunt_rule_list")
+	o.api = api
+	m:append(o)
+
+	if luci.http.formvalue("cbi.submit") == "1" then
+		local group_order = luci.http.formvaluetable("group.order")
+		if group_order then
+			for k, v in pairs(group_order) do
+				if v and v~= "" then
+					local new_order = {}
+					string.gsub(v, "[^" .. " " .. "]+", function(w)
+						new_order[#new_order + 1] = w
+					end)
+					for idx, name in ipairs(new_order) do
+						m.uci:reorder(appname, name, idx - 1)
+					end
+				end
+			end
 		end
-	end)
-	TypedSection.remove(e, t)
+	end
 end
-
-o = s:option(DummyValue, "remarks", translate("Remarks"))
-
-local sortable = Template(appname .. "/cbi/sortable")
-sortable.api = api
-sortable.target_cfgname = cfgname
-m:append(sortable)
 
 return api.return_map(m)

@@ -2,7 +2,7 @@
 
 # 🚀 luci-app-pushbot PushBot
 
-**Router alert & log push tool** — DingTalk · WeCom · Feishu · Bark · PushPlus · PushDeer
+**Router alert & log push tool** — DingTalk · WeCom · Feishu · Bark · PushPlus · PushDeer · ntfy · Gotify (debug)
 
 [![GitHub release](https://img.shields.io/github/v/release/zzsj0928/luci-app-pushbot?style=flat-square&color=blue)](https://github.com/zzsj0928/luci-app-pushbot/releases)
 [![GitHub issues](https://img.shields.io/github/issues/zzsj0928/luci-app-pushbot?style=flat-square&color=orange)](https://github.com/zzsj0928/luci-app-pushbot/issues)
@@ -24,6 +24,18 @@
 
 # 📝 Changelog
 
+- **2026-08-12** (v5.12-r15):
+  - Added: Gotify push channel (debug)
+  - Added: "Test Color" button on the Color Settings card (saves config & sends a test push immediately)
+  - Added: version badge auto-reads the installed version; click the badge to check GitHub updates from the browser (8s timeout, frosted toast, 0.5s fade-in / 4s hold)
+  - Fixed: MT798x interface dropdown empty (busybox lacks timeout command); OpenWrt 23.05 ipk missing r minor version
+- **2026-08-09** (v5.12): Added Gotify channel support (debug), main version 5.11 → 5.12
+- **2026-08-09** (v5.11): Multiple fixes & enhancements
+  - Theme adaptation: auto-follow argon / zargon / liquid / system light/dark mode
+  - ntfy: fixed line-break display; Token & self-hosted server toggles
+  - PushPlus: all channels (App/extension/ClawBot/voice etc.) & channel code
+  - Full UI localization; test buttons renamed "Test Channel / Test Schedule"
+  - Fixed multiple translation failures & page JS errors
 - **2026-08-06**: Full i18n and multiple improvements
   - Full i18n: English as the source language; install `luci-i18n-pushbot-zh-cn` to get the Chinese UI
   - Language pack version tracks the main package
@@ -47,7 +59,7 @@
 | Module | Description |
 |--------|-------------|
 | Run Control | Enable/disable switch, compact mode (compact device list / current time / push title only) |
-| Push Mode | DingTalk, WeCom, Feishu, Bark, PushPlus, PushDeer, custom push |
+| Push Mode | DingTalk, WeCom, Feishu, Bark, PushPlus (all channels), PushDeer, ntfy, Gotify (debug), custom push |
 | Terminal Info | MAC device database (compact / full / network lookup), device aliases |
 | Do Not Disturb | DND hours (pause script / silent mode), MAC filter (whitelist / blacklist / interface filter, online / offline DND) |
 

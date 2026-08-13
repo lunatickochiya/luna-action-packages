@@ -31,34 +31,25 @@ local function get_domain_excluded()
 	return hosts
 end
 
-function parseDNS(str)
-	local result_dns_server
-	-- [proto]://[ip]
-	-- [proto]://[ip]:[port]
-	-- https://[ip]/[path]
-	-- https://[ip]:[port]/[path]
-	local _a = api.parseURL(str)
-	if _a then
-		if _a.protocol == "tcp" or _a.protocol == "udp" or _a.protocol == "https" then
-			result_dns_server = {
-				address = str
-			}
-			if _a.protocol == "udp" then
-				result_dns_server.address = _a.hostname
-			end
-			if _a.port then
-				result_dns_server.port = _a.port
-			else
-				if _a.protocol == "https" then
-					result_dns_server.port = 443
-				else
-					result_dns_server.port = 53
-				end
-			end
-		end
-	end
-	return result_dns_server
+local function get_log_level(s)
+	if s == "warn" then s = "warning" end
+	return s
 end
+
+--[[
+local cipherSuites = {
+	"TLS_AES_128_GCM_SHA256", "TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256",
+	"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA", "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+	"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA", "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+	"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256", "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+	"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+	"TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256", "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
+}
+local cipherSuites_lookup = {}
+for i, v in ipairs(cipherSuites) do
+	cipherSuites_lookup[v] = true
+end
+]]--
 
 function gen_outbound(flag, node, tag, proxy_table)
 	local result = nil
@@ -170,9 +161,15 @@ function gen_outbound(flag, node, tag, proxy_table)
 					mark = 255,
 					domainStrategy = node.domain_strategy or "UseIP",
 					tcpFastOpen = (node.tcp_fast_open == "1") and true or nil,
-					tcpMptcp = (node.tcpMptcp == "1") and true or nil
+					tcpMptcp = (node.tcpMptcp == "1") and true or nil,
+					happyEyeballs = (node.happy_eyeballs == "1") and {
+						TryDelayMs = 250,
+						PrioritizeIPv6 = false,
+						Interleave = 1,
+						MaxConcurrentTry = 4
+					} or nil
 				},
-				network = node.transport,
+				[(api.compare_versions(xray_version, "<", "26.7.11")) and "network" or "method"] = node.transport, -- Todo: Remove version check and "network"
 				security = node.stream_security,
 				tlsSettings = (node.stream_security == "tls") and {
 					serverName = node.tls_serverName,
@@ -183,7 +180,8 @@ function gen_outbound(flag, node, tag, proxy_table)
 					certificates = (node.tls_certificate == "1" and node.tls_certificate_pem ~= "") and {
 						certificate = api.split(node.tls_certificate_pem, "\n"),
 						usage = "verify"
-					} or nil
+					} or nil,
+					cipherSuites = (node.cipherSuites and #node.cipherSuites > 0) and table.concat(node.cipherSuites, ":") or nil,
 				} or nil,
 				realitySettings = (node.stream_security == "reality") and {
 					serverName = node.tls_serverName,
@@ -498,17 +496,46 @@ function gen_config_server(node)
 		{ protocol = "freedom", tag = "direct", settings = { finalRules = {{ action = "allow" }}}}, { protocol = "blackhole", tag = "blocked" }
 	}
 
-	if node.protocol == "vmess" or node.protocol == "vless" then
-		if node.uuid then
-			local users = {}
-			for i = 1, #node.uuid do
-				users[i] = {
-					id = node.uuid[i],
-					flow = (node.protocol == "vless"
-					and (node.tls == "1" or (node.decryption and node.decryption ~= "" and node.decryption ~= "none")) 
-					and node.flow and node.flow ~= "") and node.flow or nil
-				}
+	local users = node.users or {}
+	local users = nil
+	if node.users and #node.users > 0 then
+		users = {}
+		for i, v in ipairs(node.users) do
+			local user = uci:get_all("passwall2_server", v) or {}
+			if user[".type"] == "user" then
+				local u = {}
+				if node.protocol == "socks" or node.protocol == "http" then
+					u.user = user.username
+					u.pass = user.password
+				end
+				if node.protocol == "shadowsocks" or node.protocol == "trojan" then
+					u.email = user.username
+					u.password = user.password
+				end
+				if node.protocol == "vmess" then
+					u.email = user.username
+					u.id = user.uuid
+					u.alterId = 0
+				end
+				if node.protocol == "vless" then
+					u.email = user.username
+					u.id = user.uuid
+					u.flow = node.flow
+				end
+				if node.protocol == "hysteria2" then
+					u.email = user.username
+					u.auth = user.password
+				end
+				users[#users + 1] = u
 			end
+		end
+		if #users == 0 then
+			users = nil
+		end
+	end
+
+	if node.protocol == "vmess" or node.protocol == "vless" then
+		if users then
 			settings = {
 				users = users,
 				decryption = (node.protocol == "vless") and ((node.decryption and node.decryption ~= "") and node.decryption or "none") or nil
@@ -517,40 +544,25 @@ function gen_config_server(node)
 	elseif node.protocol == "socks" then
 		settings = {
 			udp = ("1" == node.udp_forward) and true or false,
-			auth = ("1" == node.auth) and "password" or "noauth",
-			users = ("1" == node.auth) and {
-				{
-					user = node.username,
-					pass = node.password
-				}
-			} or nil
+			auth = users and "password" or "noauth",
+			users = users
 		}
 	elseif node.protocol == "http" then
 		settings = {
 			allowTransparent = false,
-			users = ("1" == node.auth) and {
-				{
-					user = node.username,
-					pass = node.password
-				}
-			} or nil
+			users = users
 		}
 		node.transport = "tcp"
 		node.tcp_guise = "none"
 	elseif node.protocol == "shadowsocks" then
 		settings = {
 			method = node.method,
-			password = node.password,
-			network = node.ss_network or "TCP,UDP"
+			password = node.ss_password,
+			users = users,
+			network = node.ss_network or "tcp,udp"
 		}
 	elseif node.protocol == "trojan" then
-		if node.uuid then
-			local users = {}
-			for i = 1, #node.uuid do
-				users[i] = {
-					password = node.uuid[i],
-				}
-			end
+		if users then
 			settings = {
 				users = users
 			}
@@ -558,9 +570,7 @@ function gen_config_server(node)
 	elseif node.protocol == "hysteria2" then
 		settings = {
 			version = 2,
-			users = node.hysteria2_auth_password and {
-				{ auth = node.hysteria2_auth_password }
-			}
+			users = users
 		}
 	elseif node.protocol == "dokodemo-door" then
 		settings = {
@@ -650,7 +660,7 @@ function gen_config_server(node)
 
 	local config = {
 		log = {
-			loglevel = ("1" == node.log) and node.loglevel or "none"
+			loglevel = ("1" == node.log) and get_log_level(node.loglevel) or "none"
 		},
 		inbounds = {
 			{
@@ -659,7 +669,7 @@ function gen_config_server(node)
 				protocol = node.protocol,
 				settings = settings,
 				streamSettings = {
-					network = node.transport,
+					[(api.compare_versions(xray_version, "<", "26.7.11")) and "network" or "method"] = node.transport, -- Todo: Remove version check and "network"
 					security = "none",
 					tlsSettings = ("1" == node.tls) and {
 						disableSystemRoot = false,
@@ -988,37 +998,26 @@ function gen_config(var)
 		table.insert(inbounds, inbound)
 	end
 
-	function gen_socks_config_node(node_id, socks_id, remarks)
-		if node_id then
-			socks_id = node_id:sub(1 + #"Socks_")
-		end
-		local result
-		local socks_node = uci:get_all(appname, socks_id) or nil
-		if socks_node then
-			if not remarks then
-				remarks = socks_node.port
-			end
-			result = {
-				[".name"] = "Socksid_" .. socks_id,
-				remarks = remarks,
+	function get_node_by_id(node_id)
+		if not node_id or node_id == "" or node_id == "nil" then return nil end
+		local section = uci:get_all(appname, node_id) or {}
+		if section[".type"] == "socks" then
+			local result = {
+				[".name"] = node_id,
+				remarks = "socks[%s]" % section.port,
 				type = "Xray",
 				protocol = "socks",
 				address = "127.0.0.1",
-				port = socks_node.port,
+				port = section.port,
 				transport = "tcp",
 				stream_security = "none"
 			}
+			return result
 		end
-		return result
-	end
-
-	function get_node_by_id(node_id)
-		if not node_id or node_id == "" or node_id == "nil" then return nil end
-		if node_id:find("Socks_") then
-			return gen_socks_config_node(node_id)
-		else
-			return uci:get_all(appname, node_id)
+		if section[".type"] == "nodes" then
+			return section
 		end
+		return nil
 	end
 
 	function gen_loopback(outbound_tag, loopback_dst)
@@ -1072,6 +1071,10 @@ function gen_config(var)
 				local outboundTag = gen_outbound_get_tag(flag, blc_node_id, blc_node_tag, { fragment = xray_settings.fragment == "1" or nil, noise = xray_settings.noise == "1" or nil, run_socks_instance = not no_run })
 				if outboundTag then
 					valid_nodes[#valid_nodes + 1] = outboundTag
+				end
+				-- Check if balancing node duplicates fallback node
+				if _node.fallback_node == blc_node_id then
+					_node.fallback_node = nil
 				end
 			end
 		end
@@ -1392,6 +1395,9 @@ function gen_config(var)
 
 			--shunt rule
 			uci:foreach(appname, "shunt_rules", function(e)
+				if node["shunt_group"] ~= e.group then
+					return
+				end
 				local outboundTag = gen_shunt_node(e[".name"])
 				if outboundTag and e.remarks then
 					if outboundTag == "default" then
@@ -1978,7 +1984,7 @@ function gen_config(var)
 				--access = string.format("/tmp/etc/%s/%s_access.log", appname, "global"),
 				--error = string.format("/tmp/etc/%s/%s_error.log", appname, "global"),
 				--dnsLog = true,
-				loglevel = loglevel
+				loglevel = get_log_level(loglevel)
 			},
 			dns = dns,
 			fakedns = fakedns,
@@ -2163,157 +2169,7 @@ function gen_proto_config(var)
 	return jsonc.stringify(config, 1)
 end
 
-function gen_front_dns_config(var)
-	local dns_listen_port = var["dns_listen_port"]
-	local direct_dns_udp_server = var["direct_dns_udp_server"]
-	local direct_dns_udp_port = var["direct_dns_udp_port"]
-	local default_dns_udp_server = var["default_dns_udp_server"]
-	local default_dns_udp_port = var["default_dns_udp_port"]
-
-	local queryStrategy = "UseIP"
-	local dns = {
-		tag = "dns-global-direct",
-		disableCache = false,
-		disableFallback = true,
-		disableFallbackIfMatch = true,
-		queryStrategy = queryStrategy,
-		servers = {}
-	}
-	local inbounds = {}
-	local outbounds = {}
-	local routing = {
-		rules = {}
-	}
-
-	table.insert(outbounds, {
-		tag = "direct",
-		protocol = "freedom",
-		settings = {
-			domainStrategy = queryStrategy
-		},
-		streamSettings = {
-			sockopt = {
-				mark = 255
-			}
-		}
-	})
-
-	if default_dns_udp_server then
-		table.insert(dns.servers, {
-			tag = "default",
-			address = default_dns_udp_server,
-			port = tonumber(default_dns_udp_port) or 53,
-			queryStrategy = queryStrategy,
-		})
-	end
-
-	local direct_dns_shunt = uci:get(appname, "@global[0]", "direct_dns_shunt") or ""
-	if #direct_dns_shunt > 0 then
-		local dns_server = {}
-		string.gsub(direct_dns_shunt, '[^' .. "\r\n" .. ']+', function(w)
-			if w:find("#") == 1 then return end
-			local domain = sys.exec(string.format("echo -n $(echo %s | awk -F ' ' '{print $1}')", w))
-			local dns = sys.exec(string.format("echo -n $(echo %s | awk -F ' ' '{print $2}')", w))
-			if domain ~= "" and dns ~= "" then
-				local new_dns_server = parseDNS(dns)
-				if new_dns_server then
-					if not dns_server[dns] then
-						dns_server[dns] = {}
-					end
-					dns_server[dns].tag = dns
-					dns_server[dns].queryStrategy = queryStrategy
-					dns_server[dns].address = new_dns_server.address
-					dns_server[dns].port = new_dns_server.port
-					dns_server[dns].finalQuery = true
-					if not dns_server[dns].domains then
-						dns_server[dns].domains = {}
-					end
-					table.insert(dns_server[dns].domains, domain)
-				end
-			end
-		end)
-		for k, v in pairs(dns_server) do
-			table.insert(dns.servers, v)
-			table.insert(routing.rules, {
-				inboundTag = {
-					v.tag
-				},
-				outboundTag = "direct"
-			})
-		end
-	end
-
-	if direct_dns_udp_server then
-		local node_domain = {}
-		local nodes_domain_text = sys.exec('uci show passwall2 | grep ".address=" | cut -d "\'" -f 2 | grep "[a-zA-Z]$" | sort -u')
-		string.gsub(nodes_domain_text, '[^' .. "\r\n" .. ']+', function(w)
-			w = (w or ""):lower()
-			table.insert(node_domain, "full:" .. w)
-		end)
-		if #node_domain > 0 then
-			table.insert(dns.servers, {
-				tag = "dns-in-vpslist",
-				address = direct_dns_udp_server,
-				port = tonumber(direct_dns_udp_port) or 53,
-				queryStrategy = queryStrategy,
-				domains = node_domain,
-				finalQuery = true,
-				disableCache = false,
-				serveStale = true,
-			})
-		end
-	end
-
-	table.insert(inbounds, {
-		tag = "dns-in",
-		listen = "127.0.0.1",
-		port = tonumber(dns_listen_port),
-		protocol = "dokodemo-door",
-		settings = {
-			address = "0.0.0.0",
-			network = "tcp,udp"
-		}
-	})
-
-	table.insert(outbounds, {
-		tag = "dns-out",
-		protocol = "dns",
-		proxySettings = {
-			tag = "direct"
-		},
-		settings = {
-			address = direct_dns_udp_server,
-			port = tonumber(direct_dns_udp_port) or 53,
-			network = "udp",
-			nonIPQuery = "skip",
-			blockTypes = {
-				65
-			}
-		}
-	})
-
-	table.insert(routing.rules, {
-		inboundTag = {
-			"dns-in"
-		},
-		outboundTag = "dns-out"
-	})
-
-	local config = {
-		log = {
-			dnsLog = true,
-			loglevel = "debug"
-		},
-		dns = dns,
-		inbounds = inbounds,
-		outbounds = outbounds,
-		routing = routing
-	}
-	return jsonc.stringify(config, 1)
-end
-
 _G.gen_config = gen_config
-_G.gen_front_dns_config = gen_front_dns_config
 _G.gen_proto_config = gen_proto_config
 
 if arg[1] then

@@ -48,27 +48,17 @@ o = s:option(Value, _n("port"), translate("Listen Port"))
 o.datatype = "port"
 o:depends({ [_n("custom")] = false })
 
-o = s:option(Flag, _n("auth"), translate("Auth"))
-o.validate = function(self, value, t)
-	if value and value == "1" then
-		local user_v = s.fields[_n("username")] and s.fields[_n("username")]:formvalue(t) or ""
-		local pass_v = s.fields[_n("password")] and s.fields[_n("password")]:formvalue(t) or ""
-		if user_v == "" or pass_v == "" then
-			return nil, translate("Username and Password must be used together!")
-		end
-	end
-	return value
+o = s:option(DynamicList, _n("users"), translate("User"))
+for i, v in ipairs(user_list) do
+	o:value(v[".name"], v.username)
 end
-o:depends({ [_n("protocol")] = "socks" })
 o:depends({ [_n("protocol")] = "http" })
-
-o = s:option(Value, _n("username"), translate("Username"))
-o:depends({ [_n("auth")] = true })
-
-o = s:option(Value, _n("password"), translate("Password"))
-o.password = true
-o:depends({ [_n("auth")] = true })
+o:depends({ [_n("protocol")] = "socks" })
 o:depends({ [_n("protocol")] = "shadowsocks" })
+o:depends({ [_n("protocol")] = "vmess" })
+o:depends({ [_n("protocol")] = "vless" })
+o:depends({ [_n("protocol")] = "trojan" })
+o:depends({ [_n("protocol")] = "hysteria2" })
 
 o = s:option(ListValue, _n("d_protocol"), translate("Destination protocol"))
 o:value("tcp", "TCP")
@@ -97,6 +87,9 @@ o.rewrite_option = "method"
 for a, t in ipairs(x_ss_method_list) do o:value(t) end
 o:depends({ [_n("protocol")] = "shadowsocks" })
 
+o = s:option(Value, _n("ss_password"), translate("Password"))
+o:depends({ [_n("protocol")] = "shadowsocks" })
+
 o = s:option(ListValue, _n("ss_network"), translate("Transport"))
 o.default = "tcp,udp"
 o:value("tcp", "TCP")
@@ -108,14 +101,6 @@ o = s:option(Flag, _n("udp_forward"), translate("UDP Forward"))
 o.default = "1"
 o.rmempty = false
 o:depends({ [_n("protocol")] = "socks" })
-
-o = s:option(DynamicList, _n("uuid"), translate("ID") .. "/" .. translate("Password"))
-for i = 1, 3 do
-	o:value(api.gen_uuid(1))
-end
-o:depends({ [_n("protocol")] = "vmess" })
-o:depends({ [_n("protocol")] = "vless" })
-o:depends({ [_n("protocol")] = "trojan" })
 
 o = s:option(ListValue, _n("flow"), translate("flow"))
 o.default = ""
@@ -140,10 +125,6 @@ end
 o = s:option(DynamicList, _n("hysteria2_realm_stun"), translate("Realm STUN"))
 o.default = { "stun.sip.us:3478", "stun.nextcloud.com:3478", "global.stun.twilio.com:3478" }
 o:depends({ [_n("hysteria2_realms")] = "1" })
-
-o = s:option(Value, _n("hysteria2_auth_password"), translate("Auth Password"))
-o.password = true
-o:depends({ [_n("protocol")] = "hysteria2"})
 
 o = s:option(ListValue, _n("hysteria2_obfs_type"), translate("Obfs Type"))
 o:value("", translate("Disable"))
@@ -218,24 +199,6 @@ o:depends({ [_n("reality")] = true })
 
 o = s:option(DynamicList, _n("reality_serverNames"), translate("serverNames"))
 o:depends({ [_n("reality")] = true })
-function o.write(self, section, value)
-	local t = {}
-	local t2 = {}
-	if type(value) == "table" then
-		local x
-		for _, x in ipairs(value) do
-			if x and #x > 0 then
-				if not t2[x] then
-					t2[x] = x
-					t[#t+1] = x
-				end
-			end
-		end
-	else
-		t = { value }
-	end
-	return DynamicList.write(self, section, t)
-end
 
 o = s:option(ListValue, _n("alpn"), translate("alpn"))
 o.default = "default"

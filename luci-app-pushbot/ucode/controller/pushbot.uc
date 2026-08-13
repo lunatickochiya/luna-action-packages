@@ -74,15 +74,29 @@ return {
 	},
 
 	act_send_test: function() {
-		system("/usr/bin/pushbot/pushbot test &");
+		system("/usr/bin/pushbot/pushbot test >/dev/null 2>&1 &");
 		http.prepare_content("application/json");
 		http.write_json({ ok: true });
 	},
 
 	act_send_manual: function() {
-		system("/usr/bin/pushbot/pushbot send &");
+		system("/usr/bin/pushbot/pushbot send >/dev/null 2>&1 &");
 		http.prepare_content("application/json");
 		http.write_json({ ok: true });
+	},
+
+	act_version: function() {
+		let ver = "";
+		/* apk (OpenWrt 24.10+): /lib/apk/db/installed */
+		let f = popen("awk '/^P:luci-app-pushbot$/{f=1;next} f&&/^V:/{print substr($0,3);exit}' /lib/apk/db/installed 2>/dev/null", "r");
+		if (f) { ver = replace(f.read("all"), /\s+/, ""); f.close(); }
+		/* opkg (legacy): /usr/lib/opkg/status */
+		if (ver == "") {
+			f = popen("awk '/^Package: luci-app-pushbot$/{f=1;next} f&&/^Version:/{print $2;exit}' /usr/lib/opkg/status 2>/dev/null", "r");
+			if (f) { ver = replace(f.read("all"), /\s+/, ""); f.close(); }
+		}
+		http.prepare_content("application/json");
+		http.write_json({ version: ver });
 	},
 
 	act_soc_test: function() {
@@ -139,7 +153,8 @@ return {
 			"pushbot_interface","macmechanism2","crontab","regular_time",
 			"regular_time_2","regular_time_3","interval_time","send_title",
 			"router_status","router_temp","router_wan","client_list",
-			"google_check_timeout","pushbot_up","pushbot_down",
+			"google_check_count","pushbot_up","pushbot_down","table_format",
+			"ntfy_srv_enable","ntfy_server","ntfy_topic","ntfy_token_enable","ntfy_token","ntfy_priority","gotify_server","gotify_token","gotify_priority",
 			"cpuload_enable","cpuload","temperature_enable","temperature",
 			"client_usage","client_usage_max","client_usage_disturb",
 			"pushbot_ipv4","ipv4_interface","pushbot_ipv6","ipv6_interface",
@@ -204,7 +219,7 @@ return {
 
 		/* network interfaces */
 		let ifaces = [];
-		let pf = popen("timeout 3 ls /sys/class/net 2>/dev/null", "r");
+		let pf = popen("ls /sys/class/net 2>/dev/null", "r");
 		if (pf) {
 			for (let line = pf.read("line"); line; line = pf.read("line")) {
 				let n = replace(line, /\s+/, "");
@@ -217,7 +232,7 @@ return {
 
 		/* IP hints from arp */
 		let ip_hints = [];
-		let arpf = popen("timeout 3 grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+' /proc/net/arp 2>/dev/null", "r");
+		let arpf = popen("grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+' /proc/net/arp 2>/dev/null", "r");
 		if (arpf) {
 			for (let line = arpf.read("line"); line; line = arpf.read("line")) {
 				let m = match(line, /^(\d+\.\d+\.\d+\.\d+)/);
@@ -240,7 +255,7 @@ return {
 			lf.close();
 		}
 		/* also try arp for additional MACs */
-		let arpf2 = popen("timeout 3 grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+' /proc/net/arp 2>/dev/null", "r");
+		let arpf2 = popen("grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+' /proc/net/arp 2>/dev/null", "r");
 		if (arpf2) {
 			for (let line = arpf2.read("line"); line; line = arpf2.read("line")) {
 				let m = match(line, /^(\d+\.\d+\.\d+\.\d+)\s+\S+\s+\S+\s+(\S+)/);
@@ -362,6 +377,18 @@ return {
 			}
 		}
 		uci_commit("pushbot");
+
+		/* 保存后联动服务状态（避免"config 启用但服务未启动"）：
+		 *   enable=1 → 服务未跑则启动，已在跑则重启使新配置生效
+		 *   enable=0 → 停止服务（配合主脚本 enable_detection 双保险）
+		 *   后台(&)执行，避免阻塞 HTTP 请求导致前端"保存失败" */
+		let u = cursor();
+		let en = u.get("pushbot", "pushbot", "pushbot_enable");
+		if (en == "1" || en == 1 || en == true)
+			system("/etc/init.d/pushbot start >/dev/null 2>&1 &");
+		else if (en == "0" || en == 0 || en == false)
+			system("/etc/init.d/pushbot stop >/dev/null 2>&1 &");
+
 		http.write_json({ ok: true });
 	},
 
