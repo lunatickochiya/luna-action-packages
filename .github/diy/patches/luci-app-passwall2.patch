@@ -1,18 +1,3 @@
---- a/luci-app-passwall2/root/etc/uci-defaults/luci-passwall2
-+++ b/luci-app-passwall2/root/etc/uci-defaults/luci-passwall2
-@@ -1,5 +1,10 @@
- #!/bin/sh
- 
-+[ "`which nft`" ] && {
-+uci -q set passwall2.@global_forwarding[0].use_nft=1
-+uci -q commit passwall2
-+}
-+
- if [ -e "/etc/config/ucitrack" ]; then
-     uci -q batch <<-EOF
-  		delete ucitrack.@passwall2[-1]
-
-
 --- a/luci-app-passwall2/luasrc/controller/passwall2.lua
 +++ b/luci-app-passwall2/luasrc/controller/passwall2.lua
 @@ -32,6 +32,7 @@ function index()
@@ -83,7 +68,7 @@
 +end
 +
  function reset_config()
- 	uci:revert(appname)
+ 	uci:revert(c_config)
  	luci.sys.call("echo '' > /tmp/log/passwall2.log")
 
 --- a/luci-app-passwall2/luasrc/model/cbi/passwall2/client/global.lua
@@ -91,8 +76,8 @@
 @@ -387,5 +387,6 @@ footer.global_cfgid = global_cfgid
  footer.shunt_list = api.jsonc.stringify(shunt_list)
  
- m:append(footer)
-+m:append(Template(appname .. "/global/status_bottom"))
+ m:appendTemplate("/global/footer", {shunt_list = api.jsonc.stringify(shunt_list)})
++m:appendTemplate(Template("/global/status_bottom"))
  
  return api.return_map(m)
 
