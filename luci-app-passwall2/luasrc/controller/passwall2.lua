@@ -120,6 +120,7 @@ function index()
 	entry({"admin", "services", appname, "geo_view"}, call("geo_view")).leaf = true
 
 	entry({"admin", "services", appname, "fetch_certsha256"}, call("fetch_certsha256")).leaf = true
+	entry({"admin", "services", appname, "gen_wireguard_key"}, call("gen_wireguard_key")).leaf = true
 end
 
 local function http_write_json(content)
@@ -304,7 +305,7 @@ end
 function get_redir_log()
 	local id = http.formvalue("id")
 	local name = http.formvalue("name")
-	local file_path = "/tmp/etc/passwall2/acl/" .. id .. "/" .. name .. ".log"
+	local file_path = api.TMP_PATH .. "/acl/" .. id .. "/" .. name .. ".log"
 	if nixio.fs.access(file_path) then
 		local content = luci.sys.exec("tail -n 19999 '" .. file_path .. "'")
 		content = content:gsub("\n", "<br />")
@@ -316,7 +317,7 @@ end
 
 function get_socks_log()
 	local name = http.formvalue("name")
-	local path = "/tmp/etc/passwall2/" .. name .. ".log"
+	local path = api.TMP_PATH .. "/" .. name .. ".log"
 	if nixio.fs.access(path) then
 		local content = luci.sys.exec("tail -n 5000 ".. path)
 		content = content:gsub("\n", "<br />")
@@ -349,7 +350,7 @@ end
 
 function index_status()
 	local e = {}
-	e["global_status"] = luci.sys.call("/bin/busybox top -bn1 | grep -v 'grep' | grep '/tmp/etc/passwall2/bin/' | grep 'default' | grep 'global' >/dev/null") == 0
+	e["global_status"] = luci.sys.call("/bin/busybox top -bn1 | grep -v 'grep' | grep '%s/bin/' | grep 'default' | grep 'global' >/dev/null" % api.TMP_PATH) == 0
 	http_write_json(e)
 end
 
@@ -522,14 +523,13 @@ end
 function delete_select_nodes()
 	local ids = http.formvalue("ids")
 	local redirect = http.formvalue("redirect")
+	local ids_t = {}
 	string.gsub(ids, '[^' .. "," .. ']+', function(w)
+		ids_t[#ids_t + 1] = w
 		if (uci_get("@global[0]", "node") or "") == w then
 			uci_del('@global[0]', "node")
 		end
 		uci_foreach("socks", function(t)
-			if t["node"] == w then
-				uci_del(t[".name"])
-			end
 			local changed = false
 			local auto_switch_node_list = uci_get(t[".name"], "autoswitch_backup_node") or {}
 			for i = #auto_switch_node_list, 1, -1 do
@@ -540,6 +540,14 @@ function delete_select_nodes()
 			end
 			if changed then
 				uci_set(t[".name"], "autoswitch_backup_node", auto_switch_node_list)
+			end
+			if t["node"] == w then
+				local new_node = api.get_random_normal_node(ids_t)
+				if new_node then
+					uci_set(t[".name"], "node", new_node[".name"])
+				else
+					uci_set(t[".name"], "enabled", "0")
+				end
 			end
 		end)
 		uci_foreach("haproxy_config", function(t)
@@ -720,8 +728,9 @@ end
 
 function server_log()
 	local id = http.formvalue("id")
-	if nixio.fs.access("/tmp/etc/passwall2_server/" .. id .. ".log") then
-		local content = luci.sys.exec("cat /tmp/etc/passwall2_server/" .. id .. ".log")
+	local f_file = api.S_TMP_PATH .. "/" .. id .. ".log"
+	if nixio.fs.access(f_file) then
+		local content = luci.sys.exec("cat " .. f_file)
 		content = content:gsub("\n", "<br />")
 		http.write(content)
 	else
@@ -1083,5 +1092,14 @@ function delete_select_shunt_rules()
 		http.redirect(api.url("rule"))
 	else
 		uci_save(true, true)
+	end
+end
+
+function gen_wireguard_key()
+	local key = api.gen_wireguard_key()
+	if key then
+		http_write_json_ok(key)
+	else
+		http_write_json_error()
 	end
 end

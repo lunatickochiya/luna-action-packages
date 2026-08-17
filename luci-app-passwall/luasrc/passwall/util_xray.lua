@@ -1,9 +1,7 @@
 module("luci.passwall.util_xray", package.seeall)
 local api = require "luci.passwall.api"
-local uci = api.uci
 local sys = api.sys
 local jsonc = api.jsonc
-local appname = "passwall"
 local fs = api.fs
 
 local GLOBAL = {
@@ -17,7 +15,7 @@ local xray_version = api.get_app_version("xray")
 local xray_min_version = "26.3.27"
 
 local function get_domain_excluded()
-	local path = string.format("/usr/share/%s/rules/domains_excluded", appname)
+	local path = "/usr/share/passwall/domains_excluded"
 	local content = fs.readfile(path)
 	if not content then return nil end
 	local hosts = {}
@@ -68,8 +66,7 @@ function gen_outbound(flag, node, tag, proxy_table)
 					config_file = string.format("%s_%s_%s_%s.json", flag, tag, node_id, new_port)
 				end
 				if run_socks_instance then
-					sys.call(string.format('/usr/share/%s/app.sh run_socks "%s"> /dev/null',
-						appname,
+					sys.call(string.format('/usr/share/passwall/app.sh run_socks "%s"> /dev/null',
 						string.format("flag=%s node=%s bind=%s socks_port=%s config_file=%s relay_port=%s",
 							new_port, --flag
 							node_id, --node
@@ -493,7 +490,7 @@ function gen_config_server(node)
 	if node.users and #node.users > 0 then
 		users = {}
 		for i, v in ipairs(node.users) do
-			local user = uci:get_all("passwall_server", v) or {}
+			local user = api.uci_get_s(v) or {}
 			if user[".type"] == "user" then
 				local u = {}
 				if node.protocol == "socks" or node.protocol == "http" then
@@ -517,6 +514,12 @@ function gen_config_server(node)
 				if node.protocol == "hysteria2" then
 					u.email = user.username
 					u.auth = user.password
+				end
+				if node.protocol == "wireguard" then
+					u.publicKey = user.wireguard_public_key
+					u.preSharedKey = user.wireguard_pre_shared_key
+					u.keepAlive = 0
+					u.allowedIPs = user.allowed_ips
 				end
 				users[#users + 1] = u
 			end
@@ -569,6 +572,14 @@ function gen_config_server(node)
 			network = node.d_protocol,
 			address = node.d_address,
 			port = tonumber(node.d_port)
+		}
+	elseif node.protocol == "wireguard" then
+		settings = {
+			secretKey = node.wireguard_private_key,
+			--address = node.wireguard_local_address,
+			--noKernelTun = node.wireguard_system_interface ~= "1" and true or false,
+			mtu = tonumber(node.wireguard_mtu or 1420),
+			peers = users
 		}
 	end
 
@@ -625,7 +636,7 @@ function gen_config_server(node)
 			}
 			sys.call(string.format("mkdir -p %s && touch %s/%s", api.TMP_IFACE_PATH, api.TMP_IFACE_PATH, node.outbound_node_iface))
 		else
-			local outbound_node_t = uci:get_all("passwall", node.outbound_node)
+			local outbound_node_t = api.uci_get_c(node.outbound_node)
 			if node.outbound_node == "_socks" or node.outbound_node == "_http" then
 				outbound_node_t = {
 					type = node.type,
@@ -901,7 +912,7 @@ function gen_config(var)
 	local outbounds = {}
 	local COMMON = {}
 
-	local xray_settings = uci:get_all(appname, "@global_xray[0]") or {}
+	local xray_settings = api.uci_get_c("@global_xray[0]") or {}
 
 	if xray_settings.fragment == "1" then
 		local lengths, delays = {}, {}
@@ -926,7 +937,7 @@ function gen_config(var)
 
 	if xray_settings.noise == "1" then
 		local noises = {}
-		uci:foreach(appname, "xray_noise_packets", function(n)
+		api.uci_foreach_c("xray_noise_packets", function(n)
 			if n.enabled == "1" then
 				local noise = {
 					rand = (n.type == "rand" and n.packet) and (n.packet:find("-", 1, true) and n.packet or tonumber(n.packet)) or nil,
@@ -944,7 +955,7 @@ function gen_config(var)
 	end
 
 	if node_id then
-		local node = uci:get_all(appname, node_id)
+		local node = api.uci_get_c(node_id)
 		local balancers = {}
 		local rules = {}
 		if node then
@@ -1001,7 +1012,7 @@ function gen_config(var)
 
 		function get_node_by_id(node_id)
 			if not node_id or node_id == "" or node_id == "nil" then return nil end
-			local section = uci:get_all(appname, node_id) or {}
+			local section = api.uci_get_c(node_id) or {}
 			if section[".type"] == "socks" then
 				local result = {
 					[".name"] = node_id,
@@ -1374,7 +1385,7 @@ function gen_config(var)
 
 			--shunt rule
 			local function foreach_shunt_rule(callback)
-				uci:foreach(appname, "shunt_rules", callback)
+				api.uci_foreach_c("shunt_rules", callback)
 
 				if use_gfw_list ~= "1" or chn_list ~= "0" then return end
 
@@ -1400,7 +1411,7 @@ function gen_config(var)
 
 				local bin = api.finded_com("geoview")
 				if bin then
-					local geo_file = (uci:get(appname, "@global_rules[0]", "v2ray_location_asset") or "/usr/share/v2ray/"):match("^(.*)/") .. "/geosite.dat"
+					local geo_file = (api.uci_get_c("@global_rules[0]", "v2ray_location_asset") or "/usr/share/v2ray/"):match("^(.*)/") .. "/geosite.dat"
 					if luci.sys.call('"' .. bin .. '" -type geosite -input "' .. geo_file .. '" | grep -q "^GFW$"') == 0 then
 						domain_list = (domain_list == "") and "geosite:gfw" or domain_list .. "\ngeosite:gfw"
 					end
@@ -1788,7 +1799,7 @@ function gen_config(var)
 			})
 
 			-- remote dns outbound
-			local chn_list = uci:get(appname, "@global[0]", "chn_list") or "direct"
+			local chn_list = api.uci_get_c("@global[0]", "chn_list") or "direct"
 			remote_dns_outbound = {
 				tag = "dns-out",
 				protocol = "dns",
@@ -1979,11 +1990,11 @@ function gen_config(var)
 	if inbounds or outbounds then
 		local config = {
 			env = (function()
-				local asset_location = uci:get(appname, "@global_rules[0]", "v2ray_location_asset") or "/usr/share/v2ray/"
+				local asset_location = api.uci_get_c("@global_rules[0]", "v2ray_location_asset") or "/usr/share/v2ray/"
 				return { XRAY_LOCATION_ASSET = asset_location }
 			end)(),
 			log = {
-				-- error = string.format("/tmp/etc/%s/%s.log", appname, node[".name"]),
+				-- error = string.format("/tmp/etc/passwall/%s.log", node[".name"]),
 				loglevel = get_log_level(loglevel)
 			},
 			-- DNS
