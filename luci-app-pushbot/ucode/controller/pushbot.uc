@@ -113,6 +113,99 @@ return {
 		}
 	},
 
+	/* 即时获取 IPv4/IPv6（用于 IPv4/IPv6 变更通知的实时预览输出）：
+	 *   type = 4|6, mode = iface|url
+	 *   iface 模式：读指定接口地址；仅私网时输出地址并标注"非公网IP"
+	 *   url 模式：随机起点换列表内其他 URL 最多 3 次，带 --interface 适配多 WAN
+	 * 返回纯文本（获取失败时返回翻译后的失败文案） */
+	act_get_ip: function() {
+		let type = http.formvalue("type") ?? "4";
+		let mode = http.formvalue("mode") ?? "iface";
+		let iface = http.formvalue("iface") ?? "";
+		let urls  = http.formvalue("url")  ?? "";
+
+		http.prepare_content("text/plain; charset=UTF-8");
+
+		/* 接口名只允许安全字符 */
+		iface = replace(iface, /[^A-Za-z0-9_.\-]/g, "");
+
+		/* 私网/链路本地判断 */
+		function is_private(ip) {
+			if (type == "4") {
+				let m = match(ip, /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+				if (!m) return true;
+				let a = +m[1], b = +m[2];
+				if (a == 10) return true;
+				if (a == 172 && b >= 16 && b <= 31) return true;
+				if (a == 192 && b == 168) return true;
+				if (a == 169 && b == 254) return true;  /* link-local */
+				if (a == 127) return true;              /* loopback */
+				if (a == 100 && b >= 64 && b <= 127) return true;  /* CGNAT */
+				return false;
+			}
+			if (match(ip, /^fe80:/i)) return true;       /* link-local */
+			if (match(ip, /^fc/i) || match(ip, /^fd/i)) return true;  /* ULA */
+			if (ip == "::1") return true;
+			return false;
+		}
+
+		function run(cmd) {
+			let f = popen(cmd + " 2>/dev/null", "r");
+			if (f) {
+				let out = f.read("all");
+				f.close();
+				return replace(out, /[\r\n]+$/, "");
+			}
+			return "";
+		}
+
+		let ip = "";
+		if (mode == "iface" && iface != "") {
+			if (type == "4") {
+				ip = run("/sbin/ifconfig " + sq(iface) +
+					" | awk '/inet addr/ {print $2}' | awk -F: '{print $2}'" +
+					" | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | head -n1");
+			}
+			else {
+				ip = run("ip addr show " + sq(iface) +
+					" | grep -v deprecated | grep -A1 'inet6 [^f:]'" +
+					" | sed -nr ':a;N;s#^ +inet6 ([a-f0-9:]+)/.+? scope global .*? valid_lft ([0-9]+sec) .*#\\2 \\1#p;ta'" +
+					" | sort -nr | head -n1 | awk '{print $2}'");
+			}
+		}
+		else if (mode == "url") {
+			/* 与脚本 get_hostipv4/get_hostipv6 一致：随机起点，失败换列表内另一个，最多 3 次 */
+			let lines = [];
+			for (let l in split(urls, /\r?\n/)) {
+				let t = replace(l, /\s+/, "");
+				if (length(t) > 0) push(lines, t);
+			}
+			if (length(lines) > 0) {
+				let start = time() % length(lines);
+				for (let i = 0; i < 3 && i < length(lines); i++) {
+					let pick = lines[(start + i) % length(lines)];
+					let bind = iface != "" ? " --interface " + sq(iface) : "";
+					let out = run("curl -k -s -" + (type == "4" ? "4" : "6") + bind + " -m 8 " + sq(pick) +
+						(type == "4"
+							? " | grep -oE '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}' | head -n1"
+							: " | grep -oE '([\\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\\da-fA-F0-9]{1,4}' | head -n1"));
+					if (out != "") { ip = out; break; }
+				}
+			}
+		}
+
+		if (ip == "") {
+			http.write(translate('Failed to obtain IP') ?? 'Failed to obtain IP');
+			return;
+		}
+		if (is_private(ip)) {
+			let note = translate('Not a public IP') ?? 'Not a public IP';
+			http.write(ip + " (" + note + ")");
+			return;
+		}
+		http.write(ip);
+	},
+
 	get_log: function() {
 		let u = cursor();
 		if (u.get("pushbot", "pushbot", "debuglevel") != "1") {
@@ -207,6 +300,14 @@ return {
 			ipv6_list:   "/usr/bin/pushbot/api/ipv6.list",
 			ip_black_list: "/usr/bin/pushbot/api/ip_blacklist"
 		};
+
+		/* 进入页面即对账一次黑名单：把内核 set 已到期移除的 IP 从文件清掉，
+		   并刷新 prev_set/prev_file 快照。用户在编辑界面看到的是"已同步"的文件，
+		   避免"残留 + 用户新增"并发导致新增被误清（乐观并发控制的前提是
+		   用户基于干净状态修改）。拉黑关闭时跳过（对账无意义且避免无谓 nft 操作）。 */
+		let bl_on = u.get("pushbot", "pushbot", "web_login_black");
+		if (bl_on == "1" || bl_on == 1 || bl_on == true)
+			system("/usr/bin/pushbot/pushbot blacklist >/dev/null 2>&1");
 
 		for (let name, path in file_paths) {
 			try {
@@ -336,8 +437,38 @@ return {
 			else if (opt in file_paths) {
 				let path = file_paths[opt];
 				if (type(val) == 'string' && val != "") {
+					/* 黑名单文件：支持换行/空格/tab 混合分隔（与脚本端
+					   IFS 空白分割一致），保存时统一规范为每行一个 IP */
+					if (opt == "ip_black_list") {
+						let keep = [];
+						let seen = {};
+						let loc = { "::1": true, "127.0.0.1": true };
+						let pf = popen("ip -o addr show 2>/dev/null | awk '{print $4}' | cut -d/ -f1", "r");
+						if (pf) {
+							for (let line = pf.read("line"); line; line = pf.read("line")) {
+								let a = replace(line, /[\r\n\s]+/, "");
+								if (a != "")
+									loc[a] = true;
+							}
+							pf.close();
+						}
+						/* 按任意空白分割（换行/空格/tab 混用均可） */
+						let parts = split(replace(val, /\r\n/g, "\n"), /\s+/);
+						for (let p in parts) {
+							let l = replace(p, /[\r\n\s]+/, "");
+							if (l == "" || (l in loc) || (l in seen))
+								continue;
+							seen[l] = true;
+							push(keep, l);
+						}
+						content = join("\n", keep);
+						if (length(content) > 0)
+							content += "\n";
+					}
+					/* 非黑名单文件（diy.json / ipv4.list / ipv6.list）直接写原始值；
+					   黑名单分支已构造规范化 content，两者共用此行 */
 					let f = open(path, "w");
-					if (f) { f.write(replace(val, /\r\n/g, "\n")); f.close(); }
+					if (f) { f.write(content ?? val); f.close(); }
 				}
 				else {
 					let f = open(path, "w");
@@ -347,9 +478,29 @@ return {
 			/* list options */
 			else if (opt in list_opt_set) {
 				uci_cmd("delete", "pushbot.pushbot." + sq(opt));
+				/* 黑名单保存校验：剔除本机接口地址与 ::1 / 127.0.0.1
+				   （防止误拉黑自己断掉 Web/SSH 访问；脚本侧还有
+				   is_local_address 硬保护，这里保存端提前过滤） */
+				let localset = {};
+				if (opt == "pushbot_blacklist") {
+					localset["::1"] = true;
+					localset["127.0.0.1"] = true;
+					let pf = popen("ip -o addr show 2>/dev/null | awk '{print $4}' | cut -d/ -f1", "r");
+					if (pf) {
+						for (let line = pf.read("line"); line; line = pf.read("line")) {
+							let a = replace(line, /[\r\n\s]+/, "");
+							if (a != "")
+								localset[a] = true;
+						}
+						pf.close();
+					}
+				}
 				function add(v) {
-					if (v != "")
-						uci_cmd("add_list", "pushbot.pushbot." + sq(opt) + "=" + sq(v));
+					if (v == "")
+						return;
+					if (opt == "pushbot_blacklist" && v in localset)
+						return;   /* 本机地址：剔除，不写入配置 */
+					uci_cmd("add_list", "pushbot.pushbot." + sq(opt) + "=" + sq(v));
 				}
 				if (type(val) == 'array')
 					for (let v in val) add(v);
@@ -388,6 +539,10 @@ return {
 			system("/etc/init.d/pushbot start >/dev/null 2>&1 &");
 		else if (en == "0" || en == 0 || en == false)
 			system("/etc/init.d/pushbot stop >/dev/null 2>&1 &");
+
+		/* 拉黑规则立即应用：保存后后台触发（新增/修改/清空黑名单、
+		   切换拉黑开关、改白名单/超时全部即时生效，不等 sleeptime 轮询） */
+		system("/usr/bin/pushbot/pushbot blacklist >/dev/null 2>&1 &");
 
 		http.write_json({ ok: true });
 	},

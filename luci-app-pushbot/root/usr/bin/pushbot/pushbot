@@ -14,7 +14,7 @@ function get_config(){
 function read_config(){
 	get_config "pushbot_enable" "lite_enable" "device_name" "sleeptime" "oui_dir" "oui_data" "reset_regularly" "debuglevel" "device_aliases" \
 	"pushbot_ipv4" "ipv4_interface" "pushbot_ipv6" "ipv6_interface" "pushbot_up" "pushbot_down" "cpuload_enable" "cpuload" "temperature_enable" "temperature" \
-	"regular_time" "regular_time_2" "regular_time_3" "interval_time" \
+	"regular_time" "regular_time_2" "regular_time_3" "interval_time" "crontab" \
 	"client_usage" "client_usage_max" "client_usage_disturb" "client_usage_whitelist" \
 	"web_logged" "ssh_logged" "web_login_failed" "ssh_login_failed" "login_max_num" "web_login_black" "ip_white_list" "ip_black_timeout" \
 	"pushbot_sheep" "starttime" "endtime" "pushbot_whitelist" "pushbot_blacklist" "pushbot_interface" "MAC_online_list" "MAC_offline_list" \
@@ -30,6 +30,11 @@ function read_config(){
 	dir="/tmp/pushbot/" && mkdir -p ${dir}
 	tempjsonpath="/tmp/pushbot/temp.json"
 	ip_blacklist_path="/usr/bin/pushbot/api/ip_blacklist"
+	# 收集本机所有接口地址（v4+v6）用于黑名单自我保护：本机地址与
+	# 127.0.0.1/::1 永不进入黑名单（登录监控可能把本机探测/回环误判为
+	# 失败来源，拉黑自己会断掉 Web/SSH 访问）。收集含回环与全部接口。
+	local_addrs="127.0.0.1 ::1"
+	local_addrs="$local_addrs $(ip -o addr show 2>/dev/null | awk '{print $4}' | cut -d'/' -f1 | grep -vE '^$' | tr '\n' ' ')"
 	[ ! -z "$oui_dir" ] && [ "$oui_dir" -eq "1" ] && oui_base="${dir}oui_base.txt" || oui_base="/usr/bin/pushbot/oui_base.txt"
 	debuglevel=`echo "$debuglevel"` && [ -z "$debuglevel" ] && logfile="/dev/null" || logfile="${dir}pushbot.log"
 	pushbot_blacklist=`echo "$pushbot_blacklist"|sed 's/ /\n/g'` 2>/dev/null
@@ -204,40 +209,83 @@ function enable_detection(){
 }
 
 # 获取 ip
+# 判断 IP 是否为私网/链路本地地址（与 LuCI 预览逻辑一致）
+# 返回 0=私网 1=公网
+function is_private_ip(){
+	local ip="$1" fam="$2"
+	[ -z "$ip" ] && return 0
+	if [ "$fam" = "6" ] ;then
+		case "$ip" in
+			fe80:*|fe8[0-9a-f]:*|fe9[0-9a-f]:*|fea[0-9a-f]:*|feb[0-9a-f]:*) return 0 ;;  # link-local
+			fc*|fd*) return 0 ;;  # ULA
+			::1) return 0 ;;
+		esac
+		return 1
+	else
+		case "$ip" in
+			10.*) return 0 ;;
+			172.1[6-9].*|172.2[0-9].*|172.3[0-1].*) return 0 ;;
+			192.168.*) return 0 ;;
+			169.254.*) return 0 ;;  # link-local
+			127.*) return 0 ;;     # loopback
+			100.6[4-9].*|100.[7-9][0-9].*|100.1[0-2][0-7].*) return 0 ;;  # CGNAT
+		esac
+		return 1
+	fi
+}
+
 function getip(){
 	[ ! "$1" ] && return
 	if [ $1 == "wanipv4" ] ;then
 		[ ! -z "$ipv4_interface" ] && local wanIP=$(/sbin/ifconfig ${ipv4_interface}|awk '/inet addr/ {print $2}'|awk -F: '{print $2}'|grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 		[ -z "$ipv4_interface" ] && local wanIP=$(getinterfacelist|grep '\"address\"'|grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+		[ -z "$wanIP" ] && echo "获取失败" && return
 		echo "$wanIP"
 	elif [ $1 == "hostipv4" ] ;then
 		function get_hostipv4()
 		{
 			local url_number=`echo "$ipv4_urllist"|wc -l`
-			local ipv4_URL=`echo "$ipv4_urllist"| sed -n "$(rand 1 $url_number)p"|sed -e 's/\r//g'`
-			[ ! -z "$ipv4_interface" ] && local hostIP=$(curl -k -s -4 --interface ${ipv4_interface} -m 5 ${ipv4_URL}) || local hostIP=$(curl -k -s -4 -m 5 ${ipv4_URL})
-			echo $hostIP|grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1
+			[ "$url_number" -le 0 ] && echo "获取失败" && return
+			# 随机起点，失败换列表内另一个，最多 3 次
+			local start=$(rand 1 $url_number)
+			for i in 1 2 3; do
+				local line=$(( (start + i - 1) % url_number + 1 ))
+				local ipv4_URL=`echo "$ipv4_urllist"| sed -n "${line}p"|sed -e 's/\r//g'`
+				[ -z "$ipv4_URL" ] && continue
+				local hostIP=""
+				[ ! -z "$ipv4_interface" ] && local hostIP=$(curl -k -s -4 --interface ${ipv4_interface} -m 8 ${ipv4_URL}) || local hostIP=$(curl -k -s -4 -m 8 ${ipv4_URL})
+				local out=`echo $hostIP|grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1`
+				[ ! -z "$out" ] && echo "$out" && return
+			done
+			echo "获取失败"
 		}
 		local hostIP=`get_hostipv4`
-		[ -z "$hostIP" ] && local hostIP=`get_hostipv4`
-		[ -z "$hostIP" ] && local hostIP=`get_hostipv4`
-		echo $hostIP # 重试，偷懒，有空再优化
+		echo $hostIP
 	elif [ $1 == "wanipv6" ] ;then
 		[ ! -z "$ipv6_interface" ] && local wanIPv6=$(ip addr show ${ipv6_interface}|grep -v deprecated|grep -A1 'inet6 [^f:]'|sed -nr ':a;N;s#^ +inet6 ([a-f0-9:]+)/.+? scope global .*? valid_lft ([0-9]+sec) .*#\2 \1#p;ta'|sort -nr|head -n1|awk '{print $2}')
 		[ -z "$ipv6_interface" ] && local wanIPv6=$(ip addr show|grep -v deprecated|grep -A1 'inet6 [^f:]'|sed -nr ':a;N;s#^ +inet6 ([a-f0-9:]+)/.+? scope global .*? valid_lft ([0-9]+sec) .*#\2 \1#p;ta'|sort -nr|head -n1|awk '{print $2}')
+		[ -z "$wanIPv6" ] && echo "获取失败" && return
 		echo "$wanIPv6"
 	elif [ $1 == "hostipv6" ] ;then
 		function get_hostipv6()
 		{
 			local urlv6_number=`echo "$ipv6_urllist"|wc -l`
-			local ipv6_URL=`echo "$ipv6_urllist"| sed -n "$(rand 1 $urlv6_number)p"|sed -e 's/\r//g'`
-			[ ! -z "$ipv6_interface" ] && local hostIPv6=$(curl -k -s -6 --interface ${ipv6_interface} -m 5 ${ipv6_URL}) || local hostIPv6=$(curl -k -s -6 -m 5 ${ipv6_URL})
-			echo $hostIPv6|grep -oE '([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}'|head -n1
+			[ "$urlv6_number" -le 0 ] && echo "获取失败" && return
+			# 随机起点，失败换列表内另一个，最多 3 次
+			local start=$(rand 1 $urlv6_number)
+			for i in 1 2 3; do
+				local line=$(( (start + i - 1) % urlv6_number + 1 ))
+				local ipv6_URL=`echo "$ipv6_urllist"| sed -n "${line}p"|sed -e 's/\r//g'`
+				[ -z "$ipv6_URL" ] && continue
+				local hostIPv6=""
+				[ ! -z "$ipv6_interface" ] && local hostIPv6=$(curl -k -s -6 --interface ${ipv6_interface} -m 8 ${ipv6_URL}) || local hostIPv6=$(curl -k -s -6 -m 8 ${ipv6_URL})
+				local out=`echo $hostIPv6|grep -oE '([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}'|head -n1`
+				[ ! -z "$out" ] && echo "$out" && return
+			done
+			echo "获取失败"
 		}
 		local hostIPv6=`get_hostipv6`
-		[ -z "$hostIPv6" ] && local hostIPv6=`get_hostipv6`
-		[ -z "$hostIPv6" ] && local hostIPv6=`get_hostipv6`
-		echo $hostIPv6 # 重试，偷懒，有空再优化
+		echo $hostIPv6
 	fi
 }
 
@@ -584,14 +632,27 @@ function pushbot_cron(){
 		crontab -l 2>/dev/null > conf && echo -e "0 0 * * * rm /tmp/pushbot/usage.db >/dev/null 2>&1" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
 		crontab -l 2>/dev/null > conf && echo -e "0 0 * * * rm /tmp/pushbot/usage6.db >/dev/null 2>&1" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
 	fi
-	[ ! -z "$regular_time_2" ] && local regular_time_2=",${regular_time_2}"
-	[ ! -z "$regular_time_3" ] && local regular_time_3=",${regular_time_3}"
-	# 定时发送
-	if [ ! -z "$regular_time" ] || [ ! -z "$regular_time_2" ] || [ ! -z "$regular_time_3" ]; then
-		crontab -l 2>/dev/null > conf && echo -e "0 $regular_time$regular_time_2$regular_time_3 * * * /usr/bin/pushbot/pushbot send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
-	# 间隔发送
-	elif [ ! -z "$interval_time" ]; then
+	# 定时/间隔严格互斥，以 crontab 开关为准（1=定时发送，2=间隔发送）
+	# 避免切换模式后残留字段（regular_time* / interval_time）误触发错误分支
+	if [ "$crontab" = "2" ] && [ ! -z "$interval_time" ]; then
+		# 间隔发送
 		crontab -l 2>/dev/null > conf && echo -e "0 */$interval_time * * * /usr/bin/pushbot/pushbot send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+	elif [ "$crontab" = "1" ] && { [ ! -z "$regular_time" ] || [ ! -z "$regular_time_2" ] || [ ! -z "$regular_time_3" ]; }; then
+		# 定时发送（兼容旧配置：crontab 未设置但 regular_time* 有值）
+		# 第二、三时段值为 0 时视为"禁用"残留（旧版把 Disabled 存成 0），过滤掉；
+		# 主时段 regular_time=0 是合法的"0 点发送"，保留。
+		[ ! -z "$regular_time_2" ] && [ "$regular_time_2" != "0" ] && local regular_time_2=",${regular_time_2}" || local regular_time_2=""
+		[ ! -z "$regular_time_3" ] && [ "$regular_time_3" != "0" ] && local regular_time_3=",${regular_time_3}" || local regular_time_3=""
+		crontab -l 2>/dev/null > conf && echo -e "0 $regular_time$regular_time_2$regular_time_3 * * * /usr/bin/pushbot/pushbot send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+	elif [ -z "$crontab" ] && { [ ! -z "$regular_time" ] || [ ! -z "$regular_time_2" ] || [ ! -z "$regular_time_3" ] || [ ! -z "$interval_time" ]; }; then
+		# 旧版兼容：crontab 未设置时，按 legacy 逻辑（定时优先，其次间隔）
+		if [ ! -z "$regular_time" ] || [ ! -z "$regular_time_2" ] || [ ! -z "$regular_time_3" ]; then
+			[ ! -z "$regular_time_2" ] && [ "$regular_time_2" != "0" ] && local regular_time_2=",${regular_time_2}" || local regular_time_2=""
+			[ ! -z "$regular_time_3" ] && [ "$regular_time_3" != "0" ] && local regular_time_3=",${regular_time_3}" || local regular_time_3=""
+			crontab -l 2>/dev/null > conf && echo -e "0 $regular_time$regular_time_2$regular_time_3 * * * /usr/bin/pushbot/pushbot send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+		elif [ ! -z "$interval_time" ]; then
+			crontab -l 2>/dev/null > conf && echo -e "0 */$interval_time * * * /usr/bin/pushbot/pushbot send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+		fi
 	fi
 	re_cron
 }
@@ -730,7 +791,7 @@ function unattended(){
 		public_ip_count=`expr $public_ip_count + 1`
 		local wanIP=`getip wanipv4`
 		local hostIP=`getip hostipv4`
-		if [ ! -z "$wanIP" ] && [ ! -z "$hostIP" ] && ( ! echo "$wanIP"|grep -q -w ${hostIP} );then
+		if [ ! -z "$wanIP" ] && [ "$wanIP" != "获取失败" ] && [ ! -z "$hostIP" ] && [ "$hostIP" != "获取失败" ] && ( ! echo "$wanIP"|grep -q -w ${hostIP} );then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【无人值守任务】重拨尝试获取公网 ip，当前第 $public_ip_count 次 " >> ${logfile}
 			ifup wan >/dev/null 2>&1
 			sleep 60
@@ -739,7 +800,7 @@ function unattended(){
 			[ ! -z "$pushbot_ipv4" ] && [ "$pushbot_ipv4" -eq "2" ] && local IPv4=${hostIP}
 			[ ! -z "$pushbot_ipv6" ] && [ "$pushbot_ipv6" -eq "1" ] && local IPv6=`getip wanipv6`
 			[ ! -z "$pushbot_ipv6" ] && [ "$pushbot_ipv6" -eq "2" ] && local IPv6=`getip hostipv6`
-			[ ! -z "$wanIP" ] && [ ! -z "$hostIP" ] && ( ! echo "$wanIP"|grep -q -w ${hostIP} ) && echo IPv4 $IPv4 > ${dir}ip && echo -e IPv6 $last_IPv6 >> ${dir}ip
+			[ ! -z "$wanIP" ] && [ "$wanIP" != "获取失败" ] && [ ! -z "$hostIP" ] && [ "$hostIP" != "获取失败" ] && ( ! echo "$wanIP"|grep -q -w ${hostIP} ) && echo IPv4 $IPv4 > ${dir}ip && echo -e IPv6 $last_IPv6 >> ${dir}ip
 		fi
 	fi
 }
@@ -856,32 +917,37 @@ function ip_changes(){
 	if [ -f ${dir}ip ]; then
 		local last_IPv4=$(cat "${dir}ip"|grep IPv4|awk '{print $2}'|grep -v "^$"|sort -u|head -n1)
 		local last_IPv6=$(cat "${dir}ip"|grep IPv6|awk '{print $2}'|grep -v "^$"|sort -u|head -n1)
-		if [ ! -z "$pushbot_ipv4" ] && [ "$pushbot_ipv4" -ne "0" ] && [ ! -z "$IPv4" ] && ( ! echo ${IPv4}|grep -w -q ${last_IPv4} ); then
+		if [ ! -z "$pushbot_ipv4" ] && [ "$pushbot_ipv4" -ne "0" ] && [ ! -z "$IPv4" ] && [ "$IPv4" != "获取失败" ] && ( ! echo ${IPv4}|grep -w -q ${last_IPv4} ); then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}当前IP：${IPv4}" >> ${logfile}
 			echo IPv4 $IPv4 > ${dir}ip && echo -e IPv6 $last_IPv6 >> ${dir}ip
 			title="IP 地址变化"
+			# 接口模式取到私网地址：标注非公网
+			local IPv4_note=""
+			[ ! -z "$IPv4" ] && [ "$IPv4" != "获取失败" ] && is_private_ip "$IPv4" 4 && IPv4_note=" (非公网IP)"
 			if [ "$table_enable" = "1" ]; then
 				local LF='\n'
-				content="${content}${str_splitline}${str_title_start}${font_success} IP 地址变化${font_end}${str_title_end}${LF}| **当前 IP** | ${IPv4} |${LF}| --- | --- |"
+				content="${content}${str_splitline}${str_title_start}${font_success} IP 地址变化${font_end}${str_title_end}${LF}| **当前 IP** | ${IPv4}${IPv4_note} |${LF}| --- | --- |"
 			else
-				content="${content}${str_splitline}${str_title_start}${font_success} IP 地址变化${font_end}${str_title_end}${str_linefeed}${str_tab}当前 IP：${IPv4}"
+				content="${content}${str_splitline}${str_title_start}${font_success} IP 地址变化${font_end}${str_title_end}${str_linefeed}${str_tab}当前 IP：${IPv4}${IPv4_note}"
 			fi
-		elif [ ! -z "$pushbot_ipv4" ] && [ "$pushbot_ipv4" -ne "0" ] && [ -z "$IPv4" ]; then
+		elif [ ! -z "$pushbot_ipv4" ] && [ "$pushbot_ipv4" -ne "0" ] && { [ -z "$IPv4" ] || [ "$IPv4" = "获取失败" ]; }; then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】获取 IPv4 地址失败" >> ${logfile}
 		fi
 
-		if [ ! -z "$pushbot_ipv6" ] && [ "$pushbot_ipv6" -ne "0" ] && [ ! -z "$IPv6" ] && ( ! echo "$IPv6"|grep -w -q ${last_IPv6} ); then
+		if [ ! -z "$pushbot_ipv6" ] && [ "$pushbot_ipv6" -ne "0" ] && [ ! -z "$IPv6" ] && [ "$IPv6" != "获取失败" ] && ( ! echo "$IPv6"|grep -w -q ${last_IPv6} ); then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}当前IPv6：${IPv6}" >> ${logfile}
 			echo IPv4 $IPv4 > ${dir}ip && echo -e IPv6 $IPv6 >> ${dir}ip
 			[ -z "$title" ] && title="IPv6 地址变化"
 			[ ! -z "$title" ] && title="IP 地址变化"
+			local IPv6_note=""
+			[ ! -z "$IPv6" ] && [ "$IPv6" != "获取失败" ] && is_private_ip "$IPv6" 6 && IPv6_note=" (非公网IP)"
 			if [ "$table_enable" = "1" ]; then
 				local LF='\n'
-				content="${content}${str_splitline}${str_title_start}${font_success} IPv6 地址变化${font_end}${str_title_end}${LF}| **当前 IPv6** | ${IPv6} |${LF}| --- | --- |"
+				content="${content}${str_splitline}${str_title_start}${font_success} IPv6 地址变化${font_end}${str_title_end}${LF}| **当前 IPv6** | ${IPv6}${IPv6_note} |${LF}| --- | --- |"
 			else
-				content="${content}${str_splitline}${str_title_start}${font_success} IPv6 地址变化${font_end}${str_title_end}${str_linefeed}${str_tab}当前 IPv6：${IPv6}"
+				content="${content}${str_splitline}${str_title_start}${font_success} IPv6 地址变化${font_end}${str_title_end}${str_linefeed}${str_tab}当前 IPv6：${IPv6}${IPv6_note}"
 			fi
-		elif [ ! -z "$pushbot_ipv6" ] && [ "$pushbot_ipv6" -ne "0" ] && [ -z "$IPv6" ]; then
+		elif [ ! -z "$pushbot_ipv6" ] && [ "$pushbot_ipv6" -ne "0" ] && { [ -z "$IPv6" ] || [ "$IPv6" = "获取失败" ]; }; then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】获取 IPv6 地址失败" >> ${logfile}
 		fi
 
@@ -892,13 +958,16 @@ function ip_changes(){
 		echo IPv4 $IPv4 > ${dir}ip && echo -e IPv6 $IPv6 >> ${dir}ip	
 		title="路由器重新启动"
 		content="${content}${str_splitline}${str_title_start}${font_success} 路由器重新启动${font_end}${str_title_end}"
+		local r4_note="" r6_note=""
+		[ ! -z "$IPv4" ] && [ "$IPv4" != "获取失败" ] && is_private_ip "$IPv4" 4 && r4_note=" (非公网IP)"
+		[ ! -z "$IPv6" ] && [ "$IPv6" != "获取失败" ] && is_private_ip "$IPv6" 6 && r6_note=" (非公网IP)"
 		if [ "$table_enable" = "1" ]; then
 			local LF='\n'
-			[ ! -z "$pushbot_ipv4" ] && [ "$pushbot_ipv4" -ne "0" ] && content="${content}${LF}| **当前IP** | ${IPv4} |${LF}| --- | --- |"
-			[ ! -z "$pushbot_ipv6" ] && [ "$pushbot_ipv6" -ne "0" ] && content="${content}${LF}| **当前IPv6** | ${IPv6} |${LF}| --- | --- |"
+			[ ! -z "$pushbot_ipv4" ] && [ "$pushbot_ipv4" -ne "0" ] && content="${content}${LF}| **当前IP** | ${IPv4}${r4_note} |${LF}| --- | --- |"
+			[ ! -z "$pushbot_ipv6" ] && [ "$pushbot_ipv6" -ne "0" ] && content="${content}${LF}| **当前IPv6** | ${IPv6}${r6_note} |${LF}| --- | --- |"
 		else
-			[ ! -z "$pushbot_ipv4" ] && [ "$pushbot_ipv4" -ne "0" ] && content="${content}${str_linefeed}${str_tab}当前IP：${IPv4}"
-			[ ! -z "$pushbot_ipv6" ] && [ "$pushbot_ipv6" -ne "0" ] && content="${content}${str_linefeed}${str_tab}当前IPv6：${IPv6}"
+			[ ! -z "$pushbot_ipv4" ] && [ "$pushbot_ipv4" -ne "0" ] && content="${content}${str_linefeed}${str_tab}当前IP：${IPv4}${r4_note}"
+			[ ! -z "$pushbot_ipv6" ] && [ "$pushbot_ipv6" -ne "0" ] && content="${content}${str_linefeed}${str_tab}当前IPv6：${IPv6}${r6_note}"
 		fi
 	fi
 
@@ -1201,7 +1270,7 @@ function login_send(){
 	local login_ip_list=`cat ${dir}web_login|awk '{print $2}'|grep -v "^$"|sort -u|head -n1`
 	for login_ip in $login_ip_list; do
 		[ -z "$login_ip" ] && continue
-		echo "$ip_white_list"|grep -w -q "$login_ip" && continue
+		ip_in_whitelist "$login_ip" && continue
 		local web_login_time=`cat ${dir}web_login|grep -w ${login_ip}|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
 		local web_login_mode=`cat ${dir}web_login|grep -w ${login_ip}|awk '{print $3}'|grep -v "^$"|sort -u|head -n1`
 		if [ ! -z "$web_logged" ] && [ "$web_logged" -eq "1" ]; then
@@ -1239,7 +1308,7 @@ function login_send(){
 	local login_ip_list=`cat ${dir}ssh_login|awk '{print $2}'|grep -v "^$"|sort -u|head -n1`
 	for login_ip in $login_ip_list; do
 		[ -z "$login_ip" ] && continue
-		echo "$ip_white_list"|grep -w -q "$login_ip" && continue
+		ip_in_whitelist "$login_ip" && continue
 		local ssh_login_time=`cat ${dir}ssh_login|grep -w ${login_ip}|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
 		local ssh_login_mode=`cat ${dir}ssh_login|grep -w ${login_ip}|awk '{print $3}'|grep -v "^$"|sort -u|head -n1`
 		[ ! -z "$ssh_login_mode" ] && local content_mode="${str_linefeed}${str_tab}登录方式： ${str_space}${str_space}${str_space}${str_space}${ssh_login_mode}"
@@ -1278,8 +1347,13 @@ function login_send(){
 	local login_ip_list=`cat ${dir}web_failed|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
 	for login_ip in $login_ip_list; do
 		[ -z "$login_ip" ] && continue
-		echo "$ip_white_list"|grep -w -q "$login_ip" && continue
+		# 本机地址硬保护：本机探测/回环即使失败也不拉黑
+		is_local_address "$login_ip" && continue
+		ip_in_whitelist "$login_ip" && continue
 		local web_login_sum=`cat ${dir}web_failed|grep -w "${login_ip}"|wc -l`
+		if [ -z "$login_max_num" ]; then
+			local login_max_num=5   # 未配置时默认 5 次失败触发拉黑，避免空值比较异常
+		fi
 		if [ "$web_login_sum" -ge "$login_max_num" ] ;then
 			if [ ! -z "$web_login_failed" ] && [ "$web_login_failed" -eq "1" ]; then
 				if [ "$table_enable" = "1" ]; then
@@ -1308,9 +1382,14 @@ function login_send(){
 					fi
 				fi
 			fi
-			sed -i "/^${login_ip}$/d" ${dir}web_failed
-			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} 通过 Web 频繁尝试登录" >> ${logfile}
-			add_ip_black $login_ip
+			# 先尝试拉黑（add_ip_black 内部会做本机/白名单保护），
+			# 成功(未被拦截)才清除失败记录；被拦截则保留记录供后续重试。
+			if add_ip_black $login_ip; then
+				sed -i "/^${login_ip}$/d" ${dir}web_failed
+				echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} 通过 Web 频繁尝试登录" >> ${logfile}
+			else
+				echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} 触发拉黑但被本机/白名单保护拦截，保留记录待后续确认" >> ${logfile}
+			fi
 		fi
 	done
 	unset login_ip
@@ -1318,8 +1397,13 @@ function login_send(){
 	local login_ip_list=`cat ${dir}ssh_failed|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
 	for login_ip in $login_ip_list; do
 		[ -z "$login_ip" ] && continue
-		echo "$ip_white_list"|grep -w -q "$login_ip" && continue
+		# 本机地址硬保护：本机探测/回环即使失败也不拉黑
+		is_local_address "$login_ip" && continue
+		ip_in_whitelist "$login_ip" && continue
 		local ssh_login_sum=`cat ${dir}ssh_failed|grep -w "${login_ip}"|wc -l`
+		if [ -z "$login_max_num" ]; then
+			local login_max_num=5   # 未配置时默认 5 次失败触发拉黑，避免空值比较异常
+		fi
 		if [ "$ssh_login_sum" -ge "$login_max_num" ] ;then
 			if [ ! -z "$ssh_login_failed" ] && [ "$ssh_login_failed" -eq "1" ]; then
 				if [ "$table_enable" = "1" ]; then
@@ -1348,17 +1432,200 @@ function login_send(){
 					fi
 				fi
 			fi
-			sed -i "/^${login_ip}$/d" ${dir}ssh_failed
-			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} 通过 SSH 频繁尝试登录" >> ${logfile}
-			add_ip_black $login_ip
+			# 先尝试拉黑，成功(未被保护拦截)才清除失败记录
+			if add_ip_black $login_ip; then
+				sed -i "/^${login_ip}$/d" ${dir}ssh_failed
+				echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} 通过 SSH 频繁尝试登录" >> ${logfile}
+			else
+				echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} 触发拉黑但被本机/白名单保护拦截，保留记录待后续确认" >> ${logfile}
+			fi
 		fi
 	done
 	unset login_ip
 
 }
 
+# 白名单匹配：支持单个 IP 或标准 IP 段（CIDR，如 10.1.1.0/24、2001:db8::/32）
+# 命中白名单返回 0，否则返回 1。任何拉黑动作前必须调用此函数。
+# 本机地址保护：target 是否为本机任一接口地址或回环地址。
+# 与白名单不同 —— 这是硬保护，任何情况下本机地址都禁止进入黑名单
+# （误拉黑自己会断掉 Web/SSH 访问）。匹配 local_addrs 精确条目。
+function is_local_address(){
+	local target="$1"
+	[ -z "$target" ] && return 1
+	# v6 归一化：展开为完整 8 段并转小写，避免压缩/完整形式、大小写差异导致
+	# 本机地址漏判被拉黑（ip 命令输出压缩形式，登录日志可能是完整形式）。
+	# v4 无此问题，保持原样精确比较。
+	local target_norm="$target" a a_norm
+	if echo "$target" | grep -q ":"; then
+		target_norm=$(expand_v6 "$target" 2>/dev/null | tr 'A-F' 'a-f')
+	fi
+	for a in $local_addrs; do
+		[ -z "$a" ] && continue
+		a_norm="$a"
+		if echo "$a" | grep -q ":"; then
+			a_norm=$(expand_v6 "$a" 2>/dev/null | tr 'A-F' 'a-f')
+		fi
+		[ "$a_norm" = "$target_norm" ] && return 0
+	done
+	return 1
+}
+
+function ip_in_whitelist(){
+	local target="$1"
+	[ -z "$target" ] && return 1
+	[ -z "$ip_white_list" ] && return 1
+	local entry
+	for entry in $ip_white_list; do
+		[ -z "$entry" ] && continue
+		# 精确 IP 匹配（v4/v6）
+		if echo "$entry" | grep -q "/"; then
+			# CIDR 网段匹配
+			local net="${entry%/*}" prefix="${entry#*/}"
+			echo "$prefix" | grep -qE "^[0-9]{1,3}$" || continue
+			if echo "$net" | grep -q ":"; then
+				# IPv6 CIDR
+				if [ "$prefix" -le 128 ] 2>/dev/null && ipv6_in_network "$target" "$net" "$prefix"; then
+					return 0
+				fi
+			else
+				# IPv4 CIDR
+				if [ "$prefix" -le 32 ] 2>/dev/null && ipv4_in_network "$target" "$net" "$prefix"; then
+					return 0
+				fi
+			fi
+		elif [ "$entry" = "$target" ]; then
+			# 精确匹配
+			return 0
+		fi
+	done
+	return 1
+}
+
+# IPv4 CIDR 匹配：target 是否在 net/prefix 内（纯算术，无外部依赖）
+function ipv4_in_network(){
+	local target="$1" net="$2" prefix="$3"
+	# 简单校验 IP 格式（4 段 0-255）
+	echo "$target" | grep -qE "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" || return 1
+	echo "$net" | grep -qE "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" || return 1
+	local a1 a2 a3 a4 b1 b2 b3 b4 i mask=0
+	IFS=. read -r a1 a2 a3 a4 <<EOF
+$target
+EOF
+	IFS=. read -r b1 b2 b3 b4 <<EOF
+$net
+EOF
+	# 拼接 32 位整数（shell 算术，busybox ash 支持）
+	local t=$(( (a1<<24) + (a2<<16) + (a3<<8) + a4 ))
+	local n=$(( (b1<<24) + (b2<<16) + (b3<<8) + b4 ))
+	# 计算掩码
+	i=$prefix; mask=0
+	while [ "$i" -gt 0 ]; do
+		mask=$(( (mask<<1) | 1 ))
+		i=$((i-1))
+	done
+	mask=$(( mask << (32-prefix) ))
+	[ $(( t & mask )) -eq $(( n & mask )) ]
+}
+
+# IPv6 展开：把压缩形式（含 ::，如 2001:db8::1 / ::1 / 2001:db8::）展开为完整 8 段，
+# 输出空格分隔（"2001 db8 0 0 0 0 0 1"）。无 :: 的地址直接转空格分隔（不足 8 段补零兜底）。
+# 用 shell 前后分割而非 awk split 空字段，规避 gawk/busybox 对尾随空字段处理的差异。
+function expand_v6(){
+	local addr="$1" head="" tail="" i
+	[ -z "$addr" ] && return 1
+	local nhead=0 ntail=0 zeros=0 out=""
+	case "$addr" in
+		*::*)
+			head="${addr%%::*}"
+			tail="${addr##*::}"
+			[ -n "$head" ] && nhead=$(echo "$head" | awk -F: '{print NF}')
+			[ -n "$tail" ] && ntail=$(echo "$tail" | awk -F: '{print NF}')
+			zeros=$((8 - nhead - ntail))
+			[ "$zeros" -lt 0 ] && zeros=0
+			[ -n "$head" ] && out="$(echo "$head" | tr ':' ' ')"
+			i=0
+			while [ "$i" -lt "$zeros" ]; do out="$out 0"; i=$((i+1)); done
+			[ -n "$tail" ] && out="$out $(echo "$tail" | tr ':' ' ')"
+			echo "$out" | sed 's/^ *//'
+			;;
+		*)
+			out=$(echo "$addr" | tr ':' ' ')
+			zeros=$((8 - $(echo "$out" | wc -w)))
+			[ "$zeros" -lt 0 ] && zeros=0
+			i=0
+			while [ "$i" -lt "$zeros" ]; do out="$out 0"; i=$((i+1)); done
+			echo "$out"
+			;;
+	esac
+}
+
+# IPv6 CIDR 匹配：先展开压缩地址为完整 8 段，再逐段（16 位）比较，
+# 十六进制转十进制用 printf "%d"（busybox 支持 0x 前缀，不依赖 gawk 的 strtonum）
+function ipv6_in_network(){
+	local target="$1" net="$2" prefix="$3"
+	echo "$target" | grep -qE "^[0-9a-fA-F:]+$" || return 1
+	echo "$net" | grep -qE "^[0-9a-fA-F:]+$" || return 1
+	[ "$prefix" -le 0 ] && return 0
+	[ "$prefix" -gt 128 ] && prefix=128
+	local tlist nlist i=0 tg ng t n bits shift
+	tlist=$(expand_v6 "$target")
+	nlist=$(expand_v6 "$net")
+	while [ "$i" -lt 8 ]; do
+		tg=$(echo "$tlist" | awk -v i=$((i+1)) '{print $i}' 2>/dev/null)
+		ng=$(echo "$nlist" | awk -v i=$((i+1)) '{print $i}' 2>/dev/null)
+		t=$(printf "%d" "0x${tg:-0}" 2>/dev/null)
+		[ -z "$t" ] && t=0
+		n=$(printf "%d" "0x${ng:-0}" 2>/dev/null)
+		[ -z "$n" ] && n=0
+		bits=$((prefix - i*16))
+		if [ "$bits" -ge 16 ]; then
+			[ "$t" -ne "$n" ] && return 1
+		elif [ "$bits" -gt 0 ]; then
+			shift=$((16-bits))
+			[ $(( t >> shift )) -ne $(( n >> shift )) ] && return 1
+		else
+			break
+		fi
+		i=$((i+1))
+	done
+	return 0
+}
+
+# 拉黑时长解析：纯数字=秒（兼容旧配置）；支持单字符单位后缀
+#   h/H 小时  d/D 天  w/W 周  M 月(=30天)  m 分钟  y/Y 年(=365天)
+# 例：3600、1h、2D、1W、1M、1Y；0/空 = 永久拉黑。输出统一秒数。
+function parse_timeout(){
+	local v="$1" num unit mult=1
+	[ -z "$v" ] && { echo 0; return; }
+	num=$(echo "$v" | grep -oE "^[0-9]+")
+	[ -z "$num" ] && { echo 0; return; }
+	unit=$(echo "$v" | grep -oE "[a-zA-Z]+$")
+	case "$unit" in
+		h|H) mult=3600 ;;
+		d|D) mult=86400 ;;
+		w|W) mult=604800 ;;
+		M)   mult=2592000 ;;
+		m)   mult=60 ;;
+		y|Y) mult=31536000 ;;
+		*)   mult=1 ;;
+	esac
+	echo $((num * mult))
+}
+
 # 添加黑名单 — 支持 nftables / iptables 双模式
 function add_ip_black(){
+	# 本机地址硬保护：本机接口地址/回环永不拉黑（误拉黑自己会断访问）
+	# 返回 1 表示"被保护拦截未拉黑"，调用方可据此保留失败记录供后续重试
+	if [ -n "$1" ] && is_local_address "$1"; then
+		echo "`date \"+%Y-%m-%d %H:%M:%S\"` 【防火墙】IP $1 是本机地址，跳过拉黑" >> ${logfile}
+		return 1
+	fi
+	# 白名单优先：命中白名单（含网段）的 IP 永不拉黑
+	if [ -n "$1" ] && ip_in_whitelist "$1"; then
+		echo "`date \"+%Y-%m-%d %H:%M:%S\"` 【防火墙】IP $1 命中白名单，跳过拉黑" >> ${logfile}
+		return 1
+	fi
 	# 只添加不存在的 IP，避免重复行（精确匹配整行）
 	if [ -n "$1" ]; then
 		if ! grep -q -x "$1" "${ip_blacklist_path}" 2>/dev/null; then
@@ -1366,39 +1633,154 @@ function add_ip_black(){
 		fi
 	fi
 	
-	# 判断是否需要更新防火墙：黑名单文件变化 或 开关状态变化
+	# 判断是否需要更新防火墙：黑名单文件变化 或 开关状态变化 或 内核规则丢失
+	# prev/onoff 存持久目录（/usr/bin/pushbot/api/），避免 /tmp 清理后
+	# 内核检测只查 set 存在性而漏掉内容变化
 	local need_update=false
 	local prev_onoff=""
-	[ -f "${dir}ip_blacklist.onoff" ] && prev_onoff=$(cat ${dir}ip_blacklist.onoff)
+	local bl_state="/usr/bin/pushbot/api/.ip_blacklist.state"
+	# 拉黑时长统一解析为秒（支持 3600 / 1h / 2D / 1W / 1M，0=永久）
+	local bl_timeout_sec=$(parse_timeout "${ip_black_timeout:-0}")
+	# timeout 配置变化必须触发重建（set 的 timeout 属性只能在创建时设定，
+	# 否则 nft add set 对已存在 set 报错、直接加元素不会更新超时）
+	[ -f "${bl_state}.timeout" ] && [ "$(cat ${bl_state}.timeout)" != "$bl_timeout_sec" ] && need_update=true
+	[ -f "${bl_state}.onoff" ] && prev_onoff=$(cat ${bl_state}.onoff)
 	local cur_onoff="${web_login_black:-0}"
 	[ "$prev_onoff" != "$cur_onoff" ] && need_update=true
-	echo "$cur_onoff" > ${dir}ip_blacklist.onoff
+	echo "$cur_onoff" > ${bl_state}.onoff
+	# 带参调用 = 新拉黑事件（登录失败/手动拉黑）：即使文件已有该 IP（上次超时残留），
+	# 也必须重建 set 使其重新生效，否则超时移除后的"再次拉黑"会因 need_update=false 被跳过
+	if [ -n "$1" ]; then
+		need_update=true
+	fi
 	
-	local prev_file="${dir}ip_blacklist.prev"
+	# ── 反向同步判定：防火墙是否发生了"主动变化"（到期移除）──
+	# 设计（乐观并发控制）：
+	#   · 新增/删除/清空/失败拉黑 = 文件→防火墙方向，文件是变更源
+	#   · set 条目到期 = 防火墙→文件方向，set 是变更源
+	# 用 prev_set 快照（上次同步的 set 元素）判定：
+	#   · 当前 set ≠ prev_set → 期间防火墙主动变了（有到期）→ 以 set 为准清文件残留
+	#   · 当前 set == prev_set → 防火墙未主动变 → 文件是权威，用户增删清直接生效
+	# 两者方向相反，故不能无条件以 set 覆盖文件（否则用户删除会被 set 复活）。
+	local prev_set_file="${bl_state}.prevset"
+	local fw_changed=false
+	if [ -f "$prev_set_file" ] && [ -n "$cur_onoff" ] && [ "$cur_onoff" != "0" ]; then
+		if command -v nft >/dev/null 2>&1; then
+			if nft list set inet fw4 pushbot_blacklist >/dev/null 2>&1; then
+				nft list set inet fw4 pushbot_blacklist 2>/dev/null | grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" > ${ip_blacklist_path}.setcur
+				nft list set inet fw4 pushbot_blacklist6 2>/dev/null | grep -oE "elements = \{ [^}]*\}" | grep -oE "[0-9a-fA-F:]+:[0-9a-fA-F:]+" >> ${ip_blacklist_path}.setcur
+				cmp -s "$prev_set_file" "${ip_blacklist_path}.setcur" || fw_changed=true
+			fi
+		elif command -v ipset >/dev/null 2>&1; then
+			if ipset list ip_blacklist >/dev/null 2>&1; then
+				ipset list ip_blacklist 2>/dev/null | grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" > ${ip_blacklist_path}.setcur
+				cmp -s "$prev_set_file" "${ip_blacklist_path}.setcur" || fw_changed=true
+			fi
+		fi
+	fi
+	# 防火墙主动变了（有到期）：以 set 为准重写文件，清掉已到期残留；
+	# 并合并"用户本次新增"的 IP（当前文件有、prev_file 无 = 用户主动加的，
+	# 如编辑界面追加新 IP；反向同步用 set 覆盖会误抹掉它）。
+	# 注意：用户若明知某 IP 已到期仍想重新拉黑，需通过带参调用（界面"拉黑"按钮），
+	# 或等残留被清后再次添加；纯文本编辑无法区分"残留"与"主动重拉"，以 prev_file 快照判定。
+	local prev_file="${bl_state}.prev"
+	if $fw_changed; then
+		# 记录用户本次新增（当前文件 - prev_file）
+		local user_added=""
+		if [ -f "$prev_file" ]; then
+			for ip_new in `cat ${ip_blacklist_path} 2>/dev/null`; do
+				grep -qx "$ip_new" "$prev_file" 2>/dev/null || user_added="${user_added} $ip_new"
+			done
+		fi
+		[ -f "${ip_blacklist_path}.setcur" ] && sort -u ${ip_blacklist_path}.setcur > ${ip_blacklist_path} || > ${ip_blacklist_path}
+		# 合并用户新增（含带参 $1）
+		if [ -n "$1" ] && ! grep -q -x "$1" "${ip_blacklist_path}" 2>/dev/null; then
+			echo "$1" >> ${ip_blacklist_path}
+		fi
+		for ip_new in $user_added; do
+			if ! grep -q -x "$ip_new" "${ip_blacklist_path}" 2>/dev/null; then
+				echo "$ip_new" >> ${ip_blacklist_path}
+			fi
+		done
+	fi
+	rm -f ${ip_blacklist_path}.setcur
+	
 	if ! $need_update && [ -f "$prev_file" ]; then
-		diff -q "$prev_file" "${ip_blacklist_path}" >/dev/null 2>&1 || need_update=true
+		cmp -s "$prev_file" "${ip_blacklist_path}" || need_update=true
 	fi
 	cp "${ip_blacklist_path}" "$prev_file" 2>/dev/null || true
 	
+	# 内核状态检测：fw4 重启/路由重启会清空 nft set 与规则，
+	# 但文件未变时上面的 diff 判断会跳过重建 → 拉黑静默失效。
+	# 直接查内核：拉黑开启且有 IP 时，set 或 rule 缺失即强制重建。
+	if ! $need_update && [ -n "$cur_onoff" ] && [ "$cur_onoff" != "0" ] && [ -s "${ip_blacklist_path}" ]; then
+		if command -v nft >/dev/null 2>&1; then
+			nft list set inet fw4 pushbot_blacklist >/dev/null 2>&1 || need_update=true
+			nft list set inet fw4 pushbot_blacklist6 >/dev/null 2>&1 || need_update=true
+			nft list chain inet fw4 input 2>/dev/null | grep -qE "@pushbot_blacklist([^6]|$)" || need_update=true
+		else
+			ipset list ip_blacklist >/dev/null 2>&1 || need_update=true
+			iptables -C INPUT -m set --match-set ip_blacklist src -j DROP >/dev/null 2>&1 || need_update=true
+		fi
+	fi
+	
 	if ! $need_update; then
+		# 无变化：仍做"set→文件"反向同步，把内核超时已移除的元素从文件清掉。
+		# （文件是待拉黑登记，set 是生效中权威含 timeout；两者必须一致）
+		if [ -n "$cur_onoff" ] && [ "$cur_onoff" != "0" ]; then
+			if command -v nft >/dev/null 2>&1; then
+				if nft list set inet fw4 pushbot_blacklist >/dev/null 2>&1; then
+					nft list set inet fw4 pushbot_blacklist 2>/dev/null | grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" > ${ip_blacklist_path}.tmp
+					nft list set inet fw4 pushbot_blacklist6 2>/dev/null | grep -oE "elements = \{ [^}]*\}" | grep -oE "[0-9a-fA-F:]+:[0-9a-fA-F:]+" >> ${ip_blacklist_path}.tmp
+					if [ -s "${ip_blacklist_path}.tmp" ]; then
+						sort -u ${ip_blacklist_path}.tmp > ${ip_blacklist_path}
+					else
+						rm -f ${ip_blacklist_path}.tmp
+						> ${ip_blacklist_path}
+					fi
+				fi
+			elif command -v ipset >/dev/null 2>&1; then
+				ipset list ip_blacklist 2>/dev/null | grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" > ${ip_blacklist_path}.tmp
+				if [ -s "${ip_blacklist_path}.tmp" ]; then
+					mv ${ip_blacklist_path}.tmp ${ip_blacklist_path}
+				else
+					rm -f ${ip_blacklist_path}.tmp
+					> ${ip_blacklist_path}
+				fi
+			fi
+		fi
 		return  # 无变化，跳过防火墙操作
 	fi
 	
 	[ -f "${ip_blacklist_path}" ] && local logrow=$(grep -c "" ${ip_blacklist_path}) || local logrow="0"
 	[ ! -f "${ip_blacklist_path}" ] && local logrow="0"
 	
-	# 收集有效 IP
+	# 收集有效 IP（IPv4 + IPv6 分离，防止混合进同一 set）
 	local black_ips=""
+	local black_ips6=""
 	local ip_count=0
 	# 如果自动拉黑功能已关闭，直接跳过 IP 收集以清空防火墙规则
 	if [ -z "$web_login_black" ] || [ "$web_login_black" = "0" ]; then
 		echo "`date \"+%Y-%m-%d %H:%M:%S\"` 【防火墙】自动拉黑功能已关闭，将清空防火墙拉黑策略" >> ${logfile}
 	else
 		for ip_black in `cat ${ip_blacklist_path} 2>/dev/null`; do
-			ip_black=`echo "$ip_black"|grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"`
-			[ -z "$ip_black" ] && continue
-			ip_count=$((ip_count+1))
-			[ -z "$black_ips" ] && black_ips="$ip_black" || black_ips="${black_ips},$ip_black"
+			# 本机地址硬保护：本机接口地址/回环不加入防火墙拉黑，
+			# 且从黑名单文件中剔除（历史遗留的本机地址一并清理）
+			if is_local_address "$ip_black"; then
+				sed -i "/^${ip_black}$/d" ${ip_blacklist_path} 2>/dev/null
+				echo "`date \"+%Y-%m-%d %H:%M:%S\"` 【防火墙】IP $ip_black 是本机地址，已从黑名单剔除" >> ${logfile}
+				continue
+			fi
+			# 白名单优先：命中白名单（含网段）的 IP 不加入防火墙
+			ip_in_whitelist "$ip_black" && continue
+			# 逐行判断 v4 / v6，避免 v6 被 v4 正则误匹配出残片
+			if echo "$ip_black" | grep -qE "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$"; then
+				ip_count=$((ip_count+1))
+				[ -z "$black_ips" ] && black_ips="$ip_black" || black_ips="${black_ips},$ip_black"
+			elif echo "$ip_black" | grep -qE "^[0-9a-fA-F:]+$"; then
+				ip_count=$((ip_count+1))
+				[ -z "$black_ips6" ] && black_ips6="$ip_black" || black_ips6="${black_ips6},$ip_black"
+			fi
 		done
 	fi
 	
@@ -1413,32 +1795,99 @@ function add_ip_black(){
 	
 	if $use_nft; then
 		if [ $ip_count -le "0" ]; then
-			local del_rule_handle=$(nft -a list chain inet fw4 input 2>/dev/null | grep "@pushbot_blacklist" | grep -o "handle [0-9]*" | head -1 | cut -d' ' -f2)
-			if [ -n "$del_rule_handle" ]; then
-				nft delete rule inet fw4 input handle $del_rule_handle 2>/dev/null || true
-			fi
+			# 删除所有引用黑名单 set 的规则（v4/v6 各一条，必须全部删除，
+			# 否则残留规则引用 set → nft delete set 报 in-use 失败 → 拉黑不解除）
+			local del_rule_handles=$(nft -a list chain inet fw4 input 2>/dev/null | grep "@pushbot_blacklist" | grep -o "handle [0-9]*" | cut -d' ' -f2)
+			for del_h in $del_rule_handles; do
+				nft delete rule inet fw4 input handle $del_h 2>/dev/null || true
+			done
 			nft delete set inet fw4 pushbot_blacklist 2>/dev/null || true
+			nft delete set inet fw4 pushbot_blacklist6 2>/dev/null || true
 			echo "`date \"+%Y-%m-%d %H:%M:%S\"` 【防火墙】黑名单列表为空，清空 nftables 防火墙拉黑策略" >> ${logfile}
 			> ${ip_blacklist_path}
+			rm -f "${bl_state}.prevset"
 			return
 		fi
-		if [ "$ip_black_timeout" = "0" ]; then
+		# IPv4 set（支持超时）
+		# 仅当 timeout 配置变化时重建 set（nft add set 对已存在 set 报错，
+		# 直接 add 不会更新 timeout；重建会让元素采用新 timeout 重新计时）。
+		# timeout 未变时保持增量同步（保留未到期元素剩余时间）。
+		local prev_timeout_file="${bl_state}.timeout"
+		local prev_timeout=""
+		[ -f "$prev_timeout_file" ] && prev_timeout=$(cat "$prev_timeout_file")
+		local cur_timeout="$bl_timeout_sec"
+		if [ "$prev_timeout" != "$cur_timeout" ]; then
+			# set 被规则引用时 nft delete set 报 Resource busy，必须先删引用规则
+			# （v4/v6 各一条，必须全部删除），重建后由下方"缺失时插入"逻辑恢复。
+			local del_rule_handles=$(nft -a list chain inet fw4 input 2>/dev/null | grep "@pushbot_blacklist" | grep -o "handle [0-9]*" | cut -d' ' -f2)
+			for del_h in $del_rule_handles; do
+				nft delete rule inet fw4 input handle $del_h 2>/dev/null || true
+			done
+			nft delete set inet fw4 pushbot_blacklist 2>/dev/null || true
+			nft delete set inet fw4 pushbot_blacklist6 2>/dev/null || true
+			echo "$cur_timeout" > "$prev_timeout_file"
+		fi
+		if [ "$bl_timeout_sec" = "0" ]; then
 			nft add set inet fw4 pushbot_blacklist { type ipv4_addr\; } 2>/dev/null || true
 		else
-			nft add set inet fw4 pushbot_blacklist { type ipv4_addr\; timeout ${ip_black_timeout}s\; } 2>/dev/null || true
+			nft add set inet fw4 pushbot_blacklist { type ipv4_addr\; timeout ${bl_timeout_sec}s\; } 2>/dev/null || true
 		fi
-		local rule_exists=$(nft list chain inet fw4 input 2>/dev/null | grep -c "@pushbot_blacklist")
-		if [ "$rule_exists" -eq "0" ]; then
-			nft add rule inet fw4 input ip saddr @pushbot_blacklist drop 2>/dev/null || true
+		# IPv6 set（支持超时）
+		if [ "$bl_timeout_sec" = "0" ]; then
+			nft add set inet fw4 pushbot_blacklist6 { type ipv6_addr\; } 2>/dev/null || true
+		else
+			nft add set inet fw4 pushbot_blacklist6 { type ipv6_addr\; timeout ${bl_timeout_sec}s\; } 2>/dev/null || true
 		fi
-		nft flush set inet fw4 pushbot_blacklist 2>/dev/null || true
-		for ip_black in `echo "$black_ips"|tr ',' ' '`; do
-			nft add element inet fw4 pushbot_blacklist { $ip_black } 2>/dev/null || true
-		done
-		echo "`date \"+%Y-%m-%d %H:%M:%S\"` 【防火墙】已 nftables 拉黑 ${black_ips}" >> ${logfile}
+		# 规则用 insert（链首优先，不被 accept 抢先），且只在缺失时插入
+		if ! nft list chain inet fw4 input 2>/dev/null | grep -qE "@pushbot_blacklist([^6]|$)"; then
+			nft insert rule inet fw4 input ip saddr @pushbot_blacklist drop 2>/dev/null || true
+		fi
+		if ! nft list chain inet fw4 input 2>/dev/null | grep -q "@pushbot_blacklist6"; then
+			nft insert rule inet fw4 input ip6 saddr @pushbot_blacklist6 drop 2>/dev/null || true
+		fi
+		# 增量同步：不 flush 重建（会抹掉内核超时状态），只补齐 set 缺失元素。
+		# 文件是"待拉黑"登记，set 是"生效中"权威（含 timeout，到期自动移除）。
+		# 双向对账：
+		#   · 文件有、set 没有 → add（新拉黑 / 重启恢复）
+		#   · set 有、文件没有 → delete（用户删除；到期移除由内核处理，此处分不出、也无需删）
+		#     注意：此处删除的是"set 存在但文件已移除"的 IP——即用户主动删除场景。
+		{
+			for ip_black in `echo "$black_ips"|tr ',' ' '`; do
+				echo "add element inet fw4 pushbot_blacklist { $ip_black }"
+			done
+			for ip_black6 in `echo "$black_ips6"|tr ',' ' '`; do
+				echo "add element inet fw4 pushbot_blacklist6 { $ip_black6 }"
+			done
+			# 删除 set 中文件里已不存在的元素（用户删除的 IP）
+			for ip_del in `nft list set inet fw4 pushbot_blacklist 2>/dev/null | grep -oE "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"`; do
+				grep -qx "$ip_del" "${ip_blacklist_path}" || echo "delete element inet fw4 pushbot_blacklist { $ip_del }"
+			done
+			for ip_del6 in `nft list set inet fw4 pushbot_blacklist6 2>/dev/null | grep -oE "elements = \{ [^}]*\}" | grep -oE "[0-9a-fA-F:]+:[0-9a-fA-F:]+"`; do
+				grep -qx "$ip_del6" "${ip_blacklist_path}" || echo "delete element inet fw4 pushbot_blacklist6 { $ip_del6 }"
+			done
+		} | nft -f - 2>/dev/null || {
+			# 老版本 nft 不支持 stdin -f 时退化为逐条
+			for ip_black in `echo "$black_ips"|tr ',' ' '`; do
+				nft add element inet fw4 pushbot_blacklist { $ip_black } 2>/dev/null || true
+			done
+			for ip_black6 in `echo "$black_ips6"|tr ',' ' '`; do
+				nft add element inet fw4 pushbot_blacklist6 { $ip_black6 } 2>/dev/null || true
+			done
+			for ip_del in `nft list set inet fw4 pushbot_blacklist 2>/dev/null | grep -oE "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"`; do
+				grep -qx "$ip_del" "${ip_blacklist_path}" || nft delete element inet fw4 pushbot_blacklist { $ip_del } 2>/dev/null || true
+			done
+			for ip_del6 in `nft list set inet fw4 pushbot_blacklist6 2>/dev/null | grep -oE "elements = \{ [^}]*\}" | grep -oE "[0-9a-fA-F:]+:[0-9a-fA-F:]+"`; do
+				grep -qx "$ip_del6" "${ip_blacklist_path}" || nft delete element inet fw4 pushbot_blacklist6 { $ip_del6 } 2>/dev/null || true
+			done
+		}
+		echo "`date \"+%Y-%m-%d %H:%M:%S\"` 【防火墙】已 nftables 拉黑 ${black_ips}${black_ips6:+,$black_ips6}" >> ${logfile}
+		# 回写黑名单文件（v4+v6）以内核 set 为准：超时移除的元素不在此列，自然从文件清除
 		nft list set inet fw4 pushbot_blacklist 2>/dev/null | grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" > ${ip_blacklist_path}.tmp
+		# v6 只抓 elements 行内的地址（跳过 set 头注释/flags 等单词）
+		nft list set inet fw4 pushbot_blacklist6 2>/dev/null | grep -oE "elements = \{ [^}]*\}" | grep -oE "[0-9a-fA-F:]+:[0-9a-fA-F:]+" >> ${ip_blacklist_path}.tmp
 		if [ -s "${ip_blacklist_path}.tmp" ]; then
-			mv ${ip_blacklist_path}.tmp ${ip_blacklist_path}
+			# 去重 + 过滤掉 set 头注释行可能的残留
+			sort -u ${ip_blacklist_path}.tmp > ${ip_blacklist_path}
 		else
 			rm -f ${ip_blacklist_path}.tmp
 		fi
@@ -1449,6 +1898,7 @@ function add_ip_black(){
 			ipset destroy ip_blacklist >/dev/null 2>&1
 			echo "`date \"+%Y-%m-%d %H:%M:%S\"` 【防火墙】黑名单列表为空，清空 iptables 防火墙拉黑策略" >> ${logfile}
 			> ${ip_blacklist_path}
+			rm -f "${bl_state}.prevset"
 			return
 		fi
 		local log_enable="拉黑"
@@ -1456,7 +1906,7 @@ function add_ip_black(){
 		if [ -n "$log_enable" ]; then
 			echo "`date \"+%Y-%m-%d %H:%M:%S\"` 【防火墙】拉黑功能已启用，且读取到黑名单列表，将生成防火墙策略" >> ${logfile}
 		fi
-		ipset list ip_blacklist >/dev/null 2>&1 || ipset create ip_blacklist hash:ip timeout ${ip_black_timeout} >/dev/null 2>&1
+		ipset list ip_blacklist >/dev/null 2>&1 || ipset create ip_blacklist hash:ip timeout ${bl_timeout_sec} >/dev/null 2>&1
 		iptables -C INPUT -m set --match-set ip_blacklist src -j DROP >/dev/null 2>&1 || iptables -I INPUT -m set --match-set ip_blacklist src -j DROP >/dev/null 2>&1
 		for ip_black in `echo "$black_ips"|tr ',' ' '`; do
 			ipset -! add ip_blacklist $ip_black >/dev/null 2>&1
@@ -1468,6 +1918,22 @@ function add_ip_black(){
 			rm -f ${ip_blacklist_path}.tmp
 		fi
 		echo "`date \"+%Y-%m-%d %H:%M:%S\"` 【防火墙】已 iptables 拉黑 ${black_ips}" >> ${logfile}
+	fi
+
+	# 记录当前 set 元素快照（供下次判定防火墙是否主动变化——到期移除 vs 用户删除）
+	# 必须在 set 更新完成后记录；若 set 不存在（关闭/首次）则清空快照。
+	local prev_set_file="${bl_state}.prevset"
+	if [ -n "$cur_onoff" ] && [ "$cur_onoff" != "0" ]; then
+		if command -v nft >/dev/null 2>&1; then
+			if nft list set inet fw4 pushbot_blacklist >/dev/null 2>&1; then
+				nft list set inet fw4 pushbot_blacklist 2>/dev/null | grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" > "$prev_set_file" 2>/dev/null || true
+				nft list set inet fw4 pushbot_blacklist6 2>/dev/null | grep -oE "elements = \{ [^}]*\}" | grep -oE "[0-9a-fA-F:]+:[0-9a-fA-F:]+" >> "$prev_set_file" 2>/dev/null || true
+			fi
+		elif command -v ipset >/dev/null 2>&1; then
+			ipset list ip_blacklist 2>/dev/null | grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" > "$prev_set_file" 2>/dev/null || true
+		fi
+	else
+		rm -f "$prev_set_file"
 	fi
 }
 
@@ -1529,26 +1995,32 @@ function send(){
 
 	if [ -z "$1" ] && [ ! -z "$router_wan" ] && [ "$router_wan" -eq "1" ]; then
 		local send_wanIP=`getip wanipv4`;local send_hostIP=`getip hostipv4`
+		# 接口 IP 为私网时标注非公网
+		local wanIP_note=""
+		[ ! -z "$send_wanIP" ] && [ "$send_wanIP" != "获取失败" ] && is_private_ip "$send_wanIP" 4 && wanIP_note=" (非公网IP)"
+		local wanIP6_note=""
 		if [ "$table_enable" = "1" ]; then
 			local LF='\n'
-			local send_content="${send_content}${str_splitline}${str_title_start}${font_module} WAN 口信息${font_end}${str_title_end}${LF}| **接口IP** | ${send_wanIP} |${LF}| --- | --- |${LF}| **外网IP** | ${send_hostIP} |"
+			local send_content="${send_content}${str_splitline}${str_title_start}${font_module} WAN 口信息${font_end}${str_title_end}${LF}| **接口IP** | ${send_wanIP}${wanIP_note} |${LF}| --- | --- |${LF}| **外网IP** | ${send_hostIP} |"
 			if [ ! -z "$pushbot_ipv6" ] && [ "$pushbot_ipv6" -ne "0" ]; then
 				local send_wanIPv6=`getip wanipv6`;local send_hostIPv6=`getip hostipv6`
-				local send_content="${send_content}${LF}| **IPv6** | ${send_wanIPv6} |${LF}| **外网v6** | ${send_hostIPv6} |"
+				[ ! -z "$send_wanIPv6" ] && [ "$send_wanIPv6" != "获取失败" ] && is_private_ip "$send_wanIPv6" 6 && wanIP6_note=" (非公网IP)"
+				local send_content="${send_content}${LF}| **IPv6** | ${send_wanIPv6}${wanIP6_note} |${LF}| **外网v6** | ${send_hostIPv6} |"
 			fi
-			( ! echo "$send_wanIP"|grep -q -w ${send_hostIP} ) && local send_content="${send_content}${LF}| **提示** | 外网 ip 与接口 ip 不一致，不是公网 ip |"
+			[ ! -z "$send_wanIP" ] && [ ! -z "$send_hostIP" ] && [ "$send_hostIP" != "获取失败" ] && ( ! echo "$send_wanIP"|grep -q -w ${send_hostIP} ) && local send_content="${send_content}${LF}| **提示** | 外网 ip 与接口 ip 不一致，不是公网 ip |"
 			local interfaceuptime=`getinterfaceuptime`
 			[ ! -z "$interfaceuptime" ] && local wanstatustime=`getinterfaceuptime|awk -F. '{run_days=$1 / 86400;run_hour=($1 % 86400)/3600;run_minute=($1 % 3600)/60;run_second=$1 % 60;printf("在线时间：%d天%d时%d分%d秒",run_days,run_hour,run_minute,run_second)}'` && unset run_days run_hour run_minute run_second
 			[ ! -z "$wanstatustime" ] && local send_content="${send_content}${LF}| **在线时间** | ${wanstatustime#在线时间：} |"
 		else
-			local send_content="${send_content}${str_splitline}${str_title_start}${font_module} WAN 口信息${font_end}${str_title_end}${str_linefeed}${str_tab}接口ip:${send_wanIP}"
+			local send_content="${send_content}${str_splitline}${str_title_start}${font_module} WAN 口信息${font_end}${str_title_end}${str_linefeed}${str_tab}接口ip:${send_wanIP}${wanIP_note}"
 			local send_content="${send_content}${str_linefeed}${str_tab}外网ip:${send_hostIP}"
 			if [ ! -z "$pushbot_ipv6" ] && [ "$pushbot_ipv6" -ne "0" ]; then
 				local send_wanIPv6=`getip wanipv6`;local send_hostIPv6=`getip hostipv6`
-				local send_content="${send_content}${str_linefeed}${str_tab}ipv6 :${send_wanIPv6}"
+				[ ! -z "$send_wanIPv6" ] && [ "$send_wanIPv6" != "获取失败" ] && is_private_ip "$send_wanIPv6" 6 && wanIP6_note=" (非公网IP)"
+				local send_content="${send_content}${str_linefeed}${str_tab}ipv6 :${send_wanIPv6}${wanIP6_note}"
 				local send_content="${send_content}${str_linefeed}${str_tab}外网v6:${send_hostIPv6}"
 			fi
-			( ! echo "$send_wanIP"|grep -q -w ${send_hostIP} ) && local send_content="${send_content}${str_linefeed}${str_tab}外网 ip 与接口 ip 不一致，你的 ip 不是公网 ip"
+			[ ! -z "$send_wanIP" ] && [ ! -z "$send_hostIP" ] && [ "$send_hostIP" != "获取失败" ] && ( ! echo "$send_wanIP"|grep -q -w ${send_hostIP} ) && local send_content="${send_content}${str_linefeed}${str_tab}外网 ip 与接口 ip 不一致，你的 ip 不是公网 ip"
 			local interfaceuptime=`getinterfaceuptime`
 			[ ! -z "$interfaceuptime" ] && local wanstatustime=`getinterfaceuptime|awk -F. '{run_days=$1 / 86400;run_hour=($1 % 86400)/3600;run_minute=($1 % 3600)/60;run_second=$1 % 60;printf("在线时间：%d天%d时%d分%d秒",run_days,run_hour,run_minute,run_second)}'` && unset run_days run_hour run_minute run_second
 			local send_content="${send_content}${str_linefeed}${str_tab}${wanstatustime}"
@@ -1632,6 +2104,8 @@ if [ "$1" ] ;then
 	[ $1 == "soc" ] && echo `soc_temp` > ${dir}soc_tmp
 	[ $1 == "client" ] && get_client
 	[ $1 == "test" ] && send test
+	# 立即应用/修改/清空拉黑规则（Web 保存后触发，不等 sleeptime 轮询）
+	[ $1 == "blacklist" ] && add_ip_black
 	exit
 fi
 
@@ -1687,6 +2161,10 @@ while [ "$pushbot_enable" = "1" ]; do
 
 	# 登录提醒通知
 	[ ! -f "${dir}send_enable.lock" ] && login_send
+
+	# 黑名单周期同步：内核 set 超时移除的元素同步回文件
+	# （避免"超时已解除拉黑但文件仍保留"的文件/内核不一致）
+	[ -f "${dir}send_enable.lock" ] || add_ip_black
 
 	# 通知
 	if [ ! -f "${dir}send_enable.lock" ] && [ ! -z "$title" ] && [ ! -z "$content" ]; then

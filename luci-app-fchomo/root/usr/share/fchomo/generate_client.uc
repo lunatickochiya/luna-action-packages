@@ -354,6 +354,8 @@ uci.foreach(uciconf, uciinbd, (cfg) => {
 
 	const listener = parseListener(cfg);
 	listener.proxy = get_proxy(listener.proxy);
+	if (listener["reality-config"])
+		listener["reality-config"].proxy = get_proxy(listener["reality-config"].proxy);
 	if (listener["shadow-tls"])
 		listener["shadow-tls"].handshake.proxy = get_proxy(listener["shadow-tls"].handshake.proxy);
 	if (listener["res-tls"])
@@ -572,6 +574,7 @@ uci.foreach(uciconf, ucinode, (cfg) => {
 		} : null,
 
 		/* AnyTLS */
+		"client-metadata": cfg.anytls_client_metadata,
 		"idle-session-check-interval": durationToSecond(cfg.anytls_idle_session_check_interval),
 		"idle-session-timeout": durationToSecond(cfg.anytls_idle_session_timeout),
 		"min-idle-session": strToInt(cfg.anytls_min_idle_session),

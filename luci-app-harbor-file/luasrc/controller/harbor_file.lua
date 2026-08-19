@@ -273,6 +273,7 @@ function index()
     entry({"admin", "local_fs", "archive_status"}, call("api_archive_status"), nil).leaf = true
     entry({"admin", "local_fs", "package_install_start"}, call("api_package_install_start"), nil).leaf = true
     entry({"admin", "local_fs", "package_install_status"}, call("api_package_install_status"), nil).leaf = true
+    entry({"admin", "local_fs", "chmod"}, call("api_chmod"), nil).leaf = true
 end
 
 local function write_json(data)
@@ -2156,7 +2157,8 @@ local function list_directory(path, preferences)
                     size = item_stat.size or 0,
                     mtime = item_stat.mtime or 0,
                     ext = get_ext(name),
-                    preview = preview
+                    preview = preview,
+                    mode = tostring(item_stat.modedec or 0)
                 }
                 if preferences.enable_thumbnails == 1 and preview == "image" then
                     item.thumbnail_available = thumbnail_available(item_path, item_stat, preferences)
@@ -4982,4 +4984,42 @@ function api_upload()
             size = state.written
         }
     })
+end
+
+function api_chmod()
+    if not validate_write_request() then
+        return
+    end
+    local path = normalize_path(luci.http.formvalue("path"))
+    local mode_str = luci.http.formvalue("mode")
+
+    local mode_valid = mode_str and (#mode_str == 3 or #mode_str == 4) and mode_str:match("^[0-7]+$")
+
+    if not path or not mode_valid then
+        write_json_status(400, "Bad Request", { code = 1, message = "invalid path or mode" })
+        return
+    end
+    local nixio_fs = require "nixio.fs"
+    local stat = nixio_fs.lstat(path)
+    if not stat then
+        write_json_status(404, "Not Found", { code = 1, message = "path not found" })
+        return
+    end
+    if not system_operations_allowed() and is_system_path(path) then
+        return deny_system_operation()
+    end
+    local mode = tonumber(mode_str, 8)
+    if not mode then
+        write_json_status(400, "Bad Request", { code = 1, message = "invalid mode number" })
+        return
+    end
+
+    local quoted_path = "'" .. path:gsub("'", "'\\''") .. "'"
+    local cmd = "chmod " .. mode_str .. " " .. quoted_path .. " 2>/dev/null"
+    local result = os.execute(cmd)
+    if result ~= 0 then
+        write_json_status(500, "Chmod Failed", { code = 1, message = "change permissions failed" })
+        return
+    end
+    write_json({ code = 0, message = "success", data = { path = path, mode = mode_str } })
 end

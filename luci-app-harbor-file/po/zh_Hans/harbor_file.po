@@ -58,6 +58,48 @@ msgstr "类型"
 msgid "Size"
 msgstr "大小"
 
+msgid "Permissions"
+msgstr "权限"
+
+msgid "Edit"
+msgstr "编辑"
+
+msgid "Owner"
+msgstr "所有者"
+
+msgid "Group"
+msgstr "组"
+
+msgid "Others"
+msgstr "其他"
+
+msgid "Octal"
+msgstr "八进制"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Permissions updated"
+msgstr "权限已更新"
+
+msgid "Update failed"
+msgstr "更新失败"
+
+msgid "Invalid permissions"
+msgstr "无效的权限"
+
+msgid "Invalid permissions format"
+msgstr "无效的权限格式"
+
+msgid "No item selected"
+msgstr "未选择项目"
+
+msgid "Item path missing"
+msgstr "项目路径缺失"
+
+msgid "File path missing"
+msgstr "文件路径缺失"
+
 msgid "Modified"
 msgstr "修改时间"
 

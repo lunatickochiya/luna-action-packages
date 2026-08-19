@@ -6,8 +6,8 @@ local sys = api.sys
 local uci = api.uci
 local jsonc = api.jsonc
 
-local CONFIG = "passwall2_server"
-local CONFIG_PATH = "/tmp/etc/" .. CONFIG
+local CONFIG = api.s_config
+local CONFIG_PATH = api.S_TMP_PATH
 local NFT_INCLUDE_FILE = CONFIG_PATH .. "/" .. CONFIG .. ".nft"
 local LOG_APP_FILE = "/tmp/log/" .. CONFIG .. ".log"
 local TMP_BIN_PATH = CONFIG_PATH .. "/bin"
@@ -53,7 +53,7 @@ local function ln_run(s, d, command, output)
 end
 
 local function gen_include()
-	cmd(string.format("echo '#!/bin/sh' > /tmp/etc/%s.include", CONFIG))
+	cmd(string.format("echo '#!/bin/sh' > %s.include", CONFIG_PATH))
 	local function extract_rules(n, a)
 		local _ipt = ipt_bin
 		if n == "6" then
@@ -64,7 +64,7 @@ local function gen_include()
 		result = result .. "COMMIT"
 		return result
 	end
-	local f, err = io.open("/tmp/etc/" .. CONFIG .. ".include", "a")
+	local f, err = io.open(CONFIG_PATH .. ".include", "a")
 	if f and err == nil then
 		if nft_flag == "0" then
 			f:write(ipt_bin .. '-save -c | grep -v "PSW2-SERVER" | ' .. ipt_bin .. '-restore -c' .. "\n")
@@ -84,7 +84,7 @@ local function gen_include()
 end
 
 local function start()
-	local enabled = tonumber(uci:get(CONFIG, "@global[0]", "enable") or 0)
+	local enabled = tonumber(api.uci_get_s("@global[0]", "enable") or 0)
 	if enabled == nil or enabled == 0 then
 		return
 	end
@@ -102,7 +102,7 @@ local function start()
 		nft_file:write('flush chain inet fw4 PSW2-SERVER\n')
 		nft_file:write('insert rule inet fw4 input position 0 jump PSW2-SERVER comment "PSW2-SERVER"\n')
 	end
-	uci:foreach(CONFIG, "server", function(server)
+	api.uci_foreach_s("server", function(server)
 		local id = server[".name"]
 		local enable = server.enable
 		if enable and tonumber(enable) == 1 then
@@ -232,7 +232,7 @@ local function stop()
 		cmd("nft flush chain inet fw4 PSW2-SERVER 2>/dev/null")
 		cmd("nft delete chain inet fw4 PSW2-SERVER 2>/dev/null")
 	end
-	cmd(string.format("rm -rf %s %s /tmp/etc/%s.include", CONFIG_PATH, LOG_APP_FILE, CONFIG))
+	cmd(string.format("rm -rf %s %s %s", CONFIG_PATH, LOG_APP_FILE, CONFIG_PATH .. ".include"))
 end
 
 if action then

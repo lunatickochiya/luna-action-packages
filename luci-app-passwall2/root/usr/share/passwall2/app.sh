@@ -12,7 +12,6 @@ LUA_UTIL_PATH=/usr/lib/lua/luci/passwall2
 UTIL_SINGBOX=$LUA_UTIL_PATH/util_sing-box.lua
 UTIL_SS=$LUA_UTIL_PATH/util_shadowsocks.lua
 UTIL_XRAY=$LUA_UTIL_PATH/util_xray.lua
-UTIL_NAIVE=$LUA_UTIL_PATH/util_naiveproxy.lua
 UTIL_HYSTERIA2=$LUA_UTIL_PATH/util_hysteria2.lua
 SINGBOX_BIN=$(first_type $(config_t_get global_app sing_box_file) sing-box)
 XRAY_BIN=$(first_type $(config_t_get global_app xray_file) xray)
@@ -201,7 +200,7 @@ run_xray() {
 
 run_singbox() {
 	local flag node redir_port tcp_proxy_way socks_address socks_port socks_username socks_password http_address http_port http_username http_password
-	local dns_listen_port direct_dns_query_strategy remote_dns_protocol remote_dns_udp_server remote_dns_tcp_server remote_dns_doh remote_dns_client_ip remote_dns_detour remote_fakedns remote_dns_query_strategy dns_cache
+	local dns_listen_port direct_dns_query_strategy remote_dns_protocol remote_dns_udp_server remote_dns_tcp_server remote_dns_doh remote_dns_client_ip remote_dns_detour remote_fakedns remote_dns_query_strategy remote_rewrite_ttl dns_cache
 	local loglevel log_file config_file
 	eval_set_val $@
 	local type=$(echo $(config_n_get $node type) | tr 'A-Z' 'a-z')
@@ -317,6 +316,7 @@ run_singbox() {
 		[ -n "$dns_listen_port" ] && json_add_string "dns_listen_port" "${dns_listen_port}"
 		[ -n "$dns_cache" ] && json_add_string "dns_cache" "${dns_cache}"
 		[ "$remote_fakedns" = "1" ] && json_add_string "remote_dns_fake" "1"
+		[ -n "$remote_rewrite_ttl" ] && json_add_string "remote_rewrite_ttl" "${remote_rewrite_ttl}"
 	}
 	json_add_string "direct_dns_udp_port" "${DIRECT_DNS_UDP_PORT}"
 	json_add_string "direct_dns_udp_server" "${DIRECT_DNS_UDP_SERVER}"
@@ -351,7 +351,7 @@ run_socks() {
 	[ -n "$config_file" ] && [ -z "$(echo ${config_file} | grep $TMP_PATH)" ] && config_file=$TMP_PATH/$config_file
 	[ -n "$http_port" ] || http_port=0
 	[ -n "$http_config_file" ] && [ -z "$(echo ${http_config_file} | grep $TMP_PATH)" ] && http_config_file=$TMP_PATH/$http_config_file
-	if [ -n "$log_file" ] && [ -z "$(echo ${log_file} | grep $TMP_PATH)" ]; then
+	if [ -n "$log_file" ] && [ "$log_file" != "/dev/null" ] && [ -z "$(echo ${log_file} | grep $TMP_PATH)" ]; then
 		log_file=$TMP_PATH/$log_file
 	else
 		log_file="/dev/null"
@@ -453,14 +453,6 @@ run_socks() {
 		local _json_arg="$(json_dump)"
 		lua $UTIL_XRAY gen_config "${_json_arg}" > $config_file
 		[ -z "$no_run" ] && ln_run ${QUEUE_RUN} "$XRAY_BIN" "xray" $log_file run -c "$config_file"
-	;;
-	naiveproxy)
-		json_add_string "local_addr" "${bind}"
-		json_add_string "local_port" "${socks_port}"
-		json_add_string "run_type" "socks"
-		local _json_arg="$(json_dump)"
-		lua $UTIL_NAIVE gen_config "${_json_arg}" > $config_file
-		[ -z "$no_run" ] && ln_run ${QUEUE_RUN} "$(first_type naive)" naive $log_file "$config_file"
 	;;
 	ssr)
 		json_add_string "local_addr" "${bind}"
@@ -612,6 +604,7 @@ run_global() {
 		
 		local _remote_dns_client_ip=$(config_t_get global remote_dns_client_ip)
 		[ -n "${_remote_dns_client_ip}" ] && V2RAY_ARGS="${V2RAY_ARGS} remote_dns_client_ip=${_remote_dns_client_ip}"
+		V2RAY_ARGS="${V2RAY_ARGS} remote_rewrite_ttl=$(config_t_get global remote_rewrite_ttl)"
 	}
 	dns_msg="${dns_msg}）"
 
@@ -982,7 +975,7 @@ acl_app() {
 		dnsmasq_port=${GLOBAL_DNSMASQ_PORT:-11400}
 		for sid in $items; do
 			index=$(expr $index + 1)
-			local enabled sid remarks sources interface tcp_no_redir_ports udp_no_redir_ports node direct_dns_query_strategy remote_dns_protocol remote_dns remote_dns_doh remote_dns_client_ip remote_dns_detour remote_fakedns remote_dns_query_strategy log loglevel log_file
+			local enabled sid remarks sources interface tcp_no_redir_ports udp_no_redir_ports node direct_dns_query_strategy remote_dns_protocol remote_dns remote_dns_doh remote_dns_client_ip remote_dns_detour remote_fakedns remote_dns_query_strategy remote_rewrite_ttl log loglevel log_file
 			local _ip _mac _iprange _ipset _ip_or_mac source_list config_file
 			[ "$(config_n_get $sid enabled)" = "1" ] || continue
 			has_enabled=1
@@ -1086,7 +1079,8 @@ acl_app() {
 											dns_listen_port=${dns_port} \
 											direct_dns_query_strategy=${direct_dns_query_strategy} \
 											remote_dns_protocol=${remote_dns_protocol} remote_dns_tcp_server=${remote_dns} remote_dns_udp_server=${remote_dns} remote_dns_doh="${remote_dns}" \
-											remote_dns_client_ip=${remote_dns_client_ip} remote_dns_detour=${remote_dns_detour} remote_fakedns=${remote_fakedns} remote_dns_query_strategy=${remote_dns_query_strategy} \
+											remote_dns_client_ip=${remote_dns_client_ip} remote_dns_detour=${remote_dns_detour} remote_dns_query_strategy=${remote_dns_query_strategy} \
+											remote_fakedns=${remote_fakedns} remote_rewrite_ttl=${remote_rewrite_ttl} \
 											config_file=${config_file} \
 											log_file="${log_file}" loglevel="${loglevel}"
 								local status=$?
@@ -1108,7 +1102,7 @@ acl_app() {
 					}
 				fi
 			}
-			unset enabled sid remarks sources interface tcp_no_redir_ports udp_no_redir_ports node direct_dns_query_strategy remote_dns_protocol remote_dns remote_dns_doh remote_dns_client_ip remote_dns_detour remote_fakedns remote_dns_query_strategy 
+			unset enabled sid remarks sources interface tcp_no_redir_ports udp_no_redir_ports node direct_dns_query_strategy remote_dns_protocol remote_dns remote_dns_doh remote_dns_client_ip remote_dns_detour remote_fakedns remote_dns_query_strategy remote_rewrite_ttl
 			unset _ip _mac _iprange _ipset _ip_or_mac source_list config_file
 		done
 		unset redir_port dns_port dnsmasq_port
@@ -1117,7 +1111,7 @@ acl_app() {
 }
 
 start() {
-	busybox pgrep -f /tmp/etc/passwall2/bin > /dev/null 2>&1 && {
+	busybox pgrep -f ${TMP_PATH}/bin > /dev/null 2>&1 && {
 		logger -t PW2-RESTART "Upgrade or overload residue is detected, and the subprocess is being called to perform complete cleaning..."
 		(stop)
 		sleep 2
