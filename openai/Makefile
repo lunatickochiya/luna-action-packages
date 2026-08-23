@@ -7,7 +7,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=openai
-PKG_VERSION:=2.8.9-96f3ca1
+PKG_SOURCE_TAG:=2.8.9-96f3ca1
+PKG_VERSION:=2.8.9~96f3ca1
 PKG_RELEASE:=3
 STRIP:=false
 
@@ -17,8 +18,8 @@ else
   PKG_LIBC:=glibc
 endif
 
-PKG_SOURCE_URL:=https://github.com/sbwml/chatgpt-next/releases/download/v$(PKG_VERSION)/
-PKG_SOURCE:=openai-v$(PKG_VERSION)-linux-$(PKG_LIBC)-$(ARCH).tar.gz
+PKG_SOURCE_URL:=https://github.com/sbwml/chatgpt-next/releases/download/v$(PKG_SOURCE_TAG)/
+PKG_SOURCE:=openai-v$(PKG_SOURCE_TAG)-linux-$(PKG_LIBC)-$(ARCH).tar.gz
 
 ifeq ($(ARCH),aarch64)
   ifeq ($(CONFIG_USE_MUSL),y)
@@ -35,7 +36,7 @@ else ifeq ($(ARCH),x86_64)
 endif
 
 PKG_MAINTAINER:=sbwml <admin@cooluc.com>
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-v$(PKG_VERSION)-linux-$(PKG_LIBC)-$(ARCH)
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-v$(PKG_SOURCE_TAG)-linux-$(PKG_LIBC)-$(ARCH)
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)

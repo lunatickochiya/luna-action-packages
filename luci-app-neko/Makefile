@@ -6,7 +6,8 @@ include $(TOPDIR)/rules.mk
 
 PKG_MAINTAINER:=nosignal <https://github.com/nosignals/neko>
 PKG_NAME:=luci-app-neko
-PKG_VERSION:=1.2.4-beta
+PKG_SOURCE_TAG:=1.2.4-beta
+PKG_VERSION:=1.2.4_beta
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -31,7 +32,7 @@ define Build/Prepare
 	chmod 0755 $(PKG_BUILD_DIR)/root/etc/init.d/neko
 	chmod 0755 $(PKG_BUILD_DIR)/root/etc/neko/core/*
 	chmod 0755 $(PKG_BUILD_DIR)/root/etc/uci-defaults/99_neko
-	sed -i "s/0.0.0-beta/$(PKG_VERSION)/g" $(PKG_BUILD_DIR)/root/etc/neko/core/neko
+	sed -i "s/0.0.0-beta/$(PKG_SOURCE_TAG)/g" $(PKG_BUILD_DIR)/root/etc/neko/core/neko
 endef
 
 define Build/Configure

@@ -6,7 +6,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=smartdns
-PKG_VERSION:=Release48.4
+PKG_SOURCE_TAG:=Release48.4
+PKG_VERSION:=48.4
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
@@ -33,7 +34,7 @@ PKG_BUILD_DEPENDS:=PACKAGE_smartdns-ui:rust/host
 include $(TOPDIR)/feeds/packages/lang/rust/rust-package.mk
 include $(INCLUDE_DIR)/package.mk
 
-MAKE_VARS += VER=$(PKG_VERSION) 
+MAKE_VARS += VER=$(PKG_SOURCE_TAG) 
 MAKE_PATH:=src
 
 define Package/smartdns/default

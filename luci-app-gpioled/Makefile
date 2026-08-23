@@ -7,7 +7,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-gpioled
-PKG_VERSION:=1.0.1-20230809
+PKG_VERSION:=1.0.1.20230809
 PKG_MAINTAINER:=<https://github.com/animegasan>
 
 LUCI_TITLE:=LuCI for GPIO LED

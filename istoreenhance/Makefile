@@ -23,7 +23,7 @@ ARCH_HEXCODE=aa32
 else ifeq ($(ARCH),mipsel)
 ARCH_HEXCODE=1b0c
 endif
-PKG_SOURCE_VERSION:=c74312de1d50b9de65d0044fcf7c4d88a1f9917c
+PKG_SOURCE_VERSION:=$(ARCH_HEXCODE)
 PKG_SOURCE:=iStoreEnhance-binary-$(PKG_SOURCE_DATE).tar.gz
 PKG_SOURCE_URL:=https://github.com/kspeeder/docker_kspeeder/releases/download/v$(PKG_SOURCE_DATE)/
 PKG_HASH:=1957ff2f4957e655b7c6eb9db227abbdd3b2da6d0cb623978c7da18b61035494

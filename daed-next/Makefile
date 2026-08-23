@@ -5,17 +5,18 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=daed-next
-PKG_VERSION:=2023-12-02-102cb56
+PKG_SOURCE_TAG:=2023-12-02-102cb56
+PKG_VERSION:=2023.12.02~102cb56
 CORE_VERSION:=core-$(shell date "+%Y-%m-%d")
 PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_SOURCE_TAG).tar.gz
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=102cb562b6962b44c47f38092284d2ab2506a702
 PKG_SOURCE_URL:=https://github.com/daeuniverse/daed-revived-next.git
 PKG_MIRROR_HASH:=skip
 
-PKG_BUILD_DIR=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)/wing
+PKG_BUILD_DIR=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_SOURCE_TAG)/wing
 PKG_BUILD_DEPENDS:=golang/host bpf-headers
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
@@ -26,7 +27,7 @@ GO_PKG_LDFLAGS:= \
 	-X '$(GO_PKG)/db.AppDescription=$(PKG_NAME) is a integration solution of dae, API and UI.'
 GO_PKG_LDFLAGS_X:= \
 	$(GO_PKG)/db.AppName=$(PKG_NAME) \
-	$(GO_PKG)/db.AppVersion=$(PKG_VERSION)-$(CORE_VERSION)
+	$(GO_PKG)/db.AppVersion=$(PKG_SOURCE_TAG)-$(CORE_VERSION)
 GO_PKG_GCFLAGS:=-l=4
 
 include $(INCLUDE_DIR)/package.mk
@@ -68,16 +69,16 @@ define Package/daed-next/conffiles
 endef
 
 define Download/daed-next
-  URL:=https://github.com/QiuSimons/luci-app-daed-next/releases/download/daed-web-$(PKG_VERSION)/
-  URL_FILE:=daed-web-$(PKG_VERSION).squashfs
-  FILE:=daed-web-$(PKG_VERSION).squashfs
+  URL:=https://github.com/QiuSimons/luci-app-daed-next/releases/download/daed-web-$(PKG_SOURCE_TAG)/
+  URL_FILE:=daed-web-$(PKG_SOURCE_TAG).squashfs
+  FILE:=daed-web-$(PKG_SOURCE_TAG).squashfs
   HASH:=skip
 endef
 
 define Build/Prepare
 	( \
-	$(TAR) --strip-components=1 -C $(PKG_BUILD_DIR)/../ -xzf $(DL_DIR)/$(PKG_NAME)-$(PKG_VERSION).tar.gz ; \
-	rm -rf $(PKG_BUILD_DIR) && git clone https://github.com/daeuniverse/dae-wing $(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)/wing ; \
+	$(TAR) --strip-components=1 -C $(PKG_BUILD_DIR)/../ -xzf $(DL_DIR)/$(PKG_NAME)-$(PKG_SOURCE_TAG).tar.gz ; \
+	rm -rf $(PKG_BUILD_DIR) && git clone https://github.com/daeuniverse/dae-wing $(BUILD_DIR)/$(PKG_NAME)-$(PKG_SOURCE_TAG)/wing ; \
 	rm -rf $(PKG_BUILD_DIR)/dae-core && git clone https://github.com/daeuniverse/dae $(PKG_BUILD_DIR)/dae-core ; \
 	rm -rf $(PKG_BUILD_DIR)/dae-core/control/kern/headers && git clone https://github.com/daeuniverse/dae_bpf_headers $(PKG_BUILD_DIR)/dae-core/control/kern/headers ; \
 	pushd $(PKG_BUILD_DIR)/dae-core ; \
@@ -85,7 +86,7 @@ define Build/Prepare
 	go get -u=patch ; \
 	go mod tidy ; \
 	popd ; \
-	pushd $(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)/wing ; \
+	pushd $(BUILD_DIR)/$(PKG_NAME)-$(PKG_SOURCE_TAG)/wing ; \
 	wget -qO - https://github.com/daeuniverse/dae-wing/commit/ca0296173d36746335efed1923ff08c1300f7a61.patch | patch -p1 ; \
 	go get -u=patch ; \
 	go mod tidy ; \
@@ -131,7 +132,7 @@ define Package/daed-next/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/dae-wing $(1)/usr/bin/dae-wing
 
 	$(INSTALL_DIR) $(1)/usr/share/daed-next
-	$(INSTALL_DATA) $(DL_DIR)/daed-web-$(PKG_VERSION).squashfs $(1)/usr/share/daed-next/daed-web.squashfs
+	$(INSTALL_DATA) $(DL_DIR)/daed-web-$(PKG_SOURCE_TAG).squashfs $(1)/usr/share/daed-next/daed-web.squashfs
 
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) $(CURDIR)/files/daed-next.config $(1)/etc/config/daed-next

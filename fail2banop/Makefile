@@ -23,7 +23,7 @@ ARCH_HEXCODE=aa32
 else ifeq ($(ARCH),mipsel)
 ARCH_HEXCODE=1b0c
 endif
-PKG_SOURCE_VERSION:=f20ec4f5cbd5d070e4c52d00558a9b8ec33051a0
+PKG_SOURCE_VERSION:=$(ARCH_HEXCODE)
 PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_SOURCE_DATE).tar.gz
 PKG_SOURCE_URL:=https://github.com/linkease/fail2ban-openwrt/releases/download/v${PKG_SOURCE_DATE}/
 PKG_HASH:=9460debf3025dc6519ce393a405bf5dc00f1396aa698f94f768ca467a5025537

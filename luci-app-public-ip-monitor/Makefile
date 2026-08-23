@@ -11,7 +11,7 @@ LUCI_PKGARCH:=all
 PKG_LICENSE:=AGPL-3.0
 PKG_MAINTAINER:=Chosen Realm Alfeche <calfeche13>
 
-PKG_VERSION:=v1.0.0
+PKG_VERSION:=1.0.0
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
