@@ -199,9 +199,207 @@ version_lt() {
   [[ "$current" != "$newest" ]]
 }
 
+is_apk_version() {
+  local version="$1"
+
+  # OpenWrt 25.12 appends -r$(PKG_RELEASE) itself.  PKG_VERSION therefore
+  # must use apk's version grammar and must not contain an opkg-style suffix.
+  [[ "$version" =~ ^[0-9]+(\.[0-9]+)*[a-z]?(_(alpha|beta|pre|rc|cvs|svn|git|hg|p)[0-9]*)*(~[0-9a-f]+)?(-r[0-9]+)?$ ]]
+}
+
+trim_version() {
+  local value="$1"
+
+  value="${value//$'\r'/}"
+  value="${value#${value%%[![:space:]]*}}"
+  value="${value%${value##*[![:space:]]}}"
+  printf '%s\n' "$value"
+}
+
+normalize_apk_version() {
+  local version
+
+  version="$(trim_version "$1")"
+  version="${version##*/}"
+  version="${version#release-}"
+  version="${version#v}"
+  version="${version#V}"
+
+  # Keep the common upstream spellings while translating them to apk's
+  # ordered suffixes.  Hashes are represented by apk's ~hash component.
+  if [[ "$version" =~ ^([0-9]+)-([0-9]+)-([0-9]+)-([0-9a-f]+)$ ]]; then
+    version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}~${BASH_REMATCH[4]}"
+  elif [[ "$version" =~ ^([0-9]+)-([0-9]+)-([0-9]+)$ ]]; then
+    version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
+  elif [[ "$version" =~ ^([0-9]+(\.[0-9]+)+)-([0-9]+)$ ]]; then
+    version="${BASH_REMATCH[1]}.${BASH_REMATCH[3]}"
+  elif [[ "$version" =~ ^([0-9]+(\.[0-9]+)+)-([0-9a-f]+)$ ]]; then
+    version="${BASH_REMATCH[1]}~${BASH_REMATCH[3]}"
+  elif [[ "$version" =~ ^([0-9]+(\.[0-9]+)+)_v([0-9].*)$ ]]; then
+    version="${BASH_REMATCH[1]}.${BASH_REMATCH[3]}"
+  elif [[ "$version" =~ ^(.+)-(alpha|beta|pre|rc|cvs|svn|git|hg|p)([0-9]*)$ ]]; then
+    version="${BASH_REMATCH[1]}_${BASH_REMATCH[2]}${BASH_REMATCH[3]}"
+  elif [[ "$version" =~ ^(.+)-dev([0-9]*)$ ]]; then
+    version="${BASH_REMATCH[1]}_pre${BASH_REMATCH[2]}"
+  elif [[ "$version" =~ ^([0-9]+(\.[0-9]+)*)p([0-9]+)$ ]]; then
+    version="${BASH_REMATCH[1]}_p${BASH_REMATCH[3]}"
+  elif [[ "$version" =~ ^svn([0-9]+)$ ]]; then
+    version="${BASH_REMATCH[1]}_svn"
+  elif [[ "$version" =~ ^Release([0-9].*)$ ]]; then
+    version="${BASH_REMATCH[1]}"
+  elif [[ "$version" =~ ^kaiplus-runtime-v([0-9].*)$ ]]; then
+    version="${BASH_REMATCH[1]}"
+  elif [[ "$version" =~ ^MatriX\.([0-9]+)$ ]]; then
+    version="${BASH_REMATCH[1]}"
+  elif [[ "$version" =~ ^(.+)-par$ ]]; then
+    version="${BASH_REMATCH[1]}_p"
+  fi
+
+  printf '%s\n' "$version"
+}
+
+read_package_release() {
+  sed -nE \
+    's/^[[:space:]]*PKG_RELEASE[[:space:]]*[:?+]?=[[:space:]]*(.*)$/\1/p' \
+    "$1" | head -n 1
+}
+
+normalize_apk_release() {
+  local release
+
+  release="$(trim_version "$1")"
+  [[ -n "$release" ]] || {
+    printf '\n'
+    return
+  }
+
+  # Build-time commit counts and autorelease helpers are numeric after make
+  # expansion.  A source hash is not an apk revision, so use a stable numeric
+  # revision for the legacy form that appears in this feed.
+  if [[ "$release" == '$(PKG_SOURCE_VERSION)' || "$release" == '${PKG_SOURCE_VERSION}' ]]; then
+    printf '1\n'
+  elif [[ "$release" == *'$('* || "$release" == *'${'* ]]; then
+    printf '%s\n' "$release"
+  elif [[ "$release" =~ ^r([0-9]+)$ ]]; then
+    printf '%s\n' "${BASH_REMATCH[1]}"
+  elif [[ "$release" =~ ^[0-9]+([-._][0-9]+)+$ ]]; then
+    printf '%s\n' "${release//[-._]/}"
+  elif [[ "$release" =~ ^[[:alpha:]]+$ ]]; then
+    printf '1\n'
+  elif [[ "$release" =~ ^[0-9]+$ ]]; then
+    printf '%s\n' "$release"
+  else
+    printf '1\n'
+  fi
+}
+
+version_is_used_for_source() {
+  local makefile="$1"
+
+  grep -Fq '$(PKG_VERSION)' "$makefile" ||
+    grep -Fq '${PKG_VERSION}' "$makefile"
+}
+
+preserve_upstream_version_references() {
+  local makefile="$1"
+  local source_version="$2"
+  local escaped_source_version
+
+  source_version="$(trim_version "$source_version")"
+  if ! make_variable_exists "$makefile" PKG_SOURCE_TAG; then
+    escaped_source_version="$(escape_sed_replacement "$source_version")"
+    sed -i -E \
+      "0,/^[[:space:]]*PKG_VERSION[[:space:]]*[:?+]?=.*[[:space:]]*$/ {/^[[:space:]]*PKG_VERSION[[:space:]]*[:?+]?=.*[[:space:]]*$/s|^|PKG_SOURCE_TAG:=${escaped_source_version}\\n|;}" \
+      "$makefile"
+  fi
+  if [[ "$source_version" == v* ]]; then
+    sed -i 's/v\$(PKG_VERSION)/$(PKG_SOURCE_TAG)/g' "$makefile"
+  fi
+  sed -i \
+    -e 's/\$(PKG_VERSION)/$(PKG_SOURCE_TAG)/g' \
+    -e 's/\${PKG_VERSION}/$(PKG_SOURCE_TAG)/g' \
+    "$makefile"
+}
+
+replace_make_variable() {
+  local file="$1"
+  local variable="$2"
+  local value="$3"
+  local escaped_value
+
+  escaped_value="$(escape_sed_replacement "$value")"
+  sed -i -E \
+    "0,/^([[:space:]]*${variable}[[:space:]]*[:?+]?=[[:space:]]*).*/s|^([[:space:]]*${variable}[[:space:]]*[:?+]?=[[:space:]]*).*|\\1${escaped_value}|" \
+    "$file"
+}
+
+make_variable_exists() {
+  local file="$1"
+  local variable="$2"
+
+  grep -Eq "^[[:space:]]*${variable}[[:space:]]*[:?+]?=" "$file"
+}
+
+normalize_apk_metadata() {
+  log 'Normalizing package versions for OpenWrt 25.12 APK metadata'
+
+  local makefile version release normalized_version normalized_release
+  local version_changes=0
+  local release_changes=0
+
+  for makefile in */Makefile; do
+    CURRENT_ITEM="$makefile"
+    version="$(read_package_version "$makefile" | head -n 1)"
+    [[ -n "$version" ]] || continue
+    release="$(read_package_release "$makefile")"
+    normalized_version="$(normalize_apk_version "$version")"
+    normalized_release="$(normalize_apk_release "$release")"
+
+    # A literal -rN in PKG_VERSION is only valid when PKG_RELEASE is empty;
+    # otherwise package-defaults.mk would produce ...-rN-rM.
+    if [[ "$normalized_release" =~ ^[0-9]+$ && "$normalized_version" =~ ^(.+)-r[0-9]+$ ]]; then
+      normalized_version="${BASH_REMATCH[1]}"
+    fi
+
+    if [[ "$version" == *'$('* ]]; then
+      if [[ "$release" != "$normalized_release" && -n "$normalized_release" && "$normalized_release" != *'$('* && "$normalized_release" != *'${'* ]]; then
+        replace_make_variable "$makefile" PKG_RELEASE "$normalized_release"
+        ((release_changes += 1))
+        log "Normalized PKG_RELEASE in ${makefile}: ${release} -> ${normalized_release}"
+      fi
+      continue
+    fi
+
+    if ! is_apk_version "$normalized_version"; then
+      log "Using APK-safe fallback PKG_VERSION in ${makefile}: ${version} -> 0"
+      normalized_version='0'
+    fi
+
+    if [[ "$(trim_version "$version")" != "$normalized_version" ]] && version_is_used_for_source "$makefile"; then
+      preserve_upstream_version_references "$makefile" "$version"
+    fi
+
+    if [[ "$normalized_version" != "$version" ]]; then
+      replace_make_variable "$makefile" PKG_VERSION "$normalized_version"
+      ((version_changes += 1))
+      log "Normalized PKG_VERSION in ${makefile}: ${version} -> ${normalized_version}"
+    fi
+
+    if [[ "$release" != "$normalized_release" && -n "$normalized_release" && "$normalized_release" != *'$('* && "$normalized_release" != *'${'* ]]; then
+      replace_make_variable "$makefile" PKG_RELEASE "$normalized_release"
+      ((release_changes += 1))
+      log "Normalized PKG_RELEASE in ${makefile}: ${release} -> ${normalized_release}"
+    fi
+  done
+
+  CURRENT_ITEM=''
+  log "Normalized ${version_changes} PKG_VERSION field(s) and ${release_changes} PKG_RELEASE field(s)"
+}
+
 normalize_release_tag() {
   local version="$1"
 
+  version="$(trim_version "$version")"
   version="${version##*/}"
   version="${version#release-}"
   version="${version#v}"
@@ -269,7 +467,8 @@ update_package_sources() {
   log 'Updating GitHub-backed package versions with latest release metadata'
 
   local makefile package repository metadata
-  local default_oid current_version latest_version release_oid escaped_version
+  local default_oid current_version current_version_raw latest_version upstream_latest_version
+  local upstream_source_version current_source_version release_oid release
 
   for makefile in */Makefile; do
     package="${makefile%%/*}"
@@ -280,21 +479,39 @@ update_package_sources() {
     get_repository_metadata "$repository" || continue
     metadata="$REPOSITORY_METADATA_RESULT"
 
-    default_oid="$(jq -r '.data.repository.defaultBranchRef.target.oid // empty' <<<"$metadata")"
-    if [[ -n "$default_oid" ]] && grep -q '^PKG_SOURCE_VERSION:=' "$makefile"; then
-      sed -i "s/^PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$default_oid/" "$makefile"
-    fi
+    current_version_raw="$(read_package_version "$makefile")"
+    [[ "$current_version_raw" != *'$('* ]] || continue
+    current_version="$(normalize_apk_version "$(normalize_release_tag "$current_version_raw")")"
+    is_apk_version "$current_version" || {
+      warn "Skipping ${package}: current PKG_VERSION is not APK-compatible (${current_version:-<empty>})."
+      continue
+    }
 
-    current_version="$(normalize_release_tag "$(read_package_version "$makefile")")"
-    [[ "$current_version" =~ [0-9] ]] || continue
-
-    latest_version="$(normalize_release_tag "$(
+    upstream_latest_version="$(normalize_release_tag "$(
       jq -r '.data.repository.latestRelease.tagName // empty' <<<"$metadata"
     )")"
+    latest_version="$(normalize_apk_version "$upstream_latest_version")"
     [[ "$latest_version" =~ [0-9] ]] || continue
     [[ "$latest_version" != *'('* ]] || continue
+    if ! is_apk_version "$latest_version"; then
+      warn "Skipping ${package}: GitHub release tag is not APK-compatible (${latest_version})."
+      continue
+    fi
 
-    version_lt "$current_version" "$latest_version" || continue
+    release="$(trim_version "$(read_package_release "$makefile")")"
+    if [[ -n "$release" && "$release" =~ ^[0-9]+$ ]] &&
+      ! is_apk_version "${latest_version}-r${release}"; then
+      warn "Skipping ${package}: ${latest_version}-r${release} is not a valid APK package version."
+      continue
+    fi
+
+    default_oid="$(jq -r '.data.repository.defaultBranchRef.target.oid // empty' <<<"$metadata")"
+    if ! version_lt "$current_version" "$latest_version"; then
+      if [[ -n "$default_oid" ]] && make_variable_exists "$makefile" PKG_SOURCE_VERSION; then
+        replace_make_variable "$makefile" PKG_SOURCE_VERSION "$default_oid"
+      fi
+      continue
+    fi
     log "Updating ${package} from ${repository}: ${current_version} -> ${latest_version}"
 
     release_oid="$(
@@ -306,15 +523,29 @@ update_package_sources() {
     )"
     [[ -n "$release_oid" ]] || continue
 
-    escaped_version="$(escape_sed_replacement "$latest_version")"
-    if ! sed -i \
-      -e "s|^PKG_SOURCE_VERSION:=.*|PKG_SOURCE_VERSION:=$release_oid|" \
-      -e "s|^PKG_VERSION:=.*|PKG_VERSION:=$escaped_version|" \
-      "$makefile"; then
+    if ! make_variable_exists "$makefile" PKG_VERSION; then
       printf '::error file=%s,title=Package version update failed::repository=%s; version=%s\n' \
         "$makefile" "$repository" "$latest_version" >&2
       return 1
     fi
+    if make_variable_exists "$makefile" PKG_SOURCE_TAG; then
+      current_source_version="$(sed -nE 's/^[[:space:]]*PKG_SOURCE_TAG[[:space:]]*[:?+]?=[[:space:]]*(.*)$/\1/p' "$makefile" | head -n 1)"
+      upstream_source_version="$upstream_latest_version"
+      if [[ "$current_source_version" == v* ]]; then
+        upstream_source_version="v${upstream_source_version#v}"
+      elif [[ "$current_source_version" == release-* ]]; then
+        upstream_source_version="release-${upstream_source_version#release-}"
+      fi
+      replace_make_variable "$makefile" PKG_SOURCE_TAG "$upstream_source_version"
+    elif [[ "$upstream_latest_version" != "$latest_version" ]] && version_is_used_for_source "$makefile"; then
+      preserve_upstream_version_references "$makefile" "$upstream_latest_version"
+      replace_make_variable "$makefile" PKG_SOURCE_TAG "$upstream_latest_version"
+    fi
+    replace_make_variable "$makefile" PKG_VERSION "$latest_version"
+    if make_variable_exists "$makefile" PKG_SOURCE_VERSION; then
+      replace_make_variable "$makefile" PKG_SOURCE_VERSION "$release_oid"
+    fi
+
   done
   CURRENT_ITEM=''
 }
@@ -476,6 +707,7 @@ main() {
   trap 'handle_error "$?" "$LINENO" "$BASH_COMMAND"' ERR
 
   run_stage 'replace legacy network options' replace_legacy_ifname
+  run_stage 'normalize APK package metadata' normalize_apk_metadata
   run_stage 'record versions before latest' snapshot_package_versions
   run_stage 'update GitHub package versions' update_package_sources
   run_stage 'update hashes changed by latest' skip_hashes_for_latest_version_changes
