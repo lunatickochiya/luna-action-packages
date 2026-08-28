@@ -239,7 +239,7 @@ source_group_04() {
   mv -n cupsd1/{luci-app-cupsd,cups} ./
   rm -rf cupsd1
   git_clone https://github.com/sbwml/luci-app-mosdns openwrt-mos
-  mv -n openwrt-mos/{*mosdns,v2dat} ./
+  mv -n openwrt-mos/{*mosdns,geo2txt} ./
   rm -rf openwrt-mos
 }
 
