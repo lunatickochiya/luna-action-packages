@@ -294,9 +294,9 @@ add_shunt_t_rule() {
 }
 
 load_acl() {
+	log_i18n 1 "Access Control:"
 	acl_json=$(lua $APP_PATH/app_acl.lua)
 	acl_node
-	log_i18n 1 "Access Control:"
 	for sid in $(jsonfilter -s "${acl_json}" -e '$.acl[*].flag'); do
 		eval $(cat "${TMP_ACL_PATH}/${sid}/var")
 
@@ -430,7 +430,7 @@ load_acl() {
 				nft "add rule $NFTABLE_NAME $nft_prerouting_chain ip protocol tcp ${_ipt_source} counter return comment \"$remarks\""
 				[ "$_ipv4" != "1" ] && nft "add rule $NFTABLE_NAME PSW2_MANGLE_V6 meta l4proto tcp ${_ipt_source} counter return comment \"$remarks\"" 2>/dev/null
 
-				[ -z "$no_tcp_proxy" ] && [ -n "$redir_port" ] && {
+				[ -z "$no_udp_proxy" ] && [ -n "$redir_port" ] && {
 					msg2="${msg}$(i18n "Use the %s node [%s]" "UDP" "${node_remarks}")(TPROXY:${redir_port})"
 
 					nft "add rule $NFTABLE_NAME PSW2_MANGLE ip protocol udp ${_ipt_source} ip daddr $FAKE_IP counter jump PSW2_RULE comment \"$remarks\""
@@ -572,10 +572,10 @@ load_acl() {
 			nft "add rule $NFTABLE_NAME mangle_output oif lo counter return comment \"PSW2_OUTPUT_MANGLE\""
 			nft "add rule $NFTABLE_NAME mangle_output meta mark ${FWMARK} counter return comment \"PSW2_OUTPUT_MANGLE\""
 
-			nft "add rule $NFTABLE_NAME PSW2_MANGLE ip protocol tcp tcp dport 53 counter accept"
-			nft "add rule $NFTABLE_NAME PSW2_MANGLE ip protocol udp udp dport 53 counter accept"
-			nft "add rule $NFTABLE_NAME PSW2_MANGLE_V6 meta l4proto tcp tcp dport 53 counter accept"
-			nft "add rule $NFTABLE_NAME PSW2_MANGLE_V6 meta l4proto udp udp dport 53 counter accept"
+			nft "insert rule $NFTABLE_NAME PSW2_MANGLE ip protocol tcp tcp dport 53 counter accept"
+			nft "insert rule $NFTABLE_NAME PSW2_MANGLE ip protocol udp udp dport 53 counter accept"
+			nft "insert rule $NFTABLE_NAME PSW2_MANGLE_V6 meta l4proto tcp tcp dport 53 counter accept"
+			nft "insert rule $NFTABLE_NAME PSW2_MANGLE_V6 meta l4proto udp udp dport 53 counter accept"
 
 			unset msg msg2 comment_l
 		}
@@ -585,6 +585,7 @@ load_acl() {
 }
 
 filter_haproxy() {
+	[ "$(config_n_get @global_haproxy[0] balancing_enable 0)" != "1" ] && return
 	for item in $(uci show $CONFIG | grep ".lbss=" | cut -d "'" -f 2); do
 		get_host_ip ipv4 $(echo $item | awk -F ":" '{print $1}') 1
 	done | insert_nftset $NFTSET_VPS "-1"
@@ -602,10 +603,16 @@ filter_vps_addr() {
 }
 
 filter_vpsip() {
-	uci show $CONFIG | grep -E "(.address=|.download_address=)" | cut -d "'" -f 2 | grep -E "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | grep -v "^127\.0\.0\.1$" | insert_nftset $NFTSET_VPS "-1"
-	#log 1 "$(i18n "Add all %s nodes to %s[%s] direct connection complete." "IPv4" "nftset" "${$NFTSET_VPS}")"
-	uci show $CONFIG | grep -E "(.address=|.download_address=)" | cut -d "'" -f 2 | grep -E "([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4}" | insert_nftset $NFTSET_VPS6 "-1"
-	#log 1 "$(i18n "Add all %s nodes to %s[%s] direct connection complete." "IPv6" "nftset" "${$NFTSET_VPS6}")"
+	local ipv4_addrs=$(uci show $CONFIG | grep -E "(.address=|.download_address=)" | cut -d "'" -f 2 | grep -E "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | grep -v "^127\.0\.0\.1$")
+	[ -n "$ipv4_addrs" ] && {
+		echo "$ipv4_addrs" | insert_nftset $NFTSET_VPS "-1"
+		log_i18n 1 "Add all %s nodes to %s[%s] direct connection complete." "IPv4" "nftset" "${NFTSET_VPS}"
+	}
+	local ipv6_addrs=$(uci show $CONFIG | grep -E "(.address=|.download_address=)" | cut -d "'" -f 2 | grep -E "([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4}")
+	[ -n "$ipv6_addrs" ] && {
+		echo "$ipv6_addrs" | insert_nftset $NFTSET_VPS6 "-1"
+		log_i18n 1 "Add all %s nodes to %s[%s] direct connection complete." "IPv6" "nftset" "${NFTSET_VPS6}"
+	}
 }
 
 filter_server_port() {
@@ -891,7 +898,7 @@ add_firewall_rule() {
 
 del_firewall_rule() {
 	for nft in "dstnat" "srcnat" "nat_output" "mangle_prerouting" "mangle_output"; do
-        local handles=$(nft -a list chain $NFTABLE_NAME ${nft} 2>/dev/null | grep -E "PSW2_" | awk -F '# handle ' '{print$2}')
+		local handles=$(nft -a list chain $NFTABLE_NAME ${nft} 2>/dev/null | grep -E "PSW2_" | awk -F '# handle ' '{print$2}')
 		for handle in $handles; do
 			nft delete rule $NFTABLE_NAME ${nft} handle ${handle} 2>/dev/null
 		done

@@ -74,7 +74,6 @@ o = s:option(Value, "udp_no_redir_ports", translate("UDP No Redir Ports"),
 o.default = "disable"
 o:value("disable", translate("No patterns are used"))
 o:value("1:65535", translate("All"))
-o:value("1:52,54:442,444:65535", translatef("Forward only %s", "53, 443"))
 o.validate = port_validate
 
 ---- TCP Proxy Drop Ports
@@ -194,7 +193,7 @@ if has_xray then
 	o.default = 0
 	o.description = translate("Override the connection destination address with the sniffed domain.<br />Otherwise use sniffed domain for routing only.<br />If using shunt nodes, configure the domain shunt rules correctly.")
 
-	local domains_excluded = string.format("/usr/share/%s/domains_excluded", m.config)
+	local domains_excluded = string.format("/usr/share/%s/rules/domains_excluded", m.config)
 	o = s_xray:option(TextValue, "excluded_domains", translate("Excluded Domains"), translate("If the traffic sniffing result is in this list, the destination address will not be overridden."))
 	o.rows = 15
 	o.wrap = "off"

@@ -6,7 +6,7 @@ PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/xjasonlyu/tun2socks.git
-PKG_SOURCE_VERSION:=8dda19e8e4613e014f0b12f3e624fdff5e5f23b3
+PKG_SOURCE_VERSION:=d24a73449e3a4fffc37bf23a353b22219ce455ed
 
 PKG_MAINTAINER:=Konstantine Shevlakov <shevlako@132lan.ru>
 PKG_LICENSE:=GPL-3.0

@@ -62,11 +62,13 @@ m:foreach("socks", function(s)
 			id = id,
 			remark = id .. " - " .. (remark or translate("Misconfigured"))
 		}
-		socks_list[#socks_list + 1] = {
-			id = s[".name"],
-			remark = translate("Socks Config") .. " " .. string.format("[%s %s]", s.port, translate("Port")),
-			group = "Socks"
-		}
+		if has_singbox or has_xray then
+			socks_list[#socks_list + 1] = {
+				id = s[".name"],
+				remark = translate("Socks Config") .. " " .. string.format("[%s %s]", s.port, translate("Port")),
+				group = "Socks"
+			}
+		end
 	end
 end)
 
@@ -211,7 +213,7 @@ o:depends({dns_shunt = "dnsmasq"})
 o:depends({dns_shunt = "chinadns-ng"})
 
 o = s:taboption("DNS", Value, "direct_dns", translate("Direct DNS"))
-o.datatype = "or(ipaddr,ipaddrport)"
+o.datatype = "or(ipaddr,ipaddrport(1))"
 o.default = "223.5.5.5"
 o:value("223.5.5.5")
 o:value("223.6.6.6")
@@ -387,7 +389,7 @@ o:depends({dns_mode = "dns2socks"})
 
 ---- DNS Forward
 o = s:taboption("DNS", Value, "remote_dns", translate("Remote DNS"))
-o.datatype = "or(ipaddr,ipaddrport)"
+o.datatype = "or(ipaddr,ipaddrport(1))"
 o.default = "1.1.1.1"
 o:value("1.1.1.1", "1.1.1.1 (CloudFlare)")
 o:value("1.1.1.2", "1.1.1.2 (CloudFlare-Security)")
