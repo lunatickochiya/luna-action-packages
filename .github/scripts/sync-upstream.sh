@@ -248,8 +248,7 @@ source_group_05() {
     https://github.com/esirplayground/LingTiGameAcc \
     https://github.com/esirplayground/luci-app-LingTiGameAcc \
     https://github.com/zxlhhyccc/luci-app-v2raya \
-    https://github.com/jerrykuku/luci-app-go-aliyundrive-webdav \
-    https://github.com/asvow/luci-app-tailscale
+    https://github.com/jerrykuku/luci-app-go-aliyundrive-webdav
   git_clone https://github.com/SSSSSimon/tencentcloud-openwrt-plugin-ddns
   mv -n tencentcloud-openwrt-plugin-ddns/tencentcloud_ddns ./luci-app-tencentddns
   rm -rf tencentcloud-openwrt-plugin-ddns

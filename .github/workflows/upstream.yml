@@ -65,6 +65,9 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: bash .github/scripts/modify-packages.sh
 
+    - name: Check package conflicts
+      run: bash .github/scripts/check-package-conflicts.sh
+
     - name: Commit and push
       run: bash .github/scripts/commit-changes.sh
 
