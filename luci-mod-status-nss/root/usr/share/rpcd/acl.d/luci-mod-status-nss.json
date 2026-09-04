@@ -5,7 +5,10 @@
 			"cgi-io": [ "exec" ],
 			"file": {
 				"/sys/kernel/debug/qca-nss-drv/stats/*": [ "read" ],
-				"/sys/class/thermal/*" : [ "read" ]
+				"/sys/class/thermal/*/type": [ "read" ],
+				"/sys/class/thermal/*/temp": [ "read" ],
+				"/sys/devices/virtual/thermal/*/type": [ "read" ],
+				"/sys/devices/virtual/thermal/*/temp": [ "read" ]
 			},
 			"ubus": {
 				"file": [ "stat" ]
