@@ -1,0 +1,16 @@
+diff --git a/luci-mod-status-nss/root/usr/share/rpcd/acl.d/luci-mod-status-nss.json b/luci-mod-status-nss/root/usr/share/rpcd/acl.d/luci-mod-status-nss.json
+index 50d2fade..b61b7b15 100644
+--- a/luci-mod-status-nss/root/usr/share/rpcd/acl.d/luci-mod-status-nss.json
++++ b/luci-mod-status-nss/root/usr/share/rpcd/acl.d/luci-mod-status-nss.json
+@@ -5,7 +5,10 @@
+ 			"cgi-io": [ "exec" ],
+ 			"file": {
+ 				"/sys/kernel/debug/qca-nss-drv/stats/*": [ "read" ],
+-				"/sys/class/thermal/*" : [ "read" ]
++				"/sys/class/thermal/*/type": [ "read" ],
++				"/sys/class/thermal/*/temp": [ "read" ],
++				"/sys/devices/virtual/thermal/*/type": [ "read" ],
++				"/sys/devices/virtual/thermal/*/temp": [ "read" ]
+ 			},
+ 			"ubus": {
+ 				"file": [ "stat" ]
