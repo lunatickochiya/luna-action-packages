@@ -566,7 +566,6 @@ source_group_21() {
     https://github.com/tty228/luci-app-wechatpush \
     https://github.com/AngelaCooljx/luci-theme-material3 \
     https://github.com/sbwml/luci-app-webdav \
-    https://github.com/koshev-msk/mwan3-nft \
     https://github.com/sbwml/package_kernel_tcp-brutal \
     https://github.com/hudra0/luci-app-qosmate
   git_clone https://github.com/sbwml/luci-app-quickfile quickf
@@ -670,9 +669,13 @@ source_group_28() {
     package/network/services/noddos
 }
 
+source_group_29() {
+  git_clone https://github.com/koshev-msk/mwan3-nft
+}
+
 run_source_groups() {
   local groups=(
-    source_group_{01..28}
+    source_group_{01..29}
   )
   local staging_root="$PWD/.sync-upstream"
   local group running=0 failed=0 status
