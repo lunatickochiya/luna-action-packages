@@ -13,6 +13,7 @@ define Package/$(PKG_NAME)
 	CATEGORY:=Network
 	TITLE:=A Lightweight self-hosted netdisk application
 	URL:=https://webd.cf
+	DEPENDS:=+libgcc
 endef
 
 TARGET_LIBC:=musl
@@ -81,6 +82,9 @@ endif
 ifeq ($(ARCH),aarch64)
   TARGET_ARCH:=aarch64
 
+  ifeq ($(BOARD),qualcommax)
+    TARGET_BOARD:=musl.rockchip-armv8
+  endif
   ifeq ($(BOARD),rockchip)
     TARGET_BOARD:=musl.rockchip-armv8
   endif
@@ -96,12 +100,14 @@ ifeq ($(ARCH),aarch64)
   endif
 endif
 
-ifeq ($(strip $(TARGET_ARCH)$(TARGET_BOARD)),)
-  $(error Unsupported ARCH/BOARD combo: ARCH=$(ARCH) BOARD=$(BOARD) SUBTARGET=$(SUBTARGET))
+ifneq ($(DUMP),1)
+  ifeq ($(strip $(TARGET_ARCH)$(TARGET_BOARD)),)
+    $(error Unsupported ARCH/BOARD combo: ARCH=$(ARCH) BOARD=$(BOARD) SUBTARGET=$(SUBTARGET))
+  endif
 endif
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(TARGET_ARCH)-openwrt-linux-$(TARGET_BOARD).tar.gz
-PKG_SOURCE_URL:=https://webd.cf/webd/$(PKG_VERSION)/
+PKG_SOURCE_URL:=https://webd90kb.github.io/webd/webd/webd_dl/20240223/
 PKG_HASH:=skip
 
 UNTAR_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
