@@ -566,6 +566,7 @@ source_group_21() {
     https://github.com/tty228/luci-app-wechatpush \
     https://github.com/AngelaCooljx/luci-theme-material3 \
     https://github.com/sbwml/luci-app-webdav \
+    https://github.com/koshev-msk/mwan3-nft \
     https://github.com/sbwml/package_kernel_tcp-brutal \
     https://github.com/hudra0/luci-app-qosmate
   git_clone https://github.com/sbwml/luci-app-quickfile quickf
