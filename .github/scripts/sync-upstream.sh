@@ -351,6 +351,7 @@ source_group_09() {
 }
 
 source_group_10() {
+  git_clone_branch https://github.com/koshev-msk/mwan3-nft my-25.12 mwan3-nft
   clone_many \
     https://github.com/mchome/openwrt-dogcom \
     https://github.com/mchome/luci-app-dogcom \
@@ -669,9 +670,7 @@ source_group_28() {
     package/network/services/noddos
 }
 
-source_group_29() {
-  git clone https://github.com/koshev-msk/mwan3-nft -b my-25.12 --depth 1
-}
+
 
 run_source_groups() {
   local groups=(
