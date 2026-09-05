@@ -670,7 +670,7 @@ source_group_28() {
 }
 
 source_group_29() {
-  git_clone https://github.com/koshev-msk/mwan3-nft
+  git clone https://github.com/koshev-msk/mwan3-nft -b my-25.12 --depth 1
 }
 
 run_source_groups() {
