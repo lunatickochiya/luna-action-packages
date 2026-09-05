@@ -1,0 +1,25 @@
+From 39fa0237a913ce28811a9304351307fb3969b164 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sat, 5 Sep 2026 09:55:04 +0800
+Subject: [PATCH 2/3] fix(ssw): resolve rpcd Kconfig cycle
+
+---
+ ssw/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ssw/Makefile b/ssw/Makefile
+index 8401b68a..9124aaf7 100644
+--- a/ssw/Makefile
++++ b/ssw/Makefile
+@@ -9,7 +9,7 @@ include $(INCLUDE_DIR)/package.mk
+ 
+ define Package/$(PKG_NAME)
+   PKGARCH:=all
+-  DEPENDS:=+modemmanager $(if $(filter 1,$(SSW_BUILD_WITH_NFT)),+mwan3-nft,+mwan3)
++  DEPENDS:=+rpcd +modemmanager $(if $(filter 1,$(SSW_BUILD_WITH_NFT)),+mwan3-nft,+mwan3)
+   TITLE:=SIM-card switcher and tracker
+ endef
+ 
+-- 
+2.55.0
+

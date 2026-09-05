@@ -1,0 +1,52 @@
+From 7e54e233e7929f1870c2dc406a117cd2707b8420 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sat, 5 Sep 2026 09:55:11 +0800
+Subject: [PATCH 3/3] fix(webd): support package metadata and qualcommax
+
+---
+ webd/Makefile | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/webd/Makefile b/webd/Makefile
+index ddf498a0..d23de906 100755
+--- a/webd/Makefile
++++ b/webd/Makefile
+@@ -13,6 +13,7 @@ define Package/$(PKG_NAME)
+ 	CATEGORY:=Network
+ 	TITLE:=A Lightweight self-hosted netdisk application
+ 	URL:=https://webd.cf
++	DEPENDS:=+libgcc
+ endef
+ 
+ TARGET_LIBC:=musl
+@@ -81,6 +82,9 @@ endif
+ ifeq ($(ARCH),aarch64)
+   TARGET_ARCH:=aarch64
+ 
++  ifeq ($(BOARD),qualcommax)
++    TARGET_BOARD:=musl.rockchip-armv8
++  endif
+   ifeq ($(BOARD),rockchip)
+     TARGET_BOARD:=musl.rockchip-armv8
+   endif
+@@ -96,12 +100,14 @@ ifeq ($(ARCH),aarch64)
+   endif
+ endif
+ 
+-ifeq ($(strip $(TARGET_ARCH)$(TARGET_BOARD)),)
+-  $(error Unsupported ARCH/BOARD combo: ARCH=$(ARCH) BOARD=$(BOARD) SUBTARGET=$(SUBTARGET))
++ifneq ($(DUMP),1)
++  ifeq ($(strip $(TARGET_ARCH)$(TARGET_BOARD)),)
++    $(error Unsupported ARCH/BOARD combo: ARCH=$(ARCH) BOARD=$(BOARD) SUBTARGET=$(SUBTARGET))
++  endif
+ endif
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(TARGET_ARCH)-openwrt-linux-$(TARGET_BOARD).tar.gz
+-PKG_SOURCE_URL:=https://webd.cf/webd/$(PKG_VERSION)/
++PKG_SOURCE_URL:=https://webd90kb.github.io/webd/webd/webd_dl/20240223/
+ PKG_HASH:=skip
+ 
+ UNTAR_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+-- 
+2.55.0
+
