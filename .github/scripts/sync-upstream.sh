@@ -674,7 +674,7 @@ source_group_28() {
 
 run_source_groups() {
   local groups=(
-    source_group_{01..29}
+    source_group_{01..28}
   )
   local staging_root="$PWD/.sync-upstream"
   local group running=0 failed=0 status
