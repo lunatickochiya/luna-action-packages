@@ -74,14 +74,15 @@ diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luc
 index 0c33ccd90f..258da6a551 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-@@ -834,5 +855,6 @@
+@@ -825,7 +825,7 @@ for k, v in pairs(nodes_table) do
  end
  
- m:appendTemplate("/global/footer", {shunt_list = api.jsonc.stringify(shunt_list)})
+ m:appendTemplate("/global/footer")
+-
 +m:appendTemplate("/global/status_bottom")
+ m:appendTemplate("/cbi/sortable", {sectiontype = s2.sectiontype})
  
  return api.return_map(m)
-
 
 new file mode 100644
 index 000000000000..a00fff9c79b3
