@@ -236,6 +236,12 @@ load_acl() {
 			}
 			[ -n "$(get_cache_var "ACL_${sid}_dns_port")" ] && dns_redirect_port=$(get_cache_var "ACL_${sid}_dns_port")
 			[ -n "$(get_cache_var "ACL_${sid}_fakedns")" ] && use_fakedns=$(get_cache_var "ACL_${sid}_fakedns")
+
+			([ -n "$node" ] && ([ "$node" = "default" ] || [ "$node" = "$NODE" ])) && {
+				use_global_config=1
+				unset node
+			}
+
 			[ -n "$node" ] && {
 				if [ "$(config_get_type $node)" = "socks" ]; then
 					node_remark="Socks 配置($(config_n_get $node port) 端口)"
@@ -411,7 +417,7 @@ load_acl() {
 					[ "$_ipv4" != "1" ] && $ip6t_n -A PSW_DNS $(comment "$remarks") -p udp ${_ipt_source} --dport 53 -j REDIRECT --to-ports ${dns_redirect} 2>/dev/null
 					$ipt_n -A PSW_DNS $(comment "$remarks") -p tcp ${_ipt_source} --dport 53 -j REDIRECT --to-ports ${dns_redirect}
 					[ "$_ipv4" != "1" ] && $ip6t_n -A PSW_DNS $(comment "$remarks") -p tcp ${_ipt_source} --dport 53 -j REDIRECT --to-ports ${dns_redirect} 2>/dev/null
-					[ -z "$(get_cache_var "ACL_${sid}_default")" ] && echolog "     - ${msg}使用与全局配置不相同节点，已将DNS强制重定向到专用 DNS 服务器。"
+					[ -z "$(get_cache_var "ACL_${sid}_default")" ] && echolog "     - ${msg}节点不同于全局配置，DNS 重定向到专用服务器[${dns_redirect}]。"
 				fi
 
 				[ -n "$tcp_port" ] || [ -n "$udp_port" ] && {
@@ -779,8 +785,8 @@ filter_server_port() {
 	local address="$1"
 	local port=$(echo "$2" | tr '-' ':' | tr -d ' ')
 	local stream=$(echo "$3" | tr 'A-Z' 'a-z')
-	local ipt_tmp="$ipt_n" _is_tproxy _ipt_cmd _ver multi_ports p ports
-	[ "$(config_n_get @global_forwarding[0] tcp_proxy_way redirect)" = "tproxy" ] && _is_tproxy="TPROXY"
+	local _is_tproxy="$4"
+	local ipt_tmp="$ipt_n" _ipt_cmd _ver multi_ports p ports
 	[ "$stream" = "udp" ] && _is_tproxy="TPROXY"
 	[ -n "$_is_tproxy" ] && ipt_tmp="$ipt_m"
 	for _ver in 4 6; do
@@ -807,7 +813,7 @@ filter_server_port() {
 }
 
 filter_node() {
-	local node="$1" stream="$2"
+	local node="$1" stream="$2" _is_tproxy="$3"
 	[ -z "$node" ] && return 1
 	local address=$(config_n_get "$node" address)
 	local port=$(config_n_get "$node" port)
@@ -816,13 +822,15 @@ filter_node() {
 	[ -z "$address" ] && return 1
 	echo "$address" | grep -Eq "$EXCLUDE_VPSIP" && return 1
 	[ -z "$port" ] && return 1
-	filter_server_port "$address" "$port" "$stream"
+	filter_server_port "$address" "$port" "$stream" "$_is_tproxy"
 }
 
 filter_direct_node_list() {
 	[ ! -s "$TMP_PATH/direct_node_list" ] && return
+	local _is_tproxy
+	[ "$(config_n_get @global_forwarding[0] tcp_proxy_way redirect)" = "tproxy" ] && _is_tproxy="TPROXY"
 	awk '!seen[$0]++' "$TMP_PATH/direct_node_list" | while read -r _node_id; do
-		filter_node "$_node_id" TCP
+		filter_node "$_node_id" TCP "$_is_tproxy"
 		filter_node "$_node_id" UDP
 		unset _node_id
 	done
@@ -1060,7 +1068,7 @@ add_firewall_rule() {
 	$ipt_n -A PSW_OUTPUT $(dst $IPSET_LAN) -j RETURN
 	$ipt_n -A PSW_OUTPUT $(dst $IPSET_VPS) -j RETURN
 	[ "${USE_DIRECT_LIST}" = "1" ] && $ipt_n -A PSW_OUTPUT $(dst $IPSET_WHITE) -j RETURN
-	$ipt_n -A PSW_OUTPUT -m mark --mark 255 -j RETURN
+	$ipt_n -A PSW_OUTPUT -m mark --mark 0xff/0xff -j RETURN
 
 	$ipt_n -N PSW_DNS
 	if [ $(config_n_get @global[0] dns_redirect "1") = "0" ]; then
@@ -1115,7 +1123,7 @@ add_firewall_rule() {
 	[ "${USE_BLOCK_LIST}" = "1" ] && $ipt_m -A PSW_OUTPUT $(dst $IPSET_BLOCK) -j MARK --set-mark 88
 	[ "${USE_DIRECT_LIST}" = "1" ] && $ipt_m -A PSW_OUTPUT $(dst $IPSET_WHITE) -j RETURN
 	$ipt_m -A PSW_OUTPUT -m conntrack --ctdir REPLY -j RETURN
-	$ipt_m -A PSW_OUTPUT -m mark --mark 255 -j RETURN
+	$ipt_m -A PSW_OUTPUT -m mark --mark 0xff/0xff -j RETURN
 
 	ip rule add fwmark ${FWMARK} table 999 priority 999
 	ip route add local 0.0.0.0/0 dev lo table 999
@@ -1130,7 +1138,7 @@ add_firewall_rule() {
 		$ip6t_n -A PSW_OUTPUT $(dst $IPSET_LAN6) -j RETURN
 		$ip6t_n -A PSW_OUTPUT $(dst $IPSET_VPS6) -j RETURN
 		[ "${USE_DIRECT_LIST}" = "1" ] && $ip6t_n -A PSW_OUTPUT $(dst $IPSET_WHITE6) -j RETURN
-		$ip6t_n -A PSW_OUTPUT -m mark --mark 255 -j RETURN
+		$ip6t_n -A PSW_OUTPUT -m mark --mark 0xff/0xff -j RETURN
 	}
 
 	$ip6t_n -N PSW_DNS
@@ -1167,7 +1175,7 @@ add_firewall_rule() {
 	insert_rule_before "$ip6t_m" "PREROUTING" "PSW" "-p tcp -m socket -j PSW_DIVERT"
 
 	$ip6t_m -N PSW_OUTPUT
-	$ip6t_m -A PSW_OUTPUT -m mark --mark 255 -j RETURN
+	$ip6t_m -A PSW_OUTPUT -m mark --mark 0xff/0xff -j RETURN
 	$ip6t_m -A PSW_OUTPUT $(dst $IPSET_LAN6) -j RETURN
 	$ip6t_m -A PSW_OUTPUT $(dst $IPSET_VPS6) -j RETURN
 	[ "${USE_BLOCK_LIST}" = "1" ] && $ip6t_m -A PSW_OUTPUT $(dst $IPSET_BLOCK6) -j MARK --set-mark 88

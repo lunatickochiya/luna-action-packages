@@ -6,8 +6,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=tuic-client
-PKG_SOURCE_TAG:=2.0.0-dev3
-PKG_VERSION:=2.0.0_pre3
+PKG_SOURCE_TAG:=2.0.0-dev7
+PKG_VERSION:=2.0.0_pre7
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_SOURCE_TAG).tar.gz
