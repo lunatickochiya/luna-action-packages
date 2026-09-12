@@ -332,25 +332,6 @@ button.topbar-icon-btn {
   }
 }
 
-/* ── LuCI indicators ──────────────────────────────────────────────── */
-
-span[data-indicator] {
-  @apply text-foreground relative size-5 cursor-pointer text-[0px];
-  @apply before:absolute before:size-5 before:bg-current before:[mask-size:cover] before:[mask-position:center] before:[mask-repeat:no-repeat];
-
-  &[data-indicator="media_error"] {
-    @apply before:[mask-image:url('@assets/icons/alert-circle.svg')];
-  }
-
-  &[data-indicator="uci-changes"] {
-    @apply before:[mask-image:url('@assets/icons/settings.svg')];
-
-    &[data-count]:not([data-count="0"]) {
-      @apply after:bg-primary after:text-primary-foreground after:absolute after:-top-0.5 after:-right-0.5 after:z-10 after:flex after:min-h-3 after:min-w-3 after:items-center after:justify-center after:rounded-full after:px-0.5 after:text-[8px] after:leading-none after:font-bold after:content-[attr(data-count)];
-    }
-  }
-}
-
 /* ── Maincontent ──────────────────────────────────────────────────── */
 
 #maincontent {
