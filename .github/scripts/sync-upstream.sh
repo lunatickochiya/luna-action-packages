@@ -589,7 +589,7 @@ source_group_22() {
   git_clone https://github.com/xuanranran/openwrt-rtp2httpd
   mv -n openwrt-rtp2httpd/luci-app-rtp2httpd ./
   mv -n openwrt-rtp2httpd/rtp2httpd ./
-  rm -rf rtp2httpd
+  rm -rf openwrt-rtp2httpd
 }
 
 source_group_23() {
