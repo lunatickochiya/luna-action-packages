@@ -586,6 +586,10 @@ source_group_22() {
   git_clone_branch https://github.com/syb999/openwrt-15.05 master
   mv -n openwrt-15.05/package/network/services/openwrt-netem/{luci-app-netem,netem-control} ./
   rm -rf openwrt-15.05
+  git_clone https://github.com/xuanranran/openwrt-rtp2httpd
+  mv -n openwrt-rtp2httpd/luci-app-rtp2httpd ./
+  mv -n openwrt-rtp2httpd/rtp2httpd ./
+  rm -rf rtp2httpd
 }
 
 source_group_23() {
