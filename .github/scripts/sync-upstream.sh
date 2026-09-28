@@ -590,6 +590,8 @@ source_group_22() {
   mv -n openwrt-rtp2httpd/luci-app-rtp2httpd ./
   mv -n openwrt-rtp2httpd/rtp2httpd ./
   rm -rf openwrt-rtp2httpd
+  git_clone https://github.com/rchen14b/luci-app-airoha-npu
+  rm -rf luci-app-airoha-npu/luci-app-airoha-npu
 }
 
 source_group_23() {
