@@ -189,10 +189,11 @@ source_group_02() {
   git_clone https://github.com/Openwrt-Passwall/openwrt-passwall
   mvdir openwrt-passwall
   git_clone_branch https://github.com/fw876/helloworld master
-  mv -n helloworld/{luci-app-ssr-plus,tuic-client,shadow-tls,lua-neturl,redsocks2,gn,dns2tcp,trojan,dns2socks-rust} ./
+  mv -n helloworld/{luci-app-ssr-plus,tuic-client,shadow-tls,lua-neturl,redsocks2,gn,dns2tcp,trojan,dns2socks-rust,shadowsocks-libev} ./
   rm -rf helloworld
   git_clone https://github.com/Lienol/openwrt-package liep
   rm -rf liep/other
+  git_clone https://github.com/permails/kcptun-client
   git_clone_branch https://github.com/AutoCONFIG/minieap-openwrt default
   clone_many \
     https://github.com/rufengsuixing/luci-app-autoipsetadder \
