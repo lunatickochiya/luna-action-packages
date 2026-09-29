@@ -1,0 +1,4 @@
+{
+	"config": "npu-monitor",
+	"init": "airoha-npu"
+}
