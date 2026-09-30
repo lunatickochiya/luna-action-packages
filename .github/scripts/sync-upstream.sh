@@ -593,8 +593,8 @@ source_group_22() {
   rm -rf openwrt-rtp2httpd
   # luci-app-airoha-npu 改用 YYH2913/openwrt 的 xr1710g-6.18-integration 分支
   # (package/ 布局, 稀疏检出避免拉取整个内核树)
-  git_sparse_clone xr1710g-6.18-integration https://github.com/YYH2913/openwrt airohanpu \
-    package/luci-app-airoha-npu
+  #git_sparse_clone xr1710g-6.18-integration https://github.com/YYH2913/openwrt airohanpu \
+  #  package/luci-app-airoha-npu
 }
 
 source_group_23() {
