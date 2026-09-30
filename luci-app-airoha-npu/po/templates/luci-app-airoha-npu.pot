@@ -60,6 +60,14 @@ msgstr ""
 msgid "CPU Cores"
 msgstr ""
 
+#: ../../package/luci-app-airoha-npu/htdocs/luci-static/resources/view/airoha_npu/status.js:535
+msgid "CPU Temperature"
+msgstr ""
+
+#: ../../package/luci-app-airoha-npu/htdocs/luci-static/resources/view/airoha_npu/status.js:745
+msgid "CPU Usage (%)"
+msgstr ""
+
 #: ../../package/luci-app-airoha-npu/htdocs/luci-static/resources/view/airoha_npu/status.js:98
 #: ../../package/luci-app-airoha-npu/htdocs/luci-static/resources/view/airoha_npu/status.js:346
 msgid "CPU DMA 1"

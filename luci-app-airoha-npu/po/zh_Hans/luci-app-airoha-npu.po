@@ -69,6 +69,14 @@ msgstr "已绑定"
 msgid "CPU Cores"
 msgstr "CPU 核心"
 
+#: ../../package/luci-app-airoha-npu/htdocs/luci-static/resources/view/airoha_npu/status.js:535
+msgid "CPU Temperature"
+msgstr "CPU 温度"
+
+#: ../../package/luci-app-airoha-npu/htdocs/luci-static/resources/view/airoha_npu/status.js:745
+msgid "CPU Usage (%)"
+msgstr "CPU 使用率（%）"
+
 #: ../../package/luci-app-airoha-npu/htdocs/luci-static/resources/view/airoha_npu/status.js:98
 #: ../../package/luci-app-airoha-npu/htdocs/luci-static/resources/view/airoha_npu/status.js:346
 msgid "CPU DMA 1"

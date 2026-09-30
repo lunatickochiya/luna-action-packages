@@ -462,6 +462,214 @@ function renderOcControls() {
 	]);
 }
 
+function renderTempBar(temp) {
+	// temp is now an integer in 0.1 C units (e.g. 516 == 51.6 C)
+	var v = (temp||0) / 10;
+	var pos = Math.max(0, Math.min(125, v)) * 100 / 125;
+	var color = v>=100?'linear-gradient(90deg,#b71c1c,#f44336)' : v>=80?'linear-gradient(90deg,#e65100,#ff9800)' : 'linear-gradient(90deg,#2e7d32,#66bb6a)';
+	var label = v.toFixed(1) + ' \u00B0C';
+	return E('div', { 'id':'cpu-temp-bar-wrap', 'style':'display:flex;align-items:center;gap:10px' }, [
+		E('span', { 'class':'soc-muted', 'style':'font-size:90%' }, '-25 \u00B0C'),
+		E('div', { 'style':'flex:1;border-radius:4px;height:22px;position:relative;min-width:180px;max-width:350px;overflow:hidden', 'class':'soc-bar-track' }, [
+			E('div', { 'id':'cpu-temp-fill', 'style':'background:'+color+';height:100%;border-radius:4px;width:'+pos+'%;transition:width .5s' }),
+			E('span', { 'id':'cpu-temp-text', 'style':'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:13px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)' }, label)
+		]),
+		E('span', { 'id':'cpu-temp-max-label', 'class':'soc-muted', 'style':'font-size:90%' }, '125 \u00B0C')
+	]);
+}
+
+function updateTempBar(temp) {
+	var v = (temp||0) / 10;
+	var pos = Math.max(0, Math.min(125, v)) * 100 / 125;
+	var color = v>=100?'linear-gradient(90deg,#b71c1c,#f44336)' : v>=80?'linear-gradient(90deg,#e65100,#ff9800)' : 'linear-gradient(90deg,#2e7d32,#66bb6a)';
+	var el = document.getElementById('cpu-temp-text'), fl = document.getElementById('cpu-temp-fill');
+	if (el) el.textContent = v.toFixed(1) + ' \u00B0C';
+	if (fl) { fl.style.width=pos+'%'; fl.style.background=color; }
+}
+
+/* ── Per-Core CPU Usage History Charts (Win10 Task Manager style – 4 separate line charts) ── */
+var _cpuUsageData = [[],[],[],[]];  // 2D: [core0_samples, core1_samples, ...]
+var _cpuUsageMaxBars = 60;          // 60 second window
+var _cpuUsageColors = ['#00bcd4', '#ff9800', '#f44336', '#4caf50'];  // per-core line colors
+var _cpuUsageChartW = 140;          // min viewBox width for each core svg
+var _cpuUsageChartH = 50;           // svg height in px
+var _cpuUsageNumCores = 4;
+
+function _cpuUsageBuildPolyPoints(vals) {
+	var n = vals.length;
+	if (n < 2) return '';
+	var stepX = _cpuUsageChartW / (_cpuUsageMaxBars - 1);
+	var pts = [];
+	for (var i = 0; i < n; i++) {
+		var x = (i + (_cpuUsageMaxBars - n)) * stepX;
+		var y = _cpuUsageChartH - (vals[i] / 100) * _cpuUsageChartH;
+		pts.push(x.toFixed(1) + ',' + y.toFixed(1));
+	}
+	return pts.join(' ');
+}
+
+// Create one core's SVG with saved group for area, line, dot
+function _makeCoreSvg(coreIdx) {
+	var svgNS = 'http://www.w3.org/2000/svg';
+	var svg = document.createElementNS(svgNS, 'svg');
+	svg.setAttribute('id', 'cpu-usage-chart-' + coreIdx);
+	svg.setAttribute('class', 'cpu-core-chart');
+	svg.setAttribute('width', '100%');
+	svg.setAttribute('height', _cpuUsageChartH);
+	svg.setAttribute('viewBox', '0 0 ' + _cpuUsageChartW + ' ' + _cpuUsageChartH);
+	svg.setAttribute('preserveAspectRatio', 'none');
+	svg.style.flex  = '1';
+	svg.style.minWidth = '0';
+	svg.style.maxWidth = '160px';
+	svg.style.display = 'block';
+	svg.style.background = 'var(--soc-bar-track)';
+	svg.style.borderRadius = '3px';
+	svg.style.overflow = 'hidden';
+	svg.style.verticalAlign = 'middle';
+
+	// 50% grid line
+	var gl = document.createElementNS(svgNS, 'line');
+	gl.setAttribute('x1', 0); gl.setAttribute('y1', (_cpuUsageChartH*0.5).toFixed(1));
+	gl.setAttribute('x2', _cpuUsageChartW); gl.setAttribute('y2', (_cpuUsageChartH*0.5).toFixed(1));
+	gl.setAttribute('stroke', 'rgba(128,128,128,0.25)');
+	gl.setAttribute('stroke-width', '1');
+	gl.setAttribute('stroke-dasharray', '3,3');
+	svg.appendChild(gl);
+
+	// Area fill – created per-core, lazy-attached on first data
+	// line path
+	var line = document.createElementNS(svgNS, 'path');
+	line.setAttribute('id', 'cpu-usage-line-' + coreIdx);
+	line.setAttribute('fill', 'none');
+	line.setAttribute('stroke', _cpuUsageColors[coreIdx % _cpuUsageColors.length]);
+	line.setAttribute('stroke-width', '2');
+	line.setAttribute('stroke-linejoin', 'round');
+	line.setAttribute('stroke-linecap', 'round');
+	svg.appendChild(line);
+
+	return svg;
+}
+
+function _updateCoreChart(coreIdx, vals) {
+	var svg = document.getElementById('cpu-usage-chart-' + coreIdx);
+	if (!svg) return;
+	var color = _cpuUsageColors[coreIdx % _cpuUsageColors.length];
+	var n = vals.length;
+	if (n > _cpuUsageMaxBars) vals = vals.slice(-_cpuUsageMaxBars);
+	n = vals.length;
+	var curPct = n > 0 ? vals[n-1] : 0;
+
+	var pts = _cpuUsageBuildPolyPoints(vals);
+	var linePath = pts ? 'M' + pts.replace(/ /g, ' L') : '';
+	var areaPath = '';
+	if (pts) {
+		var maxX = ((_cpuUsageMaxBars - 1) * (_cpuUsageChartW / (_cpuUsageMaxBars - 1))).toFixed(1);
+		areaPath = 'M0,' + _cpuUsageChartH + ' L' + pts.replace(/ /g, ' L') + ' L' + maxX + ',' + _cpuUsageChartH + ' Z';
+	}
+
+	// get or create area path for this core
+	var area = svg.querySelector('.cpu-area-' + coreIdx);
+	if (areaPath) {
+		if (!area) {
+			area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+			area.setAttribute('class', 'cpu-area-' + coreIdx);
+			// insert before the line (line is last currently)
+			var line = svg.querySelector('path[id]');
+			if (line) svg.insertBefore(area, line); else svg.appendChild(area);
+		}
+		area.setAttribute('d', areaPath);
+		area.setAttribute('fill', color);
+		area.setAttribute('fill-opacity', '0.12');
+	}
+
+	var line = document.getElementById('cpu-usage-line-' + coreIdx);
+	if (line) {
+		if (linePath) {
+			line.setAttribute('d', linePath);
+			line.setAttribute('stroke', color);
+			line.style.display = '';
+		} else {
+			line.style.display = 'none';
+		}
+	}
+
+	// dot: update existing or create
+	var dot = svg.querySelector('.cpu-dot-' + coreIdx);
+	if (n > 0) {
+		var stepX = _cpuUsageChartW / (_cpuUsageMaxBars - 1);
+		var cx = (n - 1 + (_cpuUsageMaxBars - n)) * stepX;
+		var cy = _cpuUsageChartH - (vals[n-1] / 100) * _cpuUsageChartH;
+		if (!dot) {
+			dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+			dot.setAttribute('class', 'cpu-dot-' + coreIdx);
+			dot.setAttribute('r', '3');
+			svg.appendChild(dot);
+		}
+		dot.setAttribute('cx', cx.toFixed(1));
+		dot.setAttribute('cy', cy.toFixed(1));
+		dot.setAttribute('fill', color);
+	} else if (dot) {
+		dot.style.display = 'none';
+	}
+	// if dot was hidden and now we have data, unhide
+	if (dot && n > 0) dot.style.display = '';
+}
+
+function renderCpuUsageChart(data) {
+	// data is a 2D array: [[core0...], [core1...], ...]
+	if (!Array.isArray(data)) data = [[],[],[],[]];
+	_cpuUsageData = [];
+	for (var c = 0; c < _cpuUsageNumCores; c++) {
+		_cpuUsageData[c] = (Array.isArray(data[c])) ? data[c].slice() : [];
+		if (_cpuUsageData[c].length > _cpuUsageMaxBars)
+			_cpuUsageData[c] = _cpuUsageData[c].slice(-_cpuUsageMaxBars);
+	}
+
+	var children = [];
+	children.push(E('span', { 'class': 'soc-muted', 'style': 'font-size:90%' }, '-60s'));
+
+	for (var i = 0; i < _cpuUsageNumCores; i++) {
+		var cur = _cpuUsageData[i];
+		var curPct = cur.length > 0 ? cur[cur.length - 1] : 0;
+		var svg = _makeCoreSvg(i);
+		// update with first data
+		_updateCoreChart(i, cur);
+		children.push(svg);
+	}
+
+	children.push(E('span', { 'id': 'cpu-usage-max-label', 'class': 'soc-muted', 'style': 'font-size:90%' }, 'now'));
+	children.push(E('span', { 'id': 'cpu-usage-text', 'style': 'font-weight:bold;font-size:13px;min-width:36px;text-align:right' }, '0%'));
+
+	return E('div', {
+		'id': 'cpu-usage-chart-wrap',
+		'style': 'display:flex;align-items:center;gap:8px;flex-wrap:wrap'
+	}, children);
+}
+
+function updateCpuUsageChart(data) {
+	if (!Array.isArray(data)) return;
+	for (var c = 0; c < _cpuUsageNumCores; c++) {
+		if (Array.isArray(data[c])) {
+			_cpuUsageData[c] = data[c].slice();
+			if (_cpuUsageData[c].length > _cpuUsageMaxBars)
+				_cpuUsageData[c] = _cpuUsageData[c].slice(-_cpuUsageMaxBars);
+			_updateCoreChart(c, _cpuUsageData[c]);
+		}
+	}
+	// update the "now" text to show the average of all cores' latest values
+	var textEl = document.getElementById('cpu-usage-text');
+	if (textEl) {
+		var sum=0, cnt=0;
+		for (var c2=0; c2<_cpuUsageNumCores; c2++) {
+			if (_cpuUsageData[c2] && _cpuUsageData[c2].length > 0) {
+				sum += _cpuUsageData[c2][_cpuUsageData[c2].length - 1];
+				cnt++;
+			}
+		}
+		textEl.textContent = cnt ? Math.round(sum/cnt) + '%' : '0%';
+	}
+}
+
 /* ── PPE Table ── */
 function renderPpeRows(entries) {
 	return entries.slice(0,100).map(function(e) {
@@ -518,6 +726,7 @@ return view.extend({
 		st = addPpeStats(st, ppe);
 		var memR = Array.isArray(st.memory_regions) ? st.memory_regions : [];
 		var ns = npuState(st, ti);
+		_cpuUsageNumCores = Math.max(1, Math.min(8, st.cpu_count || 4));
 
 		var view = E('div',{'class':'cbi-map'},[
 			E('h2',{},_('Airoha SoC Status')),
@@ -530,7 +739,9 @@ return view.extend({
 					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('Governor'))), E('td',{'class':'td'}, renderGovSelect(st.cpu_avail_governors,st.cpu_governor)) ]),
 					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('Max Frequency'))), E('td',{'class':'td'}, renderMaxFreqSelect(st.cpu_avail_freqs,st.cpu_max_freq)) ]),
 					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('Overclock'))), E('td',{'class':'td'}, renderOcControls()) ]),
-					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('CPU Cores'))), E('td',{'class':'td'},(st.cpu_count||0).toString()) ])
+					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('CPU Cores'))), E('td',{'class':'td'},(st.cpu_count||0).toString()) ]),
+					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('CPU Temperature'))), E('td',{'class':'td'}, renderTempBar(st.cpu_temp)) ]),
+					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('CPU Usage (%)'))), E('td',{'class':'td'}, renderCpuUsageChart(st.cpu_usage)) ])
 				])
 			]),
 
@@ -574,6 +785,8 @@ return view.extend({
 				st = addPpeStats(st, ppe);
 
 				updateFreqBar(st.cpu_cur_freq||st.cpu_hw_freq,st.cpu_min_freq,st.cpu_max_freq,st.pll_freq_mhz,st.cpu_governor);
+				updateTempBar(st.cpu_temp);
+				updateCpuUsageChart(st.cpu_usage);
 				var gs=document.getElementById('cpu-governor-select'); if(gs&&!gs.matches(':focus')) gs.value=st.cpu_governor||'';
 				var fs=document.getElementById('cpu-maxfreq-select'); if(fs&&!fs.matches(':focus')) fs.value=(st.cpu_max_freq||0).toString();
 				var vs=document.getElementById('vlan-offload-select'); if(vs&&!vs.matches(':focus')) vs.value=(vo.enabled?'1':'0');

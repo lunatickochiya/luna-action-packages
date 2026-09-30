@@ -135,7 +135,157 @@ _devmem_read() {
 	[ -n "$val" ]
 }
 
+# ============================================================
+# Per-Core CPU Usage Ring Buffer (sampling)
+# State: /tmp/luci-airoha-npu-cpuinfo
+#   line 1:          core_count (e.g. 4)
+#   lines 2.(count): per-core previous totals (space-separated)
+#   lines 2.(count): per-core previous idle   (space-separated)
+#   line 4+ :        one line per core: 60 space-separated usage values (oldest first)
+# Each call to _get_status_raw appends exactly one new sample per core.
+# ============================================================
+CPU_USAGE_STATE_FILE="/tmp/luci-airoha-npu-cpuinfo"
+CPU_USAGE_MAX_SAMPLES=60
+
+# Read per-core /proc/stat lines (CPU lines only, excluding the aggregate "cpu" line)
+# STDIN:  stdin from /proc/stat
+# Returns: each line "cpuN U N S I W IRQ SIRQ ST" already filtered
+_proc_stat_core_lines() {
+	awk '$1 ~ /^cpu[0-9]+$/ {
+		total = 0
+		idle = 0
+		for (i = 2; i <= NF; i++) total += $i
+		idle = $5 + $6
+		print total, idle
+	}' 2>/dev/null
+}
+
+# Sample per-core CPU usage and update the ring buffer.
+# Sets _cpu_usage_json to a JSON 2D array: [[core0_samples],[core1_samples],...]
+_sample_cpu_usage() {
+	# Determine core count
+	_cpu_count=4
+	if [ -d "/sys/devices/system/cpu" ]; then
+		_cpu_count=$(ls -d /sys/devices/system/cpu/cpu[0-9]* 2>/dev/null | wc -l)
+	fi
+	[ "$_cpu_count" -lt 1 ] 2>/dev/null && _cpu_count=4
+
+	# Read current per-core total/idle into arrays
+	_core_cur_totals=0
+	_core_cur_idles=0
+	_core_prev_totals=0
+	_core_prev_idles=0
+	_core_histories=0
+
+	# Load per-core stats from /proc/stat (one line per core: total idle)
+	_core_stats=$(_proc_stat_core_lines < /proc/stat 2>/dev/null)
+
+	# Read existing state
+	# Current format: line1=count, line2=per-core totals, line3=per-core idles,
+	# lines 4..(3+count) = per-core history.  Old 1-core format is:
+	# line1=total, line2=idle, line3=history.  Detect old format: line1 is NOT
+	# equal to _cpu_count (e.g. "12345" vs "4").
+	if [ -r "$CPU_USAGE_STATE_FILE" ]; then
+		_read_count=$(sed -n '1p' "$CPU_USAGE_STATE_FILE" 2>/dev/null)
+		[ -n "$_read_count" ] || _read_count=0
+		if [ "$_read_count" -gt 0 ] 2>/dev/null && [ "$_read_count" = "$_cpu_count" ] 2>/dev/null; then
+			_core_prev_totals=$(sed -n '2p' "$CPU_USAGE_STATE_FILE" 2>/dev/null)
+			_core_prev_idles=$(sed -n '3p' "$CPU_USAGE_STATE_FILE" 2>/dev/null)
+			_core_histories=$(sed -n "4,$(( 4 + _cpu_count - 1 ))p" "$CPU_USAGE_STATE_FILE" 2>/dev/null)
+		fi
+	fi
+
+	# Process each core
+	_cpu_json="["
+	_first_core=1
+	_core_idx=0
+	_new_cur_totals=""
+	_new_cur_idles=""
+	_new_histories=""
+	while [ "$_core_idx" -lt "$_cpu_count" ]; do
+		[ "$_first_core" -eq 0 ] && _cpu_json="${_cpu_json},"
+
+		# Parse current values for this core
+		_core_line=$(echo "$_core_stats" | sed -n "$(( _core_idx + 1 ))p")
+		_ct=$(echo "$_core_line" | awk '{print $1}')
+		_ci=$(echo "$_core_line" | awk '{print $2}')
+		[ -n "$_ct" ] || _ct=0
+		[ -n "$_ci" ] || _ci=0
+
+		# Parse previous values
+		_core_pt=$(echo " $_core_prev_totals" | awk -v i="$((_core_idx+1))" '{print $i}')
+		_core_pi=$(echo " $_core_prev_idles"   | awk -v i="$((_core_idx+1))" '{print $i}')
+
+		# Parse existing history
+		_core_h=$(echo "$_core_histories" | sed -n "$((_core_idx + 1))p")
+
+		# Compute usage
+		cur_usage=0
+		if [ -n "$_core_pt" ] && [ "$_core_pt" -gt 0 ] 2>/dev/null; then
+			_delta_total=$(( _ct - ${_core_pt:-0} ))
+			_delta_idle=$(( _ci - ${_core_pi:-0} ))
+			if [ "$_delta_total" -gt 0 ] 2>/dev/null; then
+				cur_usage=$(( (_delta_total - _delta_idle) * 100 / _delta_total ))
+			fi
+		fi
+		[ "$cur_usage" -lt 0 ] 2>/dev/null && cur_usage=0
+		[ "$cur_usage" -gt 100 ] 2>/dev/null && cur_usage=100
+
+		# Append to history and trim
+		new_hist=""
+		if [ -n "$_core_h" ]; then new_hist="$_core_h $cur_usage"; else new_hist="$cur_usage"; fi
+		set -- $new_hist
+		hcnt=$#
+		if [ "$hcnt" -gt "$CPU_USAGE_MAX_SAMPLES" ]; then
+			shift $(( hcnt - CPU_USAGE_MAX_SAMPLES ))
+		fi
+		trimmed_h=""
+		for var in "$@"; do
+			if [ -n "$trimmed_h" ]; then trimmed_h="$trimmed_h $var"; else trimmed_h="$var"; fi
+		done
+
+		# Build JSON for this core
+		core_json=""
+		_jf=1
+		for val in $trimmed_h; do
+			if [ "$_jf" -eq 0 ]; then core_json="$core_json,"; fi
+			core_json="${core_json}${val}"
+			_jf=0
+		done
+		_cpu_json="${_cpu_json}[$core_json]"
+
+		# Accumulate state for writing back
+		if [ "$_first_core" -eq 1 ]; then
+			_new_cur_totals="$_ct"
+			_new_cur_idles="$_ci"
+			_new_histories="$trimmed_h"
+		else
+			_new_cur_totals="${_new_cur_totals} $_ct"
+			_new_cur_idles="${_new_cur_idles} $_ci"
+			_new_histories="${_new_histories}
+${trimmed_h}"
+		fi
+		_first_core=0
+
+		_core_idx=$(( _core_idx + 1 ))
+	done
+	_cpu_json="${_cpu_json}]"
+
+	# Persist state
+	{
+		echo "$_cpu_count"
+		echo "$_new_cur_totals"
+		echo "$_new_cur_idles"
+		echo "$_new_histories"
+	} > "$CPU_USAGE_STATE_FILE" 2>/dev/null
+
+	_cpu_usage_json="$_cpu_json"
+}
+
 _get_status_raw() {
+	# Sample per-core CPU usage (ring buffer) before other status reads
+	_sample_cpu_usage
+
 	# === NPU Status ===
 	# Read the actually-loaded NPU firmware path from DTS (firmware-name property).
 	local npu_fw=""
@@ -235,9 +385,33 @@ _get_status_raw() {
 		cpu_count=$(ls -d /sys/devices/system/cpu/cpu[0-9]* 2>/dev/null | wc -l)
 	fi
 
-	printf '{"npu_version":"%s","npu_loaded":%s,"npu_device":"%s","npu_clock":%d,"npu_cores":%d,"offload_bound":%d,"offload_total":%d,"memory_regions":%s,"cpu_cur_freq":%d,"cpu_hw_freq":%d,"cpu_governor":"%s","cpu_avail_governors":"%s","cpu_min_freq":%d,"cpu_max_freq":%d,"cpu_avail_freqs":"%s","cpu_count":%d,"pll_freq_mhz":%d}' \
+	# Read CPU temperature. thermal_zone0/temp is milli-degrees (51600 == 51.6 C);
+	# keep the JSON field as an integer in units of 0.1 C (t*10). The frontend
+	# divides by 10 and renders with toFixed(1) for one decimal place.
+	local cpu_temp=0
+	local temp_path=""
+	for cand in /sys/class/thermal/thermal_zone0/temp /sys/bus/thermal/thermal_zone0/temp; do
+		if [ -r "$cand" ]; then
+			temp_path="$cand"
+			break
+		fi
+	done
+	if [ -n "$temp_path" ]; then
+		local t=0
+		t=$(cat "$temp_path" 2>/dev/null || echo 0)
+		case "$t" in ''|*[!0-9]*) t=0 ;; esac
+		if [ "$t" -gt 1000 ] 2>/dev/null; then
+			# milli-degrees C -> 0.1 deg C
+			cpu_temp=$(( t / 100 ))
+		elif [ "$t" -gt 0 ] 2>/dev/null; then
+			# already degrees C -> scale to 0.1 C
+			cpu_temp=$(( t * 10 ))
+		fi
+	fi
+
+	printf '{"npu_version":"%s","npu_loaded":%s,"npu_device":"%s","npu_clock":%d,"npu_cores":%d,"offload_bound":%d,"offload_total":%d,"memory_regions":%s,"cpu_cur_freq":%d,"cpu_hw_freq":%d,"cpu_governor":"%s","cpu_avail_governors":"%s","cpu_min_freq":%d,"cpu_max_freq":%d,"cpu_avail_freqs":"%s","cpu_count":%d,"pll_freq_mhz":%d,"cpu_temp":%d,"cpu_usage":%s}' \
 		"${npu_ver:-Unknown}" "$npu_loaded" "${npu_device:-}" "${npu_clock:-0}" "${npu_cores:-0}" "${offload_bound:-0}" "${offload_total:-0}" "$regions" \
-		"${cpu_cur_freq:-0}" "${cpu_hw_freq:-0}" "${cpu_governor:-unknown}" "${cpu_avail_governors:-}" "${cpu_min_freq:-0}" "${cpu_max_freq:-0}" "${cpu_avail_freqs:-}" "${cpu_count:-0}" "${pll_freq:-0}"
+		"${cpu_cur_freq:-0}" "${cpu_hw_freq:-0}" "${cpu_governor:-unknown}" "${cpu_avail_governors:-}" "${cpu_min_freq:-0}" "${cpu_max_freq:-0}" "${cpu_avail_freqs:-}" "${cpu_count:-0}" "${pll_freq:-0}" "${cpu_temp:-0}" "${_cpu_usage_json:-[]}"
 }
 
 _get_ppe_entries_raw() {
@@ -622,7 +796,7 @@ get_status() {
 		local npu_loaded="false"
 
 		[ -n "$npu_device" ] && npu_loaded="true"
-		printf '{"error":"hardware status unavailable","npu_version":"Unknown","npu_loaded":%s,"npu_device":"%s","npu_clock":0,"npu_cores":0,"offload_bound":0,"offload_total":0,"memory_regions":[],"cpu_cur_freq":0,"cpu_hw_freq":0,"cpu_governor":"unknown","cpu_avail_governors":"","cpu_min_freq":0,"cpu_max_freq":0,"cpu_avail_freqs":"","cpu_count":0,"pll_freq_mhz":0}\n' \
+		printf '{"error":"hardware status unavailable","npu_version":"Unknown","npu_loaded":%s,"npu_device":"%s","npu_clock":0,"npu_cores":0,"offload_bound":0,"offload_total":0,"memory_regions":[],"cpu_cur_freq":0,"cpu_hw_freq":0,"cpu_governor":"unknown","cpu_avail_governors":"","cpu_min_freq":0,"cpu_max_freq":0,"cpu_avail_freqs":"","cpu_count":4,"pll_freq_mhz":0,"cpu_temp":0,"cpu_usage":[[]]}\n' \
 			"$npu_loaded" "$npu_device"
 	fi
 }
