@@ -9,8 +9,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=cups
-PKG_SOURCE_TAG:=2.4.19
-PKG_VERSION:=2.4.19
+PKG_SOURCE_TAG:=2.4.20
+PKG_VERSION:=2.4.20
 PKG_RELEASE:=2
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_SOURCE_TAG)-source.tar.gz
 PKG_SOURCE_URL:=https://github.com/OpenPrinting/cups/releases/download/v$(PKG_SOURCE_TAG)
