@@ -677,8 +677,6 @@ source_group_28() {
     package/lean package/qca/shortcut-fe package/wwan \
     package/network/services/shellsync package/network/services/e2guardian \
     package/network/services/noddos
-  git_sparse_clone master https://github.com/naoki66/ImmortalWrt-for-Gemtek-brightspeed gemtek-brightspeed \
-    package/luci-app-airoha package/luci-app-netmode
 }
 
 
