@@ -1,24 +1,8 @@
-From 226f15cc03b16f1afe6fb3d88fb2e71e46e25595 Mon Sep 17 00:00:00 2001
-From: lunatickochiya <125438787@qq.com>
-Date: Wed, 27 Aug 2025 21:41:07 +0800
-Subject: [PATCH] Revert "Auxiliary commit to revert individual files from
- d5380015fd1660ebb555dc1c975be7d8d96432f6"
-
-This reverts commit 8f8e046aaee9039e31a30d14b38c11bef4b97435.
-Revert "Auxiliary commit to revert individual files from d5380015fd1660ebb555dc1c975be7d8d96432f6"
-
-This reverts commit 9c367c7662d63797c73359d9ca111019c6e63dec.
----
- .../resources/view/argon-config.js            | 59 ++++++++++++++++++-
- luci-theme-argon/Makefile                     |  2 +-
- .../usr/libexec/rpcd/luci.argon_wallpaper     |  3 +
- 3 files changed, 61 insertions(+), 3 deletions(-)
-
 diff --git a/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js b/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
-index e5c2d2016..a14783b3b 100644
+index 08d34a7..09df7ef 100644
 --- a/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
 +++ b/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
-@@ -52,11 +52,16 @@ return view.extend({
+@@ -97,11 +97,16 @@ return view.extend({
  		o = s.option(form.ListValue, 'online_wallpaper', _('Wallpaper source'));
  		o.value('none', _('Built-in'));
  		o.value('bing', _('Bing'));
@@ -35,12 +19,10 @@ index e5c2d2016..a14783b3b 100644
  		o = s.option(form.ListValue, 'mode', _('Theme mode'));
  		o.value('normal', _('Follow system'));
  		o.value('light', _('Light mode'));
-@@ -72,7 +77,32 @@ return view.extend({
- 				return /(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(value) ||
+@@ -118,6 +123,31 @@ return view.extend({
  					_('Expecting: %s').format(_('valid HEX color value'));
  			return true;
--		}
-+		};
+ 		};
 +		o.render = function(section_id, option_index, cfgvalue) {
 +			var el = form.Value.prototype.render.apply(this, arguments);
 +			setTimeout(function() {
@@ -69,12 +51,10 @@ index e5c2d2016..a14783b3b 100644
  
  		o = s.option(form.ListValue, 'transparency', _('[Light mode] Transparency'),
  			_('0 transparent - 1 opaque (suggest: transparent: 0 or translucent preset: 0.5).'));
-@@ -96,7 +126,32 @@ return view.extend({
- 				return /(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(value) ||
+@@ -142,6 +172,31 @@ return view.extend({
  					_('Expecting: %s').format(_('valid HEX color value'));
  			return true;
--		}
-+		};
+ 		};
 +		o.render = function(section_id, option_index, cfgvalue) {
 +			var el = form.Value.prototype.render.apply(this, arguments);
 +			setTimeout(function() {
@@ -104,44 +84,23 @@ index e5c2d2016..a14783b3b 100644
  		o = s.option(form.ListValue, 'transparency_dark', _('[Dark mode] Transparency'),
  			_('0 transparent - 1 opaque (suggest: black translucent preset: 0.5).'));
 diff --git a/luci-theme-argon/Makefile b/luci-theme-argon/Makefile
-index 6608b33c8..66f72fe8d 100644
+index 476ad2a..457f145 100644
 --- a/luci-theme-argon/Makefile
 +++ b/luci-theme-argon/Makefile
-@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
- LUCI_TITLE:=Argon Theme
- LUCI_DEPENDS:=+wget +jsonfilter
+@@ -13,4 +13,4 @@
  
 -CONFIG_LUCI_CSSTIDY:=
 +LUCI_MINIFY_CSS:=0
- 
- include $(TOPDIR)/feeds/luci/luci.mk
- 
-diff --git a/luci-theme-argon/root/usr/libexec/rpcd/luci.argon_wallpaper b/luci-theme-argon/root/usr/libexec/rpcd/luci.argon_wallpaper
-index 530121f5e..640f06640 100755
---- a/luci-theme-argon/root/usr/libexec/rpcd/luci.argon_wallpaper
-+++ b/luci-theme-argon/root/usr/libexec/rpcd/luci.argon_wallpaper
-@@ -26,6 +26,9 @@ fetch_pic_url() {
- 			sed 's/1920x1080/UHD/g')"
- 		[ -n "${picpath}" ] && echo "//www.bing.com${picpath}"
- 		;;
-+	ghser)
-+		echo "http://www.98qy.com/sjbz/api.php"
-+		;;
- 	unsplash)
- 		if [ -z "$API_KEY" ]; then
- 			local pic_id="$(wget -T3 --spider \
--- 
-2.43.0
-
-
+ # Ship template source across stable and snapshot runtimes. Precompiled
+ # bytecode would require the SDK's ucode format (see issue #715).
 diff --git a/luci-theme-argon/htdocs/luci-static/resources/menu-argon.js b/luci-theme-argon/htdocs/luci-static/resources/menu-argon.js
-index 3f4dd67f0..a959748b5 100644
+index 9124018..5791e47 100644
 --- a/luci-theme-argon/htdocs/luci-static/resources/menu-argon.js
 +++ b/luci-theme-argon/htdocs/luci-static/resources/menu-argon.js
-@@ -186,6 +186,21 @@ const SlideAnimations = {
+@@ -191,6 +191,21 @@ const SlideAnimations = {
  	}
  };
-
+ 
 +var currentUrl = window.location.href;
 +var pattern = /\/cgi-bin\/luci\/admin\/status\/logs.*/;
 +if (pattern.test(currentUrl)) {
@@ -160,4 +119,17 @@ index 3f4dd67f0..a959748b5 100644
  /**
   * Argon Theme Menu Module
   * Handles rendering and interaction of the main navigation menu and sidebar
-
+diff --git a/luci-theme-argon/root/usr/libexec/rpcd/luci.argon_wallpaper b/luci-theme-argon/root/usr/libexec/rpcd/luci.argon_wallpaper
+index 2decfae..e1b2446 100755
+--- a/luci-theme-argon/root/usr/libexec/rpcd/luci.argon_wallpaper
++++ b/luci-theme-argon/root/usr/libexec/rpcd/luci.argon_wallpaper
+@@ -25,6 +25,9 @@ fetch_pic_url() {
+ 			sed 's/1920x1080/UHD/g')"
+ 		[ -n "${picpath}" ] && echo "https://www.bing.com${picpath}"
+ 		;;
++	ghser)
++		echo "http://www.98qy.com/sjbz/api.php"
++		;;
+ 	unsplash)
+ 		if [ -n "$API_KEY" ]; then
+ 			wget -T3 -qO- "https://api.unsplash.com/photos/random?client_id=${API_KEY}" |
