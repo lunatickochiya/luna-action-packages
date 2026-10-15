@@ -505,7 +505,7 @@ source_group_18() {
   clone_many \
     https://github.com/EasyTier/luci-app-easytier \
     https://github.com/ntlf9t/luci-app-dnspod \
-    https://github.com/jarod360/luci-app-xupnpd \
+    https://github.com/lunatickochiya/luci-app-xupnpd \
     https://github.com/fuqiang03/openwrt-caddy \
     https://github.com/lmq8267/luci-app-caddy \
     https://github.com/sbwml/luci-app-smbuser \
