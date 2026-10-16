@@ -507,7 +507,6 @@ source_group_18() {
     https://github.com/ntlf9t/luci-app-dnspod \
     https://github.com/lunatickochiya/luci-app-xupnpd \
     https://github.com/fuqiang03/openwrt-caddy \
-    https://github.com/lmq8267/luci-app-caddy \
     https://github.com/sbwml/luci-app-smbuser \
     https://github.com/rushxrushx/luci-app-redsocks \
     https://github.com/luochongjun/luci-app-dynv6 \
