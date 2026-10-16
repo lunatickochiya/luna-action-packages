@@ -512,9 +512,6 @@ source_group_18() {
     https://github.com/rushxrushx/luci-app-redsocks \
     https://github.com/luochongjun/luci-app-dynv6 \
     https://github.com/nicholas9698/luci-app-campusnet
-  git_clone https://github.com/lmq8267/luci-app-vnt opvnt
-  mv -f opvnt/luci-app-vnt ./
-  rm -rf opvnt
   git_clone https://github.com/RymFred11/luci-app-nettask nettask
   mv -n nettask/luci-app-nettask ./
   rm -rf nettask
