@@ -1,0 +1,46 @@
+diff --git a/src/Makefile b/src/Makefile
+index 7b3107b..dcaa169 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -19,7 +19,7 @@ ifeq ($(UNAME), FreeBSD)
+ LIBS       += -lkvm
+ endif
+ 
+-all::	$(TARGETS) $(LIBS)
++all::	$(BIN_TARGET) $(LIBS)
+ 
+ static: $(TARGETS) $(LIBS)
+ 	$(MAKE) all CFLAGS="$(CFLAGS) --static" CC="musl-gcc"
+diff --git a/src/cpulimit.c b/src/cpulimit.c
+index fb21659..567feca 100644
+--- a/src/cpulimit.c
++++ b/src/cpulimit.c
+@@ -27,6 +27,15 @@
+  *
+  */
+ 
++/*
++ * OpenWrt 构建系统通过环境注入 CFLAGS，src/Makefile 里的默认值
++ * "CFLAGS ?= -Os -Wall -g -D_GNU_SOURCE" 不会生效；musl 下 memrchr()
++ * 只有定义了 _GNU_SOURCE 才有声明（GCC 14 对隐式声明直接报错）。
++ */
++#ifndef _GNU_SOURCE
++#define _GNU_SOURCE
++#endif
++
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <unistd.h>
+diff --git a/src/process_group.c b/src/process_group.c
+index 5e1efb6..d064d48 100644
+--- a/src/process_group.c
++++ b/src/process_group.c
+@@ -25,7 +25,7 @@
+ #include <sys/time.h>
+ #include <signal.h>
+ 
+-#if defined(__APPLE__) || defined(__FREEBSD__)
++#if defined(__APPLE__) || defined(__FREEBSD__) || defined(__linux__)
+     #include <libgen.h>
+ #endif
+ 
