@@ -1,0 +1,17 @@
+diff --git a/libcryptopp/Makefile b/libcryptopp/Makefile
+index 38c9232..bae83f5 100644
+--- a/libcryptopp/Makefile
++++ b/libcryptopp/Makefile
+@@ -44,6 +44,12 @@ endif
+ 
+ MAKE_FLAGS+= dynamic libcryptopp.pc
+ 
++# armv8-a(generic) 下 GCC 14 编 sha_simd.cpp 的 vsha1* intrinsics 会报
++# "target specific option mismatch"（-mcpu=generic 不含 crypto 扩展），
++# cryptopp 8.9 认的开关是 CRYPTOPP_DISABLE_ARM_SHA（不是 ..._ARM_SHA1）。
++TARGET_CFLAGS+= -DCRYPTOPP_DISABLE_ARM_SHA
++TARGET_CXXFLAGS+= -DCRYPTOPP_DISABLE_ARM_SHA
++
+ define Build/InstallDev
+ 	$(INSTALL_DIR) $(1)/usr/include/cryptopp
+ 	$(CP) $(PKG_INSTALL_DIR)/usr/local/include/cryptopp/* $(1)/usr/include/cryptopp/
