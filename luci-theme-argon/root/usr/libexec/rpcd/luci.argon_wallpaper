@@ -26,7 +26,21 @@ fetch_pic_url() {
 		[ -n "${picpath}" ] && echo "https://www.bing.com${picpath}"
 		;;
 	ghser)
-		echo "http://www.98qy.com/sjbz/api.php"
+		local picurl="$(wget -T6 -qO- "https://www.98qy.com/sjbz/api.php?format=json" | jsonfilter -qe '@.imgurl' | sed 's|^http:|https:|')"
+		[ -n "${picurl}" ] && echo "${picurl}"
+		;;
+	dmoe)
+		echo "https://www.dmoe.cc/random.php"
+		;;
+	alcy)
+		echo "https://t.alcy.cc/moe"
+		;;
+	paulzzh)
+		echo "https://img.paulzzh.com/touhou/random?size=pc"
+		;;
+	lolicon)
+		local picurl="$(wget -T6 -qO- "https://api.lolicon.app/setu/v2?r18=0&num=1&size=regular" | jsonfilter -qe '@.data[0].urls.regular' | sed 's|^http:|https:|')"
+		[ -n "${picurl}" ] && echo "${picurl}"
 		;;
 	unsplash)
 		if [ -n "$API_KEY" ]; then

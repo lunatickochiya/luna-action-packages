@@ -154,6 +154,10 @@ return view.extend({
 		o.value('none', _('Built-in'));
 		o.value('bing', _('Bing'));
 		o.value('ghser', _('ACG'));
+		o.value('dmoe', _('ACG (dmoe)'));
+		o.value('alcy', _('ACG (alcy)'));
+		o.value('paulzzh', _('ACG (Touhou)'));
+		o.value('lolicon', _('ACG (Pixiv)'));
 		o.value('unsplash', _('Unsplash'));
 		o.value('wallhaven', _('Wallhaven'));
 		o.default = 'none';

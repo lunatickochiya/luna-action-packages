@@ -84,14 +84,17 @@ index 08d34a7..09df7ef 100644
  		o = s.option(form.ListValue, 'transparency_dark', _('[Dark mode] Transparency'),
  			_('0 transparent - 1 opaque (suggest: black translucent preset: 0.5).'));
 diff --git a/luci-theme-argon/htdocs/luci-static/resources/view/argon-config.js b/luci-theme-argon/htdocs/luci-static/resources/view/argon-config.js
-index a4ae5a6e..53bf1ba2 100644
 --- a/luci-theme-argon/htdocs/luci-static/resources/view/argon-config.js
 +++ b/luci-theme-argon/htdocs/luci-static/resources/view/argon-config.js
-@@ -153,6 +153,7 @@ return view.extend({
+@@ -153,6 +153,11 @@
  		o = s.option(form.ListValue, 'online_wallpaper', _('Wallpaper source'));
  		o.value('none', _('Built-in'));
  		o.value('bing', _('Bing'));
 +		o.value('ghser', _('ACG'));
++		o.value('dmoe', _('ACG (dmoe)'));
++		o.value('alcy', _('ACG (alcy)'));
++		o.value('paulzzh', _('ACG (Touhou)'));
++		o.value('lolicon', _('ACG (Pixiv)'));
  		o.value('unsplash', _('Unsplash'));
  		o.value('wallhaven', _('Wallhaven'));
  		o.default = 'none';
@@ -133,15 +136,28 @@ index 9124018..5791e47 100644
   * Argon Theme Menu Module
   * Handles rendering and interaction of the main navigation menu and sidebar
 diff --git a/luci-theme-argon/root/usr/libexec/rpcd/luci.argon_wallpaper b/luci-theme-argon/root/usr/libexec/rpcd/luci.argon_wallpaper
-index 2decfae..e1b2446 100755
 --- a/luci-theme-argon/root/usr/libexec/rpcd/luci.argon_wallpaper
 +++ b/luci-theme-argon/root/usr/libexec/rpcd/luci.argon_wallpaper
-@@ -25,6 +25,9 @@ fetch_pic_url() {
+@@ -25,6 +25,23 @@
  			sed 's/1920x1080/UHD/g')"
  		[ -n "${picpath}" ] && echo "https://www.bing.com${picpath}"
  		;;
 +	ghser)
-+		echo "http://www.98qy.com/sjbz/api.php"
++		local picurl="$(wget -T6 -qO- "https://www.98qy.com/sjbz/api.php?format=json" | jsonfilter -qe '@.imgurl' | sed 's|^http:|https:|')"
++		[ -n "${picurl}" ] && echo "${picurl}"
++		;;
++	dmoe)
++		echo "https://www.dmoe.cc/random.php"
++		;;
++	alcy)
++		echo "https://t.alcy.cc/moe"
++		;;
++	paulzzh)
++		echo "https://img.paulzzh.com/touhou/random?size=pc"
++		;;
++	lolicon)
++		local picurl="$(wget -T6 -qO- "https://api.lolicon.app/setu/v2?r18=0&num=1&size=regular" | jsonfilter -qe '@.data[0].urls.regular' | sed 's|^http:|https:|')"
++		[ -n "${picurl}" ] && echo "${picurl}"
 +		;;
  	unsplash)
  		if [ -n "$API_KEY" ]; then
