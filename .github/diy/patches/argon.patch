@@ -83,6 +83,19 @@ index 08d34a7..09df7ef 100644
  
  		o = s.option(form.ListValue, 'transparency_dark', _('[Dark mode] Transparency'),
  			_('0 transparent - 1 opaque (suggest: black translucent preset: 0.5).'));
+diff --git a/luci-theme-argon/htdocs/luci-static/resources/view/argon-config.js b/luci-theme-argon/htdocs/luci-static/resources/view/argon-config.js
+index a4ae5a6e..53bf1ba2 100644
+--- a/luci-theme-argon/htdocs/luci-static/resources/view/argon-config.js
++++ b/luci-theme-argon/htdocs/luci-static/resources/view/argon-config.js
+@@ -153,6 +153,7 @@ return view.extend({
+ 		o = s.option(form.ListValue, 'online_wallpaper', _('Wallpaper source'));
+ 		o.value('none', _('Built-in'));
+ 		o.value('bing', _('Bing'));
++		o.value('ghser', _('ACG'));
+ 		o.value('unsplash', _('Unsplash'));
+ 		o.value('wallhaven', _('Wallhaven'));
+ 		o.default = 'none';
+
 diff --git a/luci-theme-argon/Makefile b/luci-theme-argon/Makefile
 index 476ad2a..457f145 100644
 --- a/luci-theme-argon/Makefile
