@@ -336,7 +336,6 @@ source_group_09() {
     https://github.com/peter-tank/luci-app-dnscrypt-proxy2 \
     https://github.com/NateLol/luci-app-oled \
     https://github.com/pymumu/luci-app-smartdns \
-    https://github.com/pymumu/openwrt-smartdns \
     https://github.com/CHN-beta/rkp-ipid
   git_clone https://github.com/4IceG/luci-app-3ginfo op3ginfo
   mv -n op3ginfo/{3ginfo,luci-app-3ginfo} ./
