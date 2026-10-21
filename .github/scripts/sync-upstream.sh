@@ -379,7 +379,7 @@ source_group_10() {
 source_group_11() {
   git_clone https://github.com/linkease/openwrt-app-actions
   git_clone https://github.com/Openwrt-Passwall/openwrt-passwall-packages
-  rm -rf openwrt-passwall-packages/{naiveproxy,tuic-client}
+  rm -rf openwrt-passwall-packages/{naiveproxy,tuic-client,smartdns}
   mvdir openwrt-passwall-packages
 }
 
