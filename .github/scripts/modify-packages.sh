@@ -36,6 +36,7 @@ readonly SOURCE_UPDATE_EXCLUDES=(
   cloudflared
   containerd
   coremark
+  cpulimit
   curl
   daed
   ddns-go
