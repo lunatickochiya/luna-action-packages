@@ -95,6 +95,7 @@ readonly SOURCE_UPDATE_EXCLUDES=(
 CURRENT_STAGE='startup'
 CURRENT_ITEM=''
 declare -A ORIGINAL_PKG_VERSIONS=()
+declare -A ORIGINAL_PKG_SOURCE_VERSIONS=()
 declare -A REPOSITORY_METADATA_CACHE=()
 REPOSITORY_METADATA_RESULT=''
 
@@ -419,22 +420,31 @@ read_package_version() {
     "$1"
 }
 
+read_package_source_version() {
+  sed -nE \
+    's/^[[:space:]]*PKG_SOURCE_VERSION[[:space:]]*[:?+]?=[[:space:]]*(.*)$/\1/p' \
+    "$1"
+}
+
 snapshot_package_versions() {
-  log 'Recording PKG_VERSION values immediately before latest updates'
+  log 'Recording PKG_VERSION and PKG_SOURCE_VERSION values immediately before latest updates'
 
   local makefile
   for makefile in */Makefile; do
     CURRENT_ITEM="$makefile"
     ORIGINAL_PKG_VERSIONS["$makefile"]="$(read_package_version "$makefile")"
+    ORIGINAL_PKG_SOURCE_VERSIONS["$makefile"]="$(read_package_source_version "$makefile")"
   done
   CURRENT_ITEM=''
 }
 
 skip_hashes_for_latest_version_changes() {
-  log 'Checking which PKG_VERSION values were changed by latest updates'
+  log 'Checking which PKG_VERSION or PKG_SOURCE_VERSION values were changed by latest updates'
 
-  local makefile original_version current_version hash_field_count
+  local makefile original_version current_version original_source_version current_source_version
+  local hash_field_count
   local version_changes=0
+  local source_changes=0
   local hash_changes=0
 
   for makefile in */Makefile; do
@@ -442,10 +452,18 @@ skip_hashes_for_latest_version_changes() {
     CURRENT_ITEM="$makefile"
     original_version="${ORIGINAL_PKG_VERSIONS[$makefile]}"
     current_version="$(read_package_version "$makefile")"
-    [[ "$current_version" != "$original_version" ]] || continue
+    original_source_version="${ORIGINAL_PKG_SOURCE_VERSIONS[$makefile]}"
+    current_source_version="$(read_package_source_version "$makefile")"
 
-    ((version_changes += 1))
-    log "latest changed PKG_VERSION in ${makefile}: ${original_version:-<empty>} -> ${current_version:-<empty>}"
+    if [[ "$current_version" != "$original_version" ]]; then
+      ((version_changes += 1))
+      log "latest changed PKG_VERSION in ${makefile}: ${original_version:-<empty>} -> ${current_version:-<empty>}"
+    fi
+    if [[ "$current_source_version" != "$original_source_version" ]]; then
+      ((source_changes += 1))
+      log "latest changed PKG_SOURCE_VERSION in ${makefile}: ${original_source_version:-<empty>} -> ${current_source_version:-<empty>}"
+    fi
+    [[ "$current_version" != "$original_version" || "$current_source_version" != "$original_source_version" ]] || continue
 
     hash_field_count="$(
       grep -Ec '^[[:space:]]*PKG_(HASH|MIRROR_HASH|MD5SUM)[[:space:]]*[:?+]?=' "$makefile" || true
@@ -462,7 +480,7 @@ skip_hashes_for_latest_version_changes() {
   done
 
   CURRENT_ITEM=''
-  log "latest changed ${version_changes} PKG_VERSION file(s); updated ${hash_changes} hash field(s)"
+  log "latest changed ${version_changes} PKG_VERSION and ${source_changes} PKG_SOURCE_VERSION file(s); updated ${hash_changes} hash field(s)"
 }
 
 update_package_sources() {
