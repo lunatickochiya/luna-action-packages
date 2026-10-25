@@ -454,6 +454,10 @@ _get_status_raw() {
 	if [ -d "$cpufreq_path" ]; then
 		cpu_cur_freq=$(cat "$cpufreq_path/scaling_cur_freq" 2>/dev/null || echo 0)
 		cpu_hw_freq=$(cat "$cpufreq_path/cpuinfo_cur_freq" 2>/dev/null || echo 0)
+		# cpufreq may successfully return the literal "<unknown>", e.g.
+		# after direct PLL changes. Do not let printf's numeric conversion
+		# fail and discard otherwise valid CPU/NPU status.
+		case "$cpu_hw_freq" in ''|*[!0-9]*) cpu_hw_freq=0 ;; esac
 		cpu_governor=$(cat "$cpufreq_path/scaling_governor" 2>/dev/null || echo "unknown")
 		cpu_avail_governors=$(cat "$cpufreq_path/scaling_available_governors" 2>/dev/null || echo "")
 		cpu_min_freq=$(cat "$cpufreq_path/scaling_min_freq" 2>/dev/null || echo 0)
@@ -461,9 +465,14 @@ _get_status_raw() {
 		cpu_avail_freqs=$(cat "$cpufreq_path/scaling_available_frequencies" 2>/dev/null || echo "")
 	fi
 
-	# Read actual PLL frequency from hardware (detects overclock)
+	# Native CPUFreq reads the PLL atomically in the kernel. Do not race
+	# its transitions with separate devmem reads of PCW and POSDIV.
+	local cpu_native_pll=false
 	local pll_freq=0
-	if command -v devmem > /dev/null 2>&1; then
+	if _native_cpufreq_pll; then
+		cpu_native_pll=true
+		pll_freq=$((cpu_hw_freq / 1000))
+	elif command -v devmem > /dev/null 2>&1; then
 		local pcw_raw=$(_devmem_read 0x1fa202b4)
 		local chg_raw=$(_devmem_read 0x1fa202b8)
 		if [ -n "$pcw_raw" ] && [ -n "$chg_raw" ]; then
@@ -509,9 +518,9 @@ _get_status_raw() {
 		fi
 	fi
 
-	printf '{"npu_version":"%s","npu_version_source":"%s","npu_loaded":%s,"npu_device":"%s","npu_clock":%d,"npu_cores":%s,"offload_bound":%d,"offload_total":%d,"memory_regions":%s,"cpu_cur_freq":%d,"cpu_hw_freq":%d,"cpu_governor":"%s","cpu_avail_governors":"%s","cpu_min_freq":%d,"cpu_max_freq":%d,"cpu_avail_freqs":"%s","cpu_count":%d,"pll_freq_mhz":%d,"cpu_temp":%d,"cpu_usage":%s}' \
+	printf '{"npu_version":"%s","npu_version_source":"%s","npu_loaded":%s,"npu_device":"%s","npu_clock":%d,"npu_cores":%s,"offload_bound":%d,"offload_total":%d,"memory_regions":%s,"cpu_cur_freq":%d,"cpu_hw_freq":%d,"cpu_governor":"%s","cpu_avail_governors":"%s","cpu_min_freq":%d,"cpu_max_freq":%d,"cpu_avail_freqs":"%s","cpu_count":%d,"pll_freq_mhz":%d,"cpu_temp":%d,"cpu_usage":%s,"cpu_native_pll":%s}' \
 		"${npu_ver:-Unknown}" "$npu_version_source" "$npu_loaded" "${npu_device:-}" "${npu_clock:-0}" "${npu_cores:-null}" "${offload_bound:-0}" "${offload_total:-0}" "$regions" \
-		"${cpu_cur_freq:-0}" "${cpu_hw_freq:-0}" "${cpu_governor:-unknown}" "${cpu_avail_governors:-}" "${cpu_min_freq:-0}" "${cpu_max_freq:-0}" "${cpu_avail_freqs:-}" "${cpu_count:-0}" "${pll_freq:-0}" "${cpu_temp:-0}" "${_cpu_usage_json:-[]}"
+		"${cpu_cur_freq:-0}" "${cpu_hw_freq:-0}" "${cpu_governor:-unknown}" "${cpu_avail_governors:-}" "${cpu_min_freq:-0}" "${cpu_max_freq:-0}" "${cpu_avail_freqs:-}" "${cpu_count:-0}" "${pll_freq:-0}" "${cpu_temp:-0}" "${_cpu_usage_json:-[]}" "$cpu_native_pll"
 }
 
 _get_ppe_entries_raw() {
@@ -665,6 +674,10 @@ _get_token_info_raw() {
 	' "$token_file" 2>/dev/null || printf '{"token_count":0,"token_size":0,"npu_active":false,"tx_queues":[],"station_counts":[%s]}' "$sta_json"
 }
 
+_native_cpufreq_pll() {
+	[ -e /sys/firmware/devicetree/base/cpufreq/airoha,force-direct-pll ]
+}
+
 set_governor() {
 	local governor
 	governor=$(echo "$1" | jsonfilter -e "@.governor" 2>/dev/null)
@@ -714,6 +727,13 @@ set_max_freq() {
 }
 
 set_overclock() {
+	# The native driver owns this PLL. Even a stale/cached LuCI page must
+	# not bypass CPUFreq policy, reporting and thermal cooling controls.
+	if _native_cpufreq_pll; then
+		echo '{"error":"native CPUFreq owns the PLL; use Max Frequency and Governor"}'
+		return
+	fi
+
 	local target_mhz
 	target_mhz=$(echo "$1" | jsonfilter -e "@.freq_mhz" 2>/dev/null)
 
@@ -722,7 +742,7 @@ set_overclock() {
 		return
 	fi
 
-	# Validate range (500-1600, crash likely above 1500 at stock voltage)
+	# This only validates register programming, not silicon stability.
 	if [ "$target_mhz" -lt 500 ] || [ "$target_mhz" -gt 1600 ]; then
 		echo '{"error":"frequency must be 500-1600 MHz"}'
 		return

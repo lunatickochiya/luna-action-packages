@@ -504,7 +504,9 @@ function renderMaxFreqSelect(avail, cur) {
 	}}, fs.map(function(f){return E('option',{'value':f,'selected':parseInt(f)===parseInt(cur)?'':null},(parseInt(f)/1000).toFixed(0)+' MHz');}));
 }
 
-function renderOcControls() {
+function renderOcControls(nativePll) {
+	if (nativePll) return E('span', {'class':'soc-muted'},
+		_('Native CPUFreq: use Max Frequency to set the upper limit. This keeps the selected governor. The firmware frequency table supplies the boot default; changes here last until reboot.'));
 	var inp = E('input',{'id':'oc-freq-input','type':'number','min':'500','max':'1600','step':'50','value':'1400','class':'cbi-input-text','style':'width:100px'});
 	var btn = E('button',{'class':'cbi-button cbi-button-action','style':'margin-left:8px','click':function(){
 		var f=parseInt(document.getElementById('oc-freq-input').value);
@@ -518,7 +520,7 @@ function renderOcControls() {
 	}},_('Apply'));
 	return E('div',{'style':'display:flex;align-items:center;gap:8px;flex-wrap:wrap'},[
 		inp, E('span',{'class':'soc-muted'},'MHz'), btn,
-		E('span',{'class':'soc-muted','style':'font-size:85%;margin-left:8px'},_('Direct PLL. Stock max 1200 MHz. Stable up to 1500 MHz.'))
+		E('span',{'class':'soc-muted','style':'font-size:85%;margin-left:8px'},_('Legacy direct PLL control forces the performance governor and bypasses the CPUFreq frequency table. Stability above the stock limit depends on the device. Changes last until reboot.'))
 	]);
 }
 
@@ -801,7 +803,7 @@ return view.extend({
 					E('tr',{'class':'tr'},[ E('td',{'class':'td','width':'33%'},E('strong',{},_('Current Frequency'))), E('td',{'class':'td'}, renderFreqBar(st.cpu_cur_freq||st.cpu_hw_freq,st.cpu_min_freq,st.cpu_max_freq,st.pll_freq_mhz,st.cpu_governor)) ]),
 					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('Governor'))), E('td',{'class':'td'}, renderGovSelect(st.cpu_avail_governors,st.cpu_governor)) ]),
 					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('Max Frequency'))), E('td',{'class':'td'}, renderMaxFreqSelect(st.cpu_avail_freqs,st.cpu_max_freq)) ]),
-					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('Overclock'))), E('td',{'class':'td'}, renderOcControls()) ]),
+					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('Frequency Control'))), E('td',{'class':'td'}, renderOcControls(st.cpu_native_pll)) ]),
 					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('CPU Cores'))), E('td',{'class':'td'},(st.cpu_count||0).toString()) ]),
 					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('CPU Temperature'))), E('td',{'class':'td'}, renderTempBar(st.cpu_temp)) ]),
 					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('CPU Usage (%)'))), E('td',{'class':'td'}, renderCpuUsageChart(st.cpu_usage)) ])

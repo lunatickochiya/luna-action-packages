@@ -108,8 +108,14 @@ msgid "Current Frequency"
 msgstr "当前频率"
 
 #: ../../package/luci-app-airoha-npu/htdocs/luci-static/resources/view/airoha_npu/status.js:425
-msgid "Direct PLL. Stock max 1200 MHz. Stable up to 1500 MHz."
-msgstr "直接设置 PLL。原厂最高 1200 MHz，已稳定测试至 1500 MHz。"
+msgid "Legacy direct PLL control forces the performance governor and bypasses the CPUFreq frequency table. Stability above the stock limit depends on the device. Changes last until reboot."
+msgstr "旧式 PLL 直写会强制使用 performance 策略，并绕过 CPUFreq 频率表。超过原厂上限的稳定性因设备而异。修改仅本次启动有效。"
+
+msgid "Native CPUFreq: use Max Frequency to set the upper limit. This keeps the selected governor. The firmware frequency table supplies the boot default; changes here last until reboot."
+msgstr "内核原生调频：通过“最高频率”设置上限，保留所选调频策略。启动默认值由固件频率表提供；此处修改仅本次启动有效。"
+
+msgid "Frequency Control"
+msgstr "频率控制"
 
 #: ../../package/luci-app-airoha-npu/htdocs/luci-static/resources/view/airoha_npu/status.js:451
 #: ../../package/luci-app-airoha-npu/htdocs/luci-static/resources/view/airoha_npu/status.js:467
