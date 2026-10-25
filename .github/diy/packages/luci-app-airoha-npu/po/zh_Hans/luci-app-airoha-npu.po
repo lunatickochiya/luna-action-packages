@@ -356,8 +356,8 @@ msgid "Warning"
 msgstr "警告"
 
 #: ../../package/luci-app-airoha-npu/htdocs/luci-static/resources/view/airoha_npu/status.js:105
-msgid "WiFi WDMA"
-msgstr "WiFi WDMA"
+msgid "Internal DMA port"
+msgstr "内部 DMA 端口"
 
 msgid "Port mapping unavailable"
 msgstr "无法读取端口映射"
@@ -371,8 +371,8 @@ msgstr "PON 上联（%s）"
 msgid "Internal switch (%s)"
 msgstr "内置交换机（%s）"
 
-msgid "No registered Wi-Fi device"
-msgstr "没有已注册的无线设备"
+msgid "IQ/OQ are raw hardware queue counters, not wireless device or client counts."
+msgstr "IQ/OQ 为硬件队列的原始计数，不代表无线设备或客户端数量。"
 
 msgid "PPE initialization and flow statistics"
 msgstr "PPE 初始化与流量统计"
@@ -385,3 +385,84 @@ msgstr "核心数未知"
 
 msgid "%s (firmware file; running version unknown)"
 msgstr "%s（固件文件版本；运行版本未知）"
+
+msgid "Last 10 minutes"
+msgstr "最近 10 分钟"
+
+msgid "Waiting for CPU samples"
+msgstr "等待 CPU 采样"
+
+msgid "Samples approximately every 10 seconds; history starts when this page opens."
+msgstr "约每 10 秒采样；历史记录从打开本页开始。"
+
+msgid "Last interval: %s s"
+msgstr "最近采样间隔：%s 秒"
+
+msgid "Hardware sample unavailable"
+msgstr "硬件采样不可用"
+
+msgid "Counter / interval change"
+msgstr "寄存器累计值 / 本间隔增量"
+
+msgid "RX flow-control drops"
+msgstr "RX 流控丢弃"
+
+msgid "RX RC drops"
+msgstr "RX RC 丢弃"
+
+msgid "RX overflow drops"
+msgstr "RX 溢出丢弃"
+
+msgid "RX error drops"
+msgstr "RX 错误丢弃"
+
+msgid "RX Ethernet drops"
+msgstr "RX 以太网丢弃"
+
+msgid "RX CPU drops"
+msgstr "RX CPU 路径丢弃"
+
+msgid "RX HWF drops"
+msgstr "RX HWF 路径丢弃"
+
+msgid "Driver loaded"
+msgstr "驱动已加载"
+
+msgid "Wireless offload active"
+msgstr "无线卸载已激活"
+
+msgid "Raw 32-bit hardware counters may wrap or reset. Drop classes can overlap and are not added together."
+msgstr "这里显示原始 32 位硬件计数，可能回绕或复位。各类丢弃计数可能重叠，不合并为丢包总数。"
+
+msgid "Waiting for a second hardware sample"
+msgstr "等待第二次硬件采样；回绕、复位或长时间中断后重新计算增量。"
+
+msgid "Bridge filtering: VLAN-tagged frames"
+msgstr "桥接过滤：VLAN 标签报文"
+
+msgid "Bridge filtering: PPPoE-tagged frames"
+msgstr "桥接过滤：PPPoE 标签报文"
+
+msgid "These bridge Netfilter settings are not hardware-offload switches. Driver status reports initialization; PPE bound counts report installed entries, not utilization."
+msgstr "桥接 Netfilter 设置用于报文过滤。驱动状态表示初始化情况；PPE 绑定数表示已安装条目数，不能据此计算硬件利用率。这两个过滤选项不表示硬件卸载开关。"
+
+msgid "PPE sample unavailable; any displayed entries are from the last successful read."
+msgstr "PPE 采样不可用；若仍有条目显示，它们来自上次成功读取。"
+
+msgid "Last successful PPE read: %s"
+msgstr "PPE 最近成功读取：%s"
+
+msgid "Waiting for PPE sample"
+msgstr "等待 PPE 采样"
+
+msgid "Original source MAC preserved"
+msgstr "保留报文原源 MAC"
+
+msgid "Source MAC index %s"
+msgstr "源 MAC 索引 %s"
+
+msgid "Source MAC unavailable"
+msgstr "源 MAC 无法从当前诊断输出还原"
+
+msgid "CPU sample unavailable"
+msgstr "CPU 采样不可用"

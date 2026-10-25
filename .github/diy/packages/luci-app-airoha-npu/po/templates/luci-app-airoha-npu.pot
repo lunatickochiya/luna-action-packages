@@ -347,7 +347,7 @@ msgid "Warning"
 msgstr ""
 
 #: ../../package/luci-app-airoha-npu/htdocs/luci-static/resources/view/airoha_npu/status.js:105
-msgid "WiFi WDMA"
+msgid "Internal DMA port"
 msgstr ""
 
 msgid "Port mapping unavailable"
@@ -362,7 +362,7 @@ msgstr ""
 msgid "Internal switch (%s)"
 msgstr ""
 
-msgid "No registered Wi-Fi device"
+msgid "IQ/OQ are raw hardware queue counters, not wireless device or client counts."
 msgstr ""
 
 msgid "PPE initialization and flow statistics"
