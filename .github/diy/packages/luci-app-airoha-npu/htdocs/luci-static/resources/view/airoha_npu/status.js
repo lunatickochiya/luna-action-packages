@@ -5,6 +5,8 @@
 'require ui';
 
 var callTopology = rpc.declare({ object: 'luci.airoha_npu', method: 'getTopology' });
+var callMulticast = rpc.declare({ object: 'luci.airoha_npu', method: 'getMulticast', nobatch: true });
+var callMulticastFilter = rpc.declare({ object: 'luci.airoha_npu', method: 'getMulticastFilter', nobatch: true });
 var callNpuStatus = rpc.declare({ object: 'luci.airoha_npu', method: 'getStatus' });
 var callPpeEntries = rpc.declare({ object: 'luci.airoha_npu', method: 'getPpeEntries', nobatch: true });
 var callTokenInfo = rpc.declare({ object: 'luci.airoha_npu', method: 'getTokenInfo', nobatch: true });
@@ -20,6 +22,8 @@ var callSetPPPoEOffload = rpc.declare({ object: 'luci.airoha_npu', method: 'setP
 var ppeSnapshot = { entries: [], truncated: false, error: 'not_loaded' };
 var boardTopology = {};
 var lastStatusPoll = 0;
+var lastFilterSample = null;
+var ppeReading = false;
 
 function hasWifi() {
 	return boardTopology.has_wifi === true;
@@ -49,10 +53,12 @@ function loadStatusData() {
 			Promise.resolve({ tx_queues: [], station_counts: [] }),
 		L.resolveDefault(callFrameEngine(), { error: 'unavailable' }),
 		L.resolveDefault(callGetVlanOffload(), { enabled: 0 }),
-		L.resolveDefault(callGetPPPoEOffload(), { enabled: 0 })
+		L.resolveDefault(callGetPPPoEOffload(), { enabled: 0 }),
+		L.resolveDefault(callMulticast(), { error: 'unavailable' }),
+		L.resolveDefault(callMulticastFilter(), { error: 'unavailable' })
 	]).then(function(data) {
 		lastStatusPoll = performance.now();
-		return [data[0], ppeSnapshot, data[1], sampleFrameEngine(data[2]), data[3], data[4]];
+		return [data[0], ppeSnapshot, data[1], sampleFrameEngine(data[2]), data[3], data[4], data[5], sampleMulticastFilter(data[6])];
 	});
 }
 
@@ -97,7 +103,9 @@ function updatePpeView(ppe) {
 }
 
 function refreshPpeData() {
-	return L.resolveDefault(callPpeEntries(), { error:'unavailable' }).then(updatePpeView);
+	if (ppeReading) return Promise.resolve();
+	ppeReading = true;
+	return L.resolveDefault(callPpeEntries(), { error:'unavailable' }).then(updatePpeView).finally(function() { ppeReading = false; });
 }
 
 /* ── Theme-adaptive CSS ── */
@@ -716,7 +724,110 @@ function renderPPPoEOffloadSelect(state) {
 	]);
 }
 
+function unsignedCounter(value) {
+	return typeof value === 'string' && /^[0-9]{1,20}$/.test(value);
+}
+
+function sampleMulticastFilter(input) {
+	var m = Object.assign({}, input || {});
+	m.drops_per_second = null;
+	if (m.error || !m.available || m.broken || m.hardware_drops_error != null ||
+		!unsignedCounter(m.hardware_drops) || typeof m.boot_id !== 'string' || !m.boot_id ||
+		!Number.isFinite(m.uptime) || typeof BigInt !== 'function') {
+		lastFilterSample = null;
+		return m;
+	}
+	var prev = lastFilterSample;
+	lastFilterSample = m;
+	if (prev && prev.boot_id === m.boot_id && m.uptime > prev.uptime && m.uptime-prev.uptime <= 60 &&
+		prev.errors === m.errors && (!unsignedCounter(m.generation) || !unsignedCounter(prev.generation) ||
+			BigInt(m.generation) >= BigInt(prev.generation))) {
+		var delta = BigInt(m.hardware_drops)-BigInt(prev.hardware_drops);
+		if (delta >= BigInt(0) && delta <= BigInt(Number.MAX_SAFE_INTEGER))
+			m.drops_per_second = Number(delta)/(m.uptime-prev.uptime);
+	}
+	return m;
+}
+
+function multicastFilterState(m) {
+	if (!m || m.error || !m.available) return _('Filter status unavailable');
+	if (m.broken) return _('Hardware failure; filtering bypassed');
+	if (!m.detailed) return _('Basic status only; applied group list unavailable on this kernel');
+	if ((m.state === 'active' || m.state === 'partial-bypass') &&
+		(m.snapshot_current !== 1 || m.generation !== m.applied_generation || m.active !== 1))
+		return _('Updating; previous admission snapshot is not active');
+	return ({
+		'active': _('Active: unsubscribed PON multicast is filtered'),
+		'partial-bypass': _('Active with bypassed scopes'),
+		'updating': _('Updating; previous admission snapshot is not active'),
+		'bypass': _('Filtering bypassed'),
+		'capacity-exceeded': _('Capacity exceeded; filtering bypassed'),
+		'unsupported-scope': _('Unsupported topology; filtering bypassed'),
+		'hardware-failure': _('Hardware failure; filtering bypassed')
+	})[m.state] || _('Filter status unavailable');
+}
+
+function renderMulticastFilter(m) {
+	var lines = [E('strong', {}, multicastFilterState(m))];
+	if (m && m.available && !m.error) {
+		lines.push(E('div', {}, _('Discarded packets: %s; current rate: %s packets/s').format(
+			m.hardware_drops_error == null && unsignedCounter(m.hardware_drops) ? m.hardware_drops : _('N/A'),
+			Number.isFinite(m.drops_per_second) ? m.drops_per_second.toFixed(1) : _('N/A'))));
+		if (m.detailed) {
+			var current = m.snapshot_current === 1 && m.active === 1 && m.generation === m.applied_generation;
+			lines.push(E('div', {}, _('Generation: %s; last applied: %s').format(m.generation || '?', m.applied_generation || '?')));
+			lines.push(E('div', {}, _('Last applied resources: rules %s/%s; lookups %s/%s').format(
+				m.applied_rules == null ? '?' : m.applied_rules, m.rule_capacity || '?',
+				m.applied_lookups == null ? '?' : m.applied_lookups, m.lookup_capacity || '?')));
+			lines.push(E('h4', {}, current ? _('Applied admissions') : _('Previous admissions (not currently active)')));
+			var admissions = Array.isArray(m.admissions) ? m.admissions : [];
+			lines.push(E('ul', {}, admissions.length ? admissions.map(function(a) {
+				return E('li', {}, (a.tagged ? _('VLAN %s').format(a.vid) : _('Untagged PON')) + ': ' +
+					(a.bypass ? _('Bypassed scope') : (Array.isArray(a.groups) ? a.groups.join(', ') : '?')));
+			}) : [E('li', {}, current ? _('No subscribed group exceptions') : _('No applied snapshot available'))]));
+		}
+	}
+	lines.push(E('p', {'class':'soc-muted'}, _('Automatic kernel policy; no player-specific configuration. Link-local control traffic and unsupported encapsulations follow their normal paths.')));
+	return E('div', {}, lines);
+}
+
 /* ── Main View ── */
+function multicastState(m) {
+	if (!m || m.error || !Number.isInteger(m.enabled)) return _('Multicast status unavailable');
+	if (m.broken) return m.ppe_stopped ? _('Hardware fault; PPE stopped, reboot required') :
+		_('Multicast fault; delivery may be interrupted, reboot required');
+	if (m.scope_lost) return m.live_apply ? _('Configured interface removed; waiting for online rebinding') : _('Configured interface removed; reboot required');
+	if (!m.frozen) return _('Waiting for boot policy');
+	if (!m.enabled) return _('Disabled; software multicast');
+	if (m.paused) return _('Paused; software multicast');
+	if (!m.running) return _('Waiting for hardware initialization');
+	if (!m.active) return _('Ready; no multicast entries installed');
+	return _('%d multicast entries installed').format(m.active);
+}
+
+function renderMulticast(m) {
+	var lines = [E('strong', {}, multicastState(m))];
+	if (m && !m.error && Number.isInteger(m.enabled)) {
+		lines.push(E('div', {}, _('Configured scope: %s → %s').format(
+			m.configured_upstream || '?', m.configured_downstream || '?')));
+		lines.push(E('div', {}, _('Boot scope: ifindex %s → %s; VID %s → %s').format(
+			m.ingress, m.egress, m.ingress_vid, m.egress_vid)));
+		lines.push(E('div', {}, _('Pending: %s; CPU copies delivered: %s; malformed: %s; stale: %s').format(
+			m.pending, m.delivered, m.bad_copies, m.stale_copies)));
+		var reasons = m.reject || {};
+		lines.push(E('div', {}, _('Admission rejections') + ': ' +
+			['packet', 'ingress', 'scope', 'route', 'bridge', 'resource', 'sample'].map(function(k) {
+				return k + '=' + (Number.isSafeInteger(reasons[k]) ? reasons[k] : '?');
+			}).join(', ')));
+		lines.push(E('p', {'class':'soc-muted'}, _('Entry counts are not traffic measurements. CPU-copy counts exclude packets forwarded entirely in hardware. Hardware qualification is pending.')));
+	}
+	lines.push(E('p', {'class':'soc-muted'}, m && m.live_apply ?
+		_('Multicast policy supports online application. Interface recovery reuses the last applied scope. Hardware faults still require recovery.') :
+		_('This kernel requires a reboot to change multicast policy.')));
+	lines.push(E('a', { 'href': L.url('admin/network/airoha-multicast') }, _('Configure multicast offload')));
+	return E('div', {}, lines);
+}
+
 return view.extend({
 	load: function() {
 		// Board wiring is static for this view; avoid probing every poll.
@@ -772,10 +883,21 @@ return view.extend({
 				E('div',{'id':'fe-container'}, renderFeDiagram(fe, ti, st))
 			]),
 
+			E('div', {'class':'cbi-section'}, [
+				E('h3', {}, _('Routed multicast offload')),
+				E('div', {'id':'multicast-status'}, renderMulticast(data[6]))
+			]),
+			E('div', {'class':'cbi-section'}, [
+				E('h3', {}, _('PON multicast admission filter (IFC)')),
+				E('div', {'id':'multicast-filter-status'}, renderMulticastFilter(data[7]))
+			]),
+
 			// PPE Flow Table
 			E('div',{'class':'cbi-section'},[
 				E('h3',{},_('PPE Flow Offload Entries')),
-				E('p', {'id':'ppe-sample-status','class':'soc-muted'}, _('Waiting for PPE sample')),
+				E('p', {'id':'ppe-sample-status','class':'soc-muted'}, _('PPE table is read only on request.')),
+				E('button', {'class':'cbi-button cbi-button-action', 'click':refreshPpeData}, _('Read PPE table')),
+				E('p', {'class':'soc-muted'}, _('UNB is an unbound learning record, not evidence of forwarding or a bound DROP rule. BND/BIND means an installed action; it does not by itself prove traffic delivery.')),
 				E('div',{'class':'soc-flow-table'},E('table',{'class':'table','id':'ppe-entries-table'},[
 					E('tr',{'class':'tr cbi-section-table-titles'},[
 						E('th',{'class':'th'},_('Index')), E('th',{'class':'th'},_('State')), E('th',{'class':'th'},_('Type')),
@@ -804,12 +926,13 @@ return view.extend({
 				var se=document.getElementById('npu-status'), ns=npuState(st,ti);
 				if(se){se.innerHTML='';var sp=document.createElement('span');sp.className=ns.className;sp.textContent=ns.text+(st.npu_device?' ('+st.npu_device+')':'');se.appendChild(sp);}
 
+				var mc=document.getElementById('multicast-status'); if(mc){mc.innerHTML='';mc.appendChild(renderMulticast(d[6]));}
+				var mf=document.getElementById('multicast-filter-status'); if(mf){mf.innerHTML='';mf.appendChild(renderMulticastFilter(d[7]));}
+
 				var fc=document.getElementById('fe-container'); if(fc){fc.innerHTML='';fc.appendChild(renderFeDiagram(fe, ti, st));}
 
 			},this));
 		},this), 10);
-
-		poll.add(refreshPpeData, 30);
 
 		return view;
 	},

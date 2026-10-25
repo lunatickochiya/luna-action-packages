@@ -376,3 +376,138 @@ msgstr ""
 
 msgid "%s (firmware file; running version unknown)"
 msgstr ""
+
+msgid "Multicast status unavailable"
+msgstr ""
+
+msgid "Hardware fault; PPE stopped, reboot required"
+msgstr ""
+
+msgid "Multicast fault; delivery may be interrupted, reboot required"
+msgstr ""
+
+msgid "Configured interface removed; reboot required"
+msgstr ""
+
+msgid "Waiting for boot policy"
+msgstr ""
+
+msgid "Disabled; software multicast"
+msgstr ""
+
+msgid "Paused; software multicast"
+msgstr ""
+
+msgid "Waiting for hardware initialization"
+msgstr ""
+
+msgid "Ready; no multicast entries installed"
+msgstr ""
+
+msgid "%d multicast entries installed"
+msgstr ""
+
+msgid "Configured scope: %s → %s"
+msgstr ""
+
+msgid "Boot scope: ifindex %s → %s; VID %s → %s"
+msgstr ""
+
+msgid "Pending: %s; CPU copies delivered: %s; malformed: %s; stale: %s"
+msgstr ""
+
+msgid "Admission rejections"
+msgstr ""
+
+msgid "Entry counts are not traffic measurements. CPU-copy counts exclude packets forwarded entirely in hardware. Hardware qualification is pending."
+msgstr ""
+
+msgid "Configure /etc/config/airoha_multicast; changes apply after reboot. No traffic-classification or firewall rules are installed by this controller."
+msgstr ""
+
+msgid "Routed multicast offload"
+msgstr ""
+
+msgid "Configured interface removed; waiting for online rebinding"
+msgstr ""
+
+msgid "Multicast policy supports online application. Interface recovery reuses the last applied scope. Hardware faults still require recovery."
+msgstr ""
+
+msgid "This kernel requires a reboot to change multicast policy."
+msgstr ""
+
+msgid "Configure multicast offload"
+msgstr ""
+
+msgid "Filter status unavailable"
+msgstr ""
+
+msgid "Hardware failure; filtering bypassed"
+msgstr ""
+
+msgid "Basic status only; applied group list unavailable on this kernel"
+msgstr ""
+
+msgid "Updating; previous admission snapshot is not active"
+msgstr ""
+
+msgid "Active: unsubscribed PON multicast is filtered"
+msgstr ""
+
+msgid "Active with bypassed scopes"
+msgstr ""
+
+msgid "Filtering bypassed"
+msgstr ""
+
+msgid "Capacity exceeded; filtering bypassed"
+msgstr ""
+
+msgid "Unsupported topology; filtering bypassed"
+msgstr ""
+
+msgid "Discarded packets: %s; current rate: %s packets/s"
+msgstr ""
+
+msgid "Generation: %s; last applied: %s"
+msgstr ""
+
+msgid "Last applied resources: rules %s/%s; lookups %s/%s"
+msgstr ""
+
+msgid "Applied admissions"
+msgstr ""
+
+msgid "Previous admissions (not currently active)"
+msgstr ""
+
+msgid "VLAN %s"
+msgstr ""
+
+msgid "Untagged PON"
+msgstr ""
+
+msgid "Bypassed scope"
+msgstr ""
+
+msgid "No subscribed group exceptions"
+msgstr ""
+
+msgid "No applied snapshot available"
+msgstr ""
+
+msgid "Automatic kernel policy; no player-specific configuration. Link-local control traffic and unsupported encapsulations follow their normal paths."
+msgstr ""
+
+msgid "PON multicast admission filter (IFC)"
+msgstr ""
+
+msgid "PPE table is read only on request."
+msgstr ""
+
+msgid "Read PPE table"
+msgstr ""
+
+msgid "UNB is an unbound learning record, not evidence of forwarding or a bound DROP rule. BND/BIND means an installed action; it does not by itself prove traffic delivery."
+msgstr ""

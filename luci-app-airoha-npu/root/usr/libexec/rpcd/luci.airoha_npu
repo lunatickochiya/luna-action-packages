@@ -895,12 +895,103 @@ set_pppoe_offload() {
 	printf '{"result":"ok","enabled":%d}' "$enabled"
 }
 
+# Cached software state only; no PPE SRAM scan or register reads.
+get_multicast() {
+	. /usr/share/libubox/jshn.sh
+	local result enabled upstream downstream
+	if [ ! -x /usr/sbin/airoha-mcastctl ]; then
+		echo '{"error":"multicast_controller_unavailable"}'
+		return
+	fi
+	result=$(_run_with_deadline 4 multicast /usr/sbin/airoha-mcastctl get) || {
+		echo '{"error":"multicast_status_unavailable"}'
+		return
+	}
+	json_init
+	json_load "$result" || {
+		echo '{"error":"multicast_status_invalid"}'
+		return
+	}
+	enabled=$(uci -q get airoha_multicast.main.enabled)
+	upstream=$(uci -q get airoha_multicast.main.upstream)
+	downstream=$(uci -q get airoha_multicast.main.downstream)
+	json_add_string configured_enabled "$enabled"
+	json_add_string configured_upstream "$upstream"
+	json_add_string configured_downstream "$downstream"
+	json_dump
+}
+
+# A single debugfs read: cached policy plus one bounded IFC MIB transaction.
+# Do not use PPE entries, devmem, UCI or retry a stalled hardware reader here.
+_get_multicast_filter_raw() {
+	local raw boot uptime rest
+	set -- /sys/kernel/debug/airoha_eth-*/pon_multicast_filter
+	[ "$#" = 1 ] && [ -r "$1" ] || {
+		echo '{"available":false,"error":"filter_status_unavailable"}'
+		return
+	}
+	raw=$(cat "$1") || return 1
+	boot=$(cat /proc/sys/kernel/random/boot_id 2>/dev/null)
+	read -r uptime rest < /proc/uptime
+	printf '%s\n' "$raw" | awk -v boot="$boot" -v uptime="$uptime" '
+	function integer(key, value) {
+		if (value ~ /^-?[0-9]+$/ && length(value) <= 10)
+			printf ",\"%s\":%s", key, value
+	}
+	function counter(key, value) {
+		if (value ~ /^[0-9]+$/ && length(value) <= 20)
+			printf ",\"%s\":\"%s\"", key, value
+	}
+	function ipv4(value, a, n, i) {
+		n=split(value,a,"."); if (n!=4) return 0
+		for(i=1;i<=4;i++) if(a[i]!~/^[0-9]+$/ || a[i]>255) return 0
+		return a[1]>=224 && a[1]<=239
+	}
+	$1 == "admission" {
+		delete row
+		for(i=2;i<=NF;i++) { split($i,p,"="); row[p[1]]=p[2] }
+		if(row["tagged"]!~/^[01]$/ || row["bypass"]!~/^[01]$/ ||
+		   row["vid"]!~/^[0-9]+$/ || row["vid"]>4094) next
+		item="{\"tagged\":" row["tagged"] ",\"vid\":" row["vid"] ",\"bypass\":" row["bypass"] ",\"groups\":["
+		n=split(row["groups"],g,","); comma=""
+		for(i=1;i<=n;i++) if(ipv4(g[i])) { item=item comma "\"" g[i] "\""; comma="," }
+		admissions=admissions sep item "]}"; sep=","; next
+	}
+	{ for(i=1;i<=NF;i++) if(index($i,"=")) { split($i,p,"="); v[p[1]]=p[2] } }
+	END {
+		if(v["automatic"]!="1" || v["active"]!~/^[01]$/ || v["broken"]!~/^[01]$/) {
+			print "{\"available\":false,\"error\":\"invalid_filter_status\"}"; exit
+		}
+		printf "{\"available\":true,\"detailed\":%s", v["status_version"]=="1"?"true":"false"
+		if(boot~/^[a-fA-F0-9-]+$/ && length(boot)==36) printf ",\"boot_id\":\"%s\"",boot
+		if(uptime~/^[0-9]+([.][0-9]+)?$/) printf ",\"uptime\":%s",uptime
+		split("automatic active broken last_error snapshot_current applied_rules rule_capacity applied_lookups lookup_capacity applied_groups applied_scopes applied_bypass hardware_drops_error",keys," ")
+		for(k in keys) integer(keys[k],v[keys[k]])
+		split("generation applied_generation hardware_drops updates events errors",keys," ")
+		for(k in keys) counter(keys[k],v[keys[k]])
+		state=v["state"]
+		if(state!~/^(active|partial-bypass|updating|bypass|capacity-exceeded|unsupported-scope|hardware-failure)$/) state="unknown"
+		printf ",\"state\":\"%s\",\"admissions\":[%s]}\n",state,admissions
+	}'
+}
+
+get_multicast_filter() {
+	_run_with_deadline 3 multicast_filter _get_multicast_filter_raw ||
+		echo '{"available":false,"error":"filter_read_failed_or_timed_out"}'
+}
+
 case "$1" in
 	list)
-		echo '{"getTopology":{},"getStatus":{},"getPpeEntries":{},"getTokenInfo":{},"getFrameEngine":{},"setGovernor":{"governor":"str"},"setMaxFreq":{"freq":"int"},"setOverclock":{"freq_mhz":"int"},"getVlanOffload":{},"setVlanOffload":{"enabled":"int"},"getPPPoEOffload":{},"setPPPoEOffload":{"enabled":"int"}}'
+		echo '{"getTopology":{},"getMulticast":{},"getMulticastFilter":{},"getStatus":{},"getPpeEntries":{},"getTokenInfo":{},"getFrameEngine":{},"setGovernor":{"governor":"str"},"setMaxFreq":{"freq":"int"},"setOverclock":{"freq_mhz":"int"},"getVlanOffload":{},"setVlanOffload":{"enabled":"int"},"getPPPoEOffload":{},"setPPPoEOffload":{"enabled":"int"}}'
 		;;
 	call)
 		case "$2" in
+			getMulticastFilter)
+				get_multicast_filter
+				;;
+			getMulticast)
+				get_multicast
+				;;
 			getTopology)
 				get_topology
 				;;

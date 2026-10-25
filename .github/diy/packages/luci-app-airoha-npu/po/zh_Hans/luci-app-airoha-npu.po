@@ -466,3 +466,138 @@ msgstr "源 MAC 无法从当前诊断输出还原"
 
 msgid "CPU sample unavailable"
 msgstr "CPU 采样不可用"
+
+msgid "Multicast status unavailable"
+msgstr "组播状态不可用"
+
+msgid "Hardware fault; PPE stopped, reboot required"
+msgstr "硬件故障；PPE 已停用，需要重启"
+
+msgid "Multicast fault; delivery may be interrupted, reboot required"
+msgstr "组播故障；投递可能中断，需要重启"
+
+msgid "Configured interface removed; reboot required"
+msgstr "已配置的接口被移除，需要重启"
+
+msgid "Waiting for boot policy"
+msgstr "等待启动配置"
+
+msgid "Disabled; software multicast"
+msgstr "未启用；使用软件组播"
+
+msgid "Paused; software multicast"
+msgstr "已暂停；使用软件组播"
+
+msgid "Waiting for hardware initialization"
+msgstr "等待硬件初始化"
+
+msgid "Ready; no multicast entries installed"
+msgstr "已就绪；尚无组播表项"
+
+msgid "%d multicast entries installed"
+msgstr "已安装 %d 个组播表项"
+
+msgid "Configured scope: %s → %s"
+msgstr "配置范围：%s → %s"
+
+msgid "Boot scope: ifindex %s → %s; VID %s → %s"
+msgstr "本次启动范围：接口索引 %s → %s；VID %s → %s"
+
+msgid "Pending: %s; CPU copies delivered: %s; malformed: %s; stale: %s"
+msgstr "待绑定：%s；已投递 CPU 副本：%s；格式异常：%s；过期副本：%s"
+
+msgid "Admission rejections"
+msgstr "准入拒绝计数"
+
+msgid "Entry counts are not traffic measurements. CPU-copy counts exclude packets forwarded entirely in hardware. Hardware qualification is pending."
+msgstr "表项数量不代表流量；CPU 副本计数不包含完全由硬件转发的报文。硬件资格验证尚未完成。"
+
+msgid "Configure /etc/config/airoha_multicast; changes apply after reboot. No traffic-classification or firewall rules are installed by this controller."
+msgstr "在 /etc/config/airoha_multicast 中配置，重启后生效。此控制器只管理卸载范围，不添加流量分类或防火墙规则。"
+
+msgid "Routed multicast offload"
+msgstr "三层组播卸载"
+
+msgid "Configured interface removed; waiting for online rebinding"
+msgstr "配置的接口已移除，等待在线重新绑定"
+
+msgid "Multicast policy supports online application. Interface recovery reuses the last applied scope. Hardware faults still require recovery."
+msgstr "组播策略支持在线应用，接口恢复沿用上次已应用的范围；硬件故障仍需恢复处理。"
+
+msgid "This kernel requires a reboot to change multicast policy."
+msgstr "当前内核修改组播策略需要重启。"
+
+msgid "Configure multicast offload"
+msgstr "配置组播卸载"
+
+msgid "Filter status unavailable"
+msgstr "过滤状态不可用"
+
+msgid "Hardware failure; filtering bypassed"
+msgstr "硬件故障；过滤已旁路"
+
+msgid "Basic status only; applied group list unavailable on this kernel"
+msgstr "仅有基本状态；此内核不提供已应用组列表"
+
+msgid "Updating; previous admission snapshot is not active"
+msgstr "正在更新；上一次放行快照当前未生效"
+
+msgid "Active: unsubscribed PON multicast is filtered"
+msgstr "已生效：过滤 PON 上未订阅的组播"
+
+msgid "Active with bypassed scopes"
+msgstr "已生效，部分范围旁路"
+
+msgid "Filtering bypassed"
+msgstr "过滤已旁路"
+
+msgid "Capacity exceeded; filtering bypassed"
+msgstr "容量不足；过滤已旁路"
+
+msgid "Unsupported topology; filtering bypassed"
+msgstr "不支持的拓扑；过滤已旁路"
+
+msgid "Discarded packets: %s; current rate: %s packets/s"
+msgstr "累计丢弃：%s 包；当前速率：%s 包/秒"
+
+msgid "Generation: %s; last applied: %s"
+msgstr "当前代次：%s；上一次成功应用：%s"
+
+msgid "Last applied resources: rules %s/%s; lookups %s/%s"
+msgstr "上一次应用的资源：规则 %s/%s；查找项 %s/%s"
+
+msgid "Applied admissions"
+msgstr "已生效的放行范围"
+
+msgid "Previous admissions (not currently active)"
+msgstr "上一次放行范围（当前未生效）"
+
+msgid "VLAN %s"
+msgstr "VLAN %s"
+
+msgid "Untagged PON"
+msgstr "PON 无标签流量"
+
+msgid "Bypassed scope"
+msgstr "此范围旁路"
+
+msgid "No subscribed group exceptions"
+msgstr "没有订阅组放行例外"
+
+msgid "No applied snapshot available"
+msgstr "没有可用的已应用快照"
+
+msgid "Automatic kernel policy; no player-specific configuration. Link-local control traffic and unsupported encapsulations follow their normal paths."
+msgstr "内核自动维护策略，无需为播放器单独配置。链路本地控制流量和不支持的封装沿用正常网络路径。"
+
+msgid "PON multicast admission filter (IFC)"
+msgstr "PON 组播放行过滤（IFC）"
+
+msgid "PPE table is read only on request."
+msgstr "PPE 全表仅在点击时读取。"
+
+msgid "Read PPE table"
+msgstr "读取 PPE 表"
+
+msgid "UNB is an unbound learning record, not evidence of forwarding or a bound DROP rule. BND/BIND means an installed action; it does not by itself prove traffic delivery."
+msgstr "UNB 是未绑定的学习记录，不能证明正在转发或已安装丢弃规则。BND/BIND 表示已安装动作，仅凭它不能证明流量实际送达。"
