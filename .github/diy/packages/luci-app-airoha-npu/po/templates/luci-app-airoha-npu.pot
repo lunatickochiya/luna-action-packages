@@ -343,3 +343,30 @@ msgstr ""
 #: ../../package/luci-app-airoha-npu/htdocs/luci-static/resources/view/airoha_npu/status.js:105
 msgid "WiFi WDMA"
 msgstr ""
+
+msgid "Port mapping unavailable"
+msgstr ""
+
+msgid "No registered network device"
+msgstr ""
+
+msgid "PON uplink (%s)"
+msgstr ""
+
+msgid "Internal switch (%s)"
+msgstr ""
+
+msgid "No registered Wi-Fi device"
+msgstr ""
+
+msgid "PPE initialization and flow statistics"
+msgstr ""
+
+msgid "Unknown"
+msgstr ""
+
+msgid "Core count unavailable"
+msgstr ""
+
+msgid "%s (firmware file; running version unknown)"
+msgstr ""

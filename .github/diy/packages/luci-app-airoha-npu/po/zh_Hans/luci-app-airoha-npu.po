@@ -352,3 +352,30 @@ msgstr "警告"
 #: ../../package/luci-app-airoha-npu/htdocs/luci-static/resources/view/airoha_npu/status.js:105
 msgid "WiFi WDMA"
 msgstr "WiFi WDMA"
+
+msgid "Port mapping unavailable"
+msgstr "无法读取端口映射"
+
+msgid "No registered network device"
+msgstr "没有已注册的网络设备"
+
+msgid "PON uplink (%s)"
+msgstr "PON 上联（%s）"
+
+msgid "Internal switch (%s)"
+msgstr "内置交换机（%s）"
+
+msgid "No registered Wi-Fi device"
+msgstr "没有已注册的无线设备"
+
+msgid "PPE initialization and flow statistics"
+msgstr "PPE 初始化与流量统计"
+
+msgid "Unknown"
+msgstr "未知"
+
+msgid "Core count unavailable"
+msgstr "核心数未知"
+
+msgid "%s (firmware file; running version unknown)"
+msgstr "%s（固件文件版本；运行版本未知）"

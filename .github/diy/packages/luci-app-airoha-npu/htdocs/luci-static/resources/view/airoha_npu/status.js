@@ -4,6 +4,7 @@
 'require rpc';
 'require ui';
 
+var callTopology = rpc.declare({ object: 'luci.airoha_npu', method: 'getTopology' });
 var callNpuStatus = rpc.declare({ object: 'luci.airoha_npu', method: 'getStatus' });
 var callPpeEntries = rpc.declare({ object: 'luci.airoha_npu', method: 'getPpeEntries', nobatch: true });
 var callTokenInfo = rpc.declare({ object: 'luci.airoha_npu', method: 'getTokenInfo', nobatch: true });
@@ -17,11 +18,34 @@ var callGetPPPoEOffload = rpc.declare({ object: 'luci.airoha_npu', method: 'getP
 var callSetPPPoEOffload = rpc.declare({ object: 'luci.airoha_npu', method: 'setPPPoEOffload', params: ['enabled'] });
 
 var ppeSnapshot = { entries: [], truncated: false };
+var boardTopology = {};
+
+function hasWifi() {
+	return boardTopology.has_wifi === true;
+}
+
+function displayNetdev(name) {
+	return /^lan[0-9]+$/.test(name) ? name.toUpperCase() : name;
+}
+
+function gdmLabel(key) {
+	var devices = boardTopology.gdm && boardTopology.gdm[key];
+	if (!Array.isArray(devices)) return _('Port mapping unavailable');
+	if (!devices.length) return _('No registered network device');
+
+	return devices.map(function(port) {
+		if (port.pon) return _('PON uplink (%s)').format(port.netdev);
+		if (Array.isArray(port.switch_ports) && port.switch_ports.length)
+			return _('Internal switch (%s)').format(port.switch_ports.map(displayNetdev).join('/'));
+		return [displayNetdev(port.netdev), (port.phy_mode || '').toUpperCase()].filter(Boolean).join(' · ');
+	}).join(', ');
+}
 
 function loadStatusData() {
 	return Promise.all([
 		L.resolveDefault(callNpuStatus(), {}),
-		L.resolveDefault(callTokenInfo(), { tx_queues: [], station_counts: [] }),
+		hasWifi() ? L.resolveDefault(callTokenInfo(), { tx_queues: [], station_counts: [] }) :
+			Promise.resolve({ tx_queues: [], station_counts: [] }),
 		L.resolveDefault(callFrameEngine(), { error: 'unavailable' }),
 		L.resolveDefault(callGetVlanOffload(), { enabled: 0 }),
 		L.resolveDefault(callGetPPPoEOffload(), { enabled: 0 })
@@ -133,14 +157,14 @@ var bandInfo = [
 var psePortMap = [
 	{ name: 'CDM1', label: _('CPU DMA 1'),       color: '#607d8b' },
 	{ name: 'GDM1', label: _('Internal Switch'), color: '#ff9800' },
-	{ name: 'GDM2', label: _('10G WAN'),         color: '#4caf50' },
+	{ name: 'GDM2', label: 'GDM2',              color: '#4caf50' },
 	{ name: 'GDM3', label: 'GDM3',        color: '#607d8b' },
 	{ name: 'PPE1', label: _('PPE Engine 1'),    color: '#2196f3' },
 	{ name: 'CDM2', label: _('CPU DMA 2'),       color: '#607d8b' },
 	{ name: 'CDM3', label: 'CDM3',        color: '#607d8b' },
 	{ name: 'CDM4', label: _('WiFi WDMA'),       color: '#9c27b0' },
 	{ name: 'PPE2', label: _('PPE Engine 2'),    color: '#2196f3' },
-	{ name: 'GDM4', label: _('LAN1 2.5G'),       color: '#4caf50' }
+	{ name: 'GDM4', label: 'GDM4',              color: '#4caf50' }
 ];
 
 function fmtFreq(khz) { return (!khz || khz === 0) ? _('N/A') : (khz / 1000).toFixed(0) + ' MHz'; }
@@ -167,11 +191,39 @@ function tokenHealth(c, s) {
 }
 
 function npuState(st, ti) {
+	if (!st || typeof st.npu_loaded !== 'boolean')
+		return { text: _('Unknown'), className: 'label-warning' };
 	if (st && st.npu_loaded && ti && ti.npu_active)
 		return { text: _('Active'), className: 'label-success' };
 	if (st && st.npu_loaded)
 		return { text: _('Driver Ready'), className: 'label-warning' };
 	return { text: _('Not Active'), className: 'label-danger' };
+}
+
+function npuCores(st) {
+	return Number.isInteger(st.npu_cores) && st.npu_cores > 0 ? st.npu_cores : null;
+}
+
+function npuInfo(st) {
+	var version = st.npu_version;
+	if (!version || version === 'Unknown') version = _('Unknown');
+	else if (st.npu_version_source === 'firmware_file')
+		version = _('%s (firmware file; running version unknown)').format(version);
+	var cores = npuCores(st);
+	return version + ' | ' + (st.npu_clock > 0 ? (st.npu_clock / 1e6).toFixed(0) + ' MHz' : _('N/A')) +
+		' | ' + (cores !== null ? _('%d cores').format(cores) : _('Core count unavailable'));
+}
+
+function npuMemory(st) {
+	var regions = Array.isArray(st.memory_regions) ? st.memory_regions : [];
+	return regions.length ? calcTotalMem(regions) + ' (' + _('%d regions').format(regions.length) + ')' : _('N/A');
+}
+
+function updateNpuInfo(st) {
+	var info = document.getElementById('npu-info');
+	var memory = document.getElementById('npu-memory');
+	if (info) info.textContent = npuInfo(st);
+	if (memory) memory.textContent = npuMemory(st);
 }
 
 function getBandStats(ti, b) {
@@ -286,14 +338,15 @@ function renderFeDiagram(fe, ti, st) {
 
 	// WiFi band chips for CDM4
 	var bandChips = [];
-	for (var b = 0; b < 3; b++) bandChips.push(renderBandChip(b, getTxQueue(ti, b), getBandStats(ti, b)));
+	if (hasWifi())
+		for (var b = 0; b < 3; b++) bandChips.push(renderBandChip(b, getTxQueue(ti, b), getBandStats(ti, b)));
 
 	// CDM4/WDMA + WiFi bands grouped
 	var p7 = ports[7] || { iq: 0, oq: 0, drops: 0 };
 	var p7Counter = ti.npu_active
 		? _('NPU handoff: %s').format(fmtK(p7.drops || 0))
 		: _('Drops: %s').format(fmtK(p7.drops || 0));
-	var cdm4WiFi = E('div', { 'class': 'soc-card soc-card-accent', 'style': 'border-left-color:#9c27b0' }, [
+	var cdm4WiFi = hasWifi() ? E('div', { 'class': 'soc-card soc-card-accent', 'style': 'border-left-color:#9c27b0' }, [
 		E('div', { 'style': 'display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px' }, [
 			E('span', { 'style': 'font-weight:bold;color:#9c27b0;font-size:14px' }, 'CDM4'),
 			E('span', { 'class': 'soc-label' }, _('P7 WiFi DMA'))
@@ -305,21 +358,24 @@ function renderFeDiagram(fe, ti, st) {
 		].filter(Boolean)),
 		// WiFi bands inside
 		E('div', { 'style': 'display:grid;grid-template-columns:repeat(3,1fr);gap:6px' }, bandChips)
-	]);
+	]) : null;
 
 	// NPU indicator
 	var npuReady = !!st.npu_loaded;
 	var npuActive = npuReady && !!ti.npu_active;
-	var npuLabel = npuActive ? _('ACTIVE') : npuReady ? _('READY') : _('OFF');
+	var npuLabel = typeof st.npu_loaded !== 'boolean' ? _('Unknown') :
+		npuActive ? _('ACTIVE') : npuReady ? _('READY') : _('OFF');
 	var npuCard = E('div', { 'class': 'soc-card', 'style': 'border-color:'+(npuActive?'#00bcd4':'var(--soc-border)') }, [
 		E('div', { 'style': 'display:flex;justify-content:space-between;align-items:center;margin-bottom:4px' }, [
 			E('span', { 'style': 'font-weight:bold;color:#00bcd4;font-size:14px' }, 'NPU'),
 			E('span', { 'style': 'background:'+(npuActive?'#00695c':'#666')+';color:#fff;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:600' }, npuLabel)
 		]),
-		E('div', { 'class': 'soc-label', 'style': 'margin-bottom:4px' }, _('%dx RISC-V via reserved RAM').format(st.npu_cores||0)),
+		E('div', { 'class': 'soc-label', 'style': 'margin-bottom:4px' }, npuCores(st) !== null ?
+			_('%dx RISC-V via reserved RAM').format(npuCores(st)) : _('Core count unavailable')),
 		E('div', { 'style': 'font-size:11px' }, [
 			E('span', { 'class': 'soc-muted' }, _('Manages:') + ' '),
-			E('span', { 'class': 'soc-text', 'style': 'font-size:11px' }, _('PPE initialization, WDMA rings, flow statistics'))
+			E('span', { 'class': 'soc-text', 'style': 'font-size:11px' }, hasWifi() ?
+				_('PPE initialization, WDMA rings, flow statistics') : _('PPE initialization and flow statistics'))
 		])
 	]);
 
@@ -346,12 +402,16 @@ function renderFeDiagram(fe, ti, st) {
 	var pseP = pseT>0 ? ((fe.pse_used/pseT)*100).toFixed(1) : '0';
 	var pseCol = parseFloat(pseP)>80?'#f44336':parseFloat(pseP)>50?'#ff9800':'#4caf50';
 
-	// PSE port cells (skip P7 since it's shown in CDM4/WiFi section)
-	var portCells = ports.filter(function(p){ return p.port !== 7; }).map(function(p) {
+	// Keep P7 queue counters visible when there is no WiFi card.
+	var portCells = ports.filter(function(p){ return p.port !== 7 || !hasWifi(); }).map(function(p) {
 		var info = psePortMap[p.port] || { name:'P'+p.port, label:'?', color:'#666' };
+		var gdmKey = { 1: 'gdm1', 2: 'gdm2', 9: 'gdm4' }[p.port];
+		var label = gdmKey ? gdmLabel(gdmKey) :
+			p.port === 7 && boardTopology.has_wifi === false ? _('No registered Wi-Fi device') : info.label;
 		var drop = (p.drops||0) > 0;
 		return E('div', { 'class': 'soc-pse-cell', 'style': drop ? 'border-color:#f44336' : '' }, [
 			E('div', { 'style': 'font-weight:600;color:'+info.color+';font-size:11px' }, 'P'+p.port+' '+info.name),
+			E('div', { 'class': 'soc-label' }, label),
 			E('div', { 'style': 'display:flex;gap:8px;font-size:11px;margin-top:2px' }, [
 				E('span', { 'class': 'soc-muted' }, 'IQ '+p.iq),
 				E('span', { 'class': 'soc-muted' }, 'OQ '+p.oq),
@@ -373,16 +433,16 @@ function renderFeDiagram(fe, ti, st) {
 		]),
 		// Row 1: GDM ports
 		E('div', { 'class': 'soc-gdm-grid' }, [
-			gdmCard('gdm1', 'GDM1', _('Internal Switch (1G LAN2/3)'), '#ff9800', 'P1'),
-			gdmCard('gdm2', 'GDM2', _('WAN (USXGMII 10G)'), '#4caf50', 'P2'),
-			gdmCard('gdm4', 'GDM4', _('LAN1 (USXGMII 2.5G)'), '#4caf50', 'P9')
+			gdmCard('gdm1', 'GDM1', gdmLabel('gdm1'), '#ff9800', 'P1'),
+			gdmCard('gdm2', 'GDM2', gdmLabel('gdm2'), '#4caf50', 'P2'),
+			gdmCard('gdm4', 'GDM4', gdmLabel('gdm4'), '#4caf50', 'P9')
 		]),
 		// Row 2: CDM1/CDM2 (CPU) + CDM4/WiFi
-		E('div', { 'class': 'soc-data-grid-3' }, [
+		E('div', { 'class': hasWifi() ? 'soc-data-grid-3' : 'soc-data-grid-2' }, [
 			cdmCard('cdm1', 'CDM1', _('CPU DMA 1'), 'P0'),
 			cdmCard('cdm2', 'CDM2', _('CPU DMA 2'), 'P5'),
 			cdm4WiFi
-		]),
+		].filter(Boolean)),
 		// Row 3: PPE + NPU
 		E('div', { 'class': 'soc-data-grid-2' }, [
 			ppeCard,
@@ -716,7 +776,11 @@ function renderPPPoEOffloadSelect(state) {
 /* ── Main View ── */
 return view.extend({
 	load: function() {
-		return loadStatusData();
+		// Board wiring is static for this view; avoid probing every poll.
+		return L.resolveDefault(callTopology(), {}).then(function(topology) {
+			boardTopology = topology || {};
+			return loadStatusData();
+		});
 	},
 
 	render: function(data) {
@@ -724,7 +788,6 @@ return view.extend({
 		var st = data[0]||{}, ppe = data[1]||{}, ti = data[2]||{}, fe = data[3]||{}, vo = data[4]||{}, po = data[5]||{};
 		var entries = Array.isArray(ppe.entries) ? ppe.entries : [];
 		st = addPpeStats(st, ppe);
-		var memR = Array.isArray(st.memory_regions) ? st.memory_regions : [];
 		var ns = npuState(st, ti);
 		_cpuUsageNumCores = Math.max(1, Math.min(8, st.cpu_count || 4));
 
@@ -752,9 +815,9 @@ return view.extend({
 					E('tr',{'class':'tr'},[ E('td',{'class':'td','width':'33%'},E('strong',{},_('NPU Status'))),
 						E('td',{'class':'td','id':'npu-status'}, E('span',{'class':ns.className},ns.text+(st.npu_device?' ('+st.npu_device+')':''))) ]),
 					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('Firmware / Clock / Cores'))),
-						E('td',{'class':'td','id':'npu-info'}, (st.npu_version||_('N/A'))+' | '+(st.npu_clock?(st.npu_clock/1e6).toFixed(0)+' MHz':_('N/A'))+' | '+_('%d cores').format(st.npu_cores||0)) ]),
+						E('td',{'class':'td','id':'npu-info'}, npuInfo(st)) ]),
 					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('Reserved Memory'))),
-						E('td',{'class':'td','id':'npu-memory'}, calcTotalMem(memR)+' ('+_('%d regions').format(memR.length)+')') ]),
+						E('td',{'class':'td','id':'npu-memory'}, npuMemory(st)) ]),
 					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('VLAN Fast Path'))),
 						E('td',{'class':'td'}, renderVlanOffloadSelect(vo)) ]),
 					E('tr',{'class':'tr'},[ E('td',{'class':'td'},E('strong',{},_('PPPoE Fast Path'))),
@@ -787,6 +850,7 @@ return view.extend({
 				updateFreqBar(st.cpu_cur_freq||st.cpu_hw_freq,st.cpu_min_freq,st.cpu_max_freq,st.pll_freq_mhz,st.cpu_governor);
 				updateTempBar(st.cpu_temp);
 				updateCpuUsageChart(st.cpu_usage);
+				updateNpuInfo(st);
 				var gs=document.getElementById('cpu-governor-select'); if(gs&&!gs.matches(':focus')) gs.value=st.cpu_governor||'';
 				var fs=document.getElementById('cpu-maxfreq-select'); if(fs&&!fs.matches(':focus')) fs.value=(st.cpu_max_freq||0).toString();
 				var vs=document.getElementById('vlan-offload-select'); if(vs&&!vs.matches(':focus')) vs.value=(vo.enabled?'1':'0');
