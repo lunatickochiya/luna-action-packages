@@ -1,165 +1,63 @@
-# luci-app-airoha-npu
+# LuCI Airoha SoC status
 
-Real-time monitoring and management dashboard for the Airoha AN7581 SoC on OpenWrt. Covers NPU offload, CPU frequency, WiFi band health, Frame Engine internals, and PPE flow tables.
+A status page and CPU controls for Airoha systems. Original project:
+[rchen14b/luci-app-airoha-npu](https://github.com/rchen14b/luci-app-airoha-npu).
+The Apache-2.0 license and existing bounded hardware-probe protections are retained.
 
-**[Download](https://github.com/rchen14b/luci-app-airoha-npu/releases/latest)**
+## Status interpretation
 
-![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)
-![OpenWrt](https://img.shields.io/badge/OpenWrt-24.10%2B-brightgreen.svg)
-![Version](https://img.shields.io/badge/version-1.0.1-orange.svg)
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?style=flat&logo=buy-me-a-coffee)](https://buymeacoffee.com/rchen14b)
+- Discover native netdev, device-tree PON/PHY mode and DSA conduit relationships
+  once per page load. PHY mode is not cable link speed. Unknown topology stays
+  unknown; reload after driver changes. Query wireless tokens only when a PHY is
+  registered. CDM4/P7 is an internal DMA port, not an absent radio.
+- Prefer cached driver `fw_version` / `num_cores`. Absent attributes fall back to
+  device-scoped logs and explicitly labelled firmware-file versions. ENODATA is
+  not replaced with a file version. These describe boot-time identity, not health.
+- Calculate CPU usage in the browser from cumulative ticks, boot ID and monotonic
+  time, without double-counting guest ticks. Missing/reset samples invalidate the
+  baseline. There is no background sampler or shared history.
+- Keep GDM/CDM drop classes separate; display raw counts and interval deltas.
+  Decreases and long sampling gaps invalidate deltas. Undetectable reset and
+  regrowth remains a limitation. Counts from different blocks cannot establish
+  a global offload ratio. Reserved-memory discovery still depends on boot logs.
+- Suppress incorrect IPv6 source-MAC decoding on old kernels; accept newer
+  debugfs `smac_id` / `pppoe_sid` fields without guessing an address.
+- Fetch the bounded PPE snapshot only on explicit refresh, marking unavailable
+  and stale output. General polling remains ten seconds while the page is open.
+- Describe VLAN/PPPoE bridge controls as bridge Netfilter filtering, not hardware
+  offload. Historical RPC names and inverse `enabled` semantics remain compatible.
 
-## Screenshots
+The inherited probe deadlines, timeout disable-until-reboot behavior, FE readiness
+checks and bounded PPE reads are baseline protections, not newly added features.
 
-### CPU Frequency & Overclock
-![CPU Frequency](screenshots/cpu-frequency.png)
+## CPU controls
 
-### NPU & Offload Engine
-![NPU & Offload Engine](screenshots/npu-offload-engine.png)
+Use CPUFreq when the device advertises native direct-PLL support; maximum
+frequency follows its exposed OPP table without forcing the performance governor.
+Otherwise restrict the inherited direct-PLL path to AN/EN7581. The page does not
+establish that an arbitrary frequency is safe for a board.
 
-### PPE Flow Offload Table
-![PPE Flow Table](screenshots/ppe-flow-table.png)
+## Optional multicast diagnostics
 
-## Features
+If installed, `airoha-mcastctl` supplies scoped multicast state and refusal
+counters. A compatible `pon_multicast_filter` debugfs file supplies applied
+VLAN/group generations and hardware drops. Missing interfaces report unavailable,
+not zero or inactive. Large counters use decimal strings. Rates are invalidated
+across boot, generation, counter or sample discontinuities. Old admissions are
+not shown as currently active during updates. Polling makes no filter writes.
+The matching kernel/control components are proposed separately to PonWrt;
+they are not hard dependencies. Structured optional replies require `jshn`.
 
-### CPU Frequency Management
-- Current frequency display with visual bar graph
-- Governor selection (performance, ondemand, schedutil, etc.)
-- Max frequency selection from available OPP entries
-- Direct PLL overclock control (500-1600 MHz) with hardware register programming
-- Overclock detection and warning for unstable frequencies
+## Source layout and validation
 
-### NPU & Offload Engine
-- NPU firmware version (TLB format), clock frequency, core count
-- NPU load status (active/inactive) and reserved memory regions
-- WiFi token pool and per-band queue state
-- PPE flow offload summary (bound / total entries)
-- Per-band WiFi status cards (2.4 GHz, 5 GHz, 6 GHz):
-  - Client count and connection state
-  - NPU vs DMA path badge
-  - TX retry rate for host DMA queues (hidden for NPU queues whose packet counters bypass the host)
+The sync workflow overlays `.github/diy/packages/luci-app-airoha-npu` onto the
+top-level package; keep both copies synchronized. Existing fixtures are retained
+in `tests/airoha-npu/`. The RPC fixture needs Python, `/usr/bin/busybox` ash and
+libubox jshn: set `HG_JSHN_SH` to `jshn.sh`; the inferred host-bin path must contain
+its `jshn` binary. The JavaScript fixture needs Node.js and mocks LuCI/DOM.
+These fixtures do not validate physical hardware or real browser scheduling.
 
-### Frame Engine Visualization
-- **PSE Shared Buffer** usage bar (congestion indicator)
-- **GDM port cards** with live TX/RX packet counters and drop counts:
-  - GDM1: Internal Switch (1G LAN2/3)
-  - GDM2: WAN (USXGMII 10G)
-  - GDM4: LAN1 (USXGMII 2.5G)
-- **CDM path counters** — TX, CPU RX, hardware-forwarded RX, and drops
-- **PSE Port Queue Status** grid (P0-P9) with IQ/OQ queue depths and drop counts
-
-### PPE Flow Offload Table
-- First 100 PPE entries with state (BND/UNB), type (IPv4/IPv6/L2B), 5-tuple, and MAC addresses
-- Auto-refreshes every 5 seconds
-
-### Theme Support
-- Uses the active theme mode, with rendered-background detection as a fallback
-- Works with Glass, Bootstrap, Bootstrap-dark, and any LuCI theme
-- No hardcoded colors — uses CSS custom properties throughout
-
-## Requirements
-
-- OpenWrt with LuCI (24.10+)
-- Airoha AN7581 target (`@TARGET_airoha`)
-- PPE debugfs (`/sys/kernel/debug/ppe/entries`)
-- **`devmem`** busybox applet — required for Frame Engine register access and CPU overclock (`CONFIG_BUSYBOX_DEFAULT_DEVMEM=y`)
-- WiFi token_info debugfs for per-band WiFi stats (`/sys/kernel/debug/ieee80211/phy*/mt76/token_info`)
-- Optional: [air_tools](https://github.com/merbanan/air_tools) scripts for additional Frame Engine debugging
-
-## Installation
-
-### From OpenWrt build
-
-```sh
-# Add to your build tree
-git clone https://github.com/rchen14b/luci-app-airoha-npu.git package/luci-app-airoha-npu
-
-# Enable in menuconfig
-make menuconfig
-# Navigate to: LuCI -> Applications -> luci-app-airoha-npu
-
-# Build
-make package/luci-app-airoha-npu/compile V=s
-```
-
-### Manual install (dev)
-
-```sh
-# Copy files to router
-scp root/usr/libexec/rpcd/luci.airoha_npu root@router:/usr/libexec/rpcd/
-scp root/usr/share/luci/menu.d/luci-app-airoha-npu.json root@router:/usr/share/luci/menu.d/
-scp root/usr/share/rpcd/acl.d/luci-app-airoha-npu.json root@router:/usr/share/rpcd/acl.d/
-scp htdocs/luci-static/resources/view/airoha_npu/status.js root@router:/www/luci-static/resources/view/airoha_npu/
-
-# Set permissions and restart
-ssh root@router 'chmod +x /usr/libexec/rpcd/luci.airoha_npu && /etc/init.d/rpcd restart'
-```
-
-## Data Sources
-
-| Data | Source | Required |
-|------|--------|----------|
-| NPU status | `/sys/bus/platform/drivers/airoha-npu/`, `dmesg` | Yes |
-| CPU frequency | `/sys/devices/system/cpu/cpufreq/policy0/` | Yes |
-| Overclock PLL | `devmem` registers (0x1fa202b4, 0x1fa202b8) | devmem |
-| PPE entries | `/sys/kernel/debug/ppe/{entries,bind}` | Yes |
-| WiFi token pool | `/sys/kernel/debug/ieee80211/phy*/mt76/token_info` | Optional |
-| WiFi station stats | `iw dev <iface> station dump` | Optional |
-| Frame Engine (GDM/CDM/PSE) | `devmem` registers (0x1fb50xxx-0x1fb53xxx) | devmem |
-
-## Project Structure
-
-```
-luci-app-airoha-npu/
-├── Makefile                                          # OpenWrt package build
-├── htdocs/
-│   └── luci-static/resources/view/airoha_npu/
-│       └── status.js                                 # LuCI JavaScript view
-├── root/
-│   └── usr/
-│       ├── libexec/rpcd/
-│       │   └── luci.airoha_npu                       # RPC backend (shell)
-│       └── share/
-│           ├── luci/menu.d/
-│           │   └── luci-app-airoha-npu.json          # Menu config
-│           └── rpcd/acl.d/
-│               └── luci-app-airoha-npu.json          # ACL permissions
-└── screenshots/
-```
-
-## RPC Methods
-
-| Method | Description | Parameters |
-|--------|-------------|------------|
-| `getStatus` | NPU, CPU, PPE summary | — |
-| `getPpeEntries` | PPE flow table (first 100) | — |
-| `getTokenInfo` | WiFi token pool & station stats | — |
-| `getFrameEngine` | PSE/GDM/CDM register counters | — |
-| `setGovernor` | Change CPU governor | `governor` |
-| `setMaxFreq` | Set CPU max frequency | `freq` (kHz) |
-| `setOverclock` | Direct PLL frequency set | `freq_mhz` |
-
-## Version History
-
-### v1.0.1
-- Unified Frame Engine diagram with architectural layout matching AN7581 data paths
-- WiFi band cards moved into CDM4/WDMA section (reflects actual WiFi DMA path)
-- Added NPU and PPE Engine cards with live status and flow counts
-- Token pool and PPE flows removed from summary table (now in Frame Engine view)
-- Fixed GDM4 register addresses (0x2500, not 0x3500)
-- Improved compact WiFi band chip styling
-
-### v1.0.0
-- CPU frequency management with governor and overclock controls
-- NPU & Offload Engine monitoring with WiFi band cards
-- Frame Engine visualization (GDM ports, CDM offload ratio, PSE queues)
-- PPE flow offload table with auto-refresh
-- Theme-adaptive dark/light mode detection
-
-## License
-
-Apache-2.0
-
-## Author
-
-Ryan Chen — Created for W1700K router (Airoha AN7581 + MT7996 BE19000)
+Earlier PonWrt versions were deployed on Nokia XG-040G-MD / AN7581; cached identity
+returned version 1456.62 and eight initialized NPU cores. This is historical
+evidence. No new tests, build, browser or hardware verification were performed
+for this export. AN7583 and wireless-equipped boards need maintainer validation.
