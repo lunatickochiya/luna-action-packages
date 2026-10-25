@@ -63,7 +63,6 @@ readonly SOURCE_UPDATE_EXCLUDES=(
   nexttrace
   nikki
   openlist
-  openwrt-smartdns
   oscam
   pppwn-cpp
   qBittorrent-Enhanced-Edition
