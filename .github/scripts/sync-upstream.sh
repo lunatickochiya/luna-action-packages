@@ -572,7 +572,8 @@ source_group_21() {
 
 source_group_22() {
   git_clone https://github.com/QiuSimons/OpenWrt-Add
-  mv -n OpenWrt-Add/luci-app-irqbalance ./
+  # 上游 2026-10 重构后 luci-app-irqbalance 移入 legacy/
+  mv -n OpenWrt-Add/legacy/luci-app-irqbalance ./
   rm -rf OpenWrt-Add
   git_clone https://github.com/lucikap/Brukamen
   mv -n Brukamen/luci-app-ua2f ./
