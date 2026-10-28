@@ -3,11 +3,11 @@
 include $(TOPDIR)/rules.mk
 
 PKG_VERSION:=1.0.3
-PKG_RELEASE:=6
+PKG_RELEASE:=17
 PKG_LICENSE:=Apache-2.0
 
 LUCI_TITLE:=LuCI Airoha SoC Status (NPU, CPU, Frame Engine)
-LUCI_DEPENDS:=+luci-base @TARGET_airoha
+LUCI_DEPENDS:=+luci-base +jshn @TARGET_airoha
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
