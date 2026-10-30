@@ -12,16 +12,36 @@ local m, s
 local running = (luci.sys.call('pidof rclone > /dev/null') == 0)
 
 local state_msg = ''
-local trport = uci:get('rclone', 'config', 'port')
+local trport = uci:get('rclone', 'config', 'port') or '5572'
+
+if type(trport) == 'table' then
+    trport = trport[1] or '5572'
+end
+
+local function first_address(value)
+    if type(value) == 'table' then
+        value = value[1]
+    end
+
+    if type(value) ~= 'string' then
+        return ''
+    end
+
+    return value:match('^([^/]+)') or value
+end
 
 local triptype = uci:get('rclone', 'config', 'addr_type')
 local trip = ''
 
 if triptype == 'local' then
-    trip = uci:get('network', 'loopback', 'ipaddr')
+    trip = first_address(uci:get('network', 'loopback', 'ipaddr'))
 elseif triptype == 'lan' then
-    trip = uci:get('network', 'lan', 'ipaddr')
+    trip = first_address(uci:get('network', 'lan', 'ipaddr'))
 else
+    trip = '[ip]'
+end
+
+if trip == '' then
     trip = '[ip]'
 end
 
