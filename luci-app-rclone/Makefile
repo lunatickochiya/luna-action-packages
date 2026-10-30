@@ -17,7 +17,7 @@ PKG_CONFIG_DEPENDS:= \
 
 LUCI_TITLE:=LuCI support for Rclone
 LUCI_PKGARCH:=all
-LUCI_DEPENDS:=+rclone-config +fuse-overlayfs +fuse3-utils \
+LUCI_DEPENDS:=+rclone-config +fuse-overlayfs +fuse3-utils +luci-lib-ipkg-compat \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_rclone-webui:rclone-webui-react \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_rclone-ng:rclone-ng
 
