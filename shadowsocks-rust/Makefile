@@ -25,15 +25,6 @@ RUST_PKG_FEATURES:=local-redir
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/rust/rust-package.mk
 
-# CI runners install sccache in the "初始化环境" step, but that download can
-# fail (GitHub release assets are occasionally unreachable).  With
-# CONFIG_RUST_SCCACHE=y the Rust package then aborts with:
-#   error: could not execute process `sccache rustc -vV` (never executed)
-# Fall back to plain rustc on hosts where sccache is not available.
-ifeq ($(shell command -v sccache >/dev/null 2>&1 && echo yes),)
-  RUST_SCCACHE_VARS:=
-endif
-
 define Package/shadowsocks-rust/Default
   define Package/shadowsocks-rust-$(1)
     SECTION:=net
