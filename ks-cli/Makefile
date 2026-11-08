@@ -5,12 +5,12 @@ include $(TOPDIR)/rules.mk
 PKG_ARCH_KS_CLI:=$(ARCH)
 
 PKG_NAME:=ks-cli
-PKG_VERSION:=0.8.9
+PKG_VERSION:=0.9.0
 PKG_RELEASE:=1
 
 PKG_SOURCE:=ks-cli-binary-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/kspeeder/docker_kspeeder/releases/download/v$(PKG_VERSION)/
-PKG_HASH:=skip
+PKG_HASH:=7798080a89153ec75763d8451626249291d3bffd7ef302e645ca31bbdac21d15
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/ks-cli-binary-$(PKG_VERSION)
 
