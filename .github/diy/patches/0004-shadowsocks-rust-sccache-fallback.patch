@@ -1,0 +1,34 @@
+From: lunatickochiya <125438787@qq.com>
+Date: Sun, 8 Nov 2026 21:20:00 +0800
+Subject: [PATCH] shadowsocks-rust: fall back to plain rustc when sccache is missing
+
+The CI init step downloads sccache, but the GitHub release asset is
+occasionally unreachable.  With CONFIG_RUST_SCCACHE=y cargo then sets
+RUSTC_WRAPPER=sccache and aborts with:
+
+  error: could not execute process `sccache rustc -vV` (never executed)
+
+Clear RUST_SCCACHE_VARS when the host has no sccache; the package then
+builds with plain rustc instead of failing.
+
+---
+diff --git a/shadowsocks-rust/Makefile b/shadowsocks-rust/Makefile
+index 427b8790..de38617f 100644
+--- a/shadowsocks-rust/Makefile
++++ b/shadowsocks-rust/Makefile
+@@ -25,6 +25,15 @@ RUST_PKG_FEATURES:=local-redir
+ include $(INCLUDE_DIR)/package.mk
+ include $(TOPDIR)/feeds/packages/lang/rust/rust-package.mk
+ 
++# CI runners install sccache in the "初始化环境" step, but that download can
++# fail (GitHub release assets are occasionally unreachable).  With
++# CONFIG_RUST_SCCACHE=y the Rust package then aborts with:
++#   error: could not execute process `sccache rustc -vV` (never executed)
++# Fall back to plain rustc on hosts where sccache is not available.
++ifeq ($(shell command -v sccache >/dev/null 2>&1 && echo yes),)
++  RUST_SCCACHE_VARS:=
++endif
++
+ define Package/shadowsocks-rust/Default
+   define Package/shadowsocks-rust-$(1)
+     SECTION:=net
