@@ -33,6 +33,13 @@ include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 
 UNZIP_CMD:=unzip -q -d $(PKG_BUILD_DIR) $(DL_DIR)/$(PKG_SOURCE)
 
+define Build/Prepare
+	$(call Build/Prepare/Default)
+	# OpenWrt copies every *.go file into .go_work; the bundled module
+	# cache contains path@version directories that go list rejects.
+	rm -rf $(PKG_BUILD_DIR)/go-mod
+endef
+
 define Package/dae/Default
   SECTION:=net
   CATEGORY:=Network
