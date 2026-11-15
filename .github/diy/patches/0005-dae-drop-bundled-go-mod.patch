@@ -1,0 +1,31 @@
+From: lunatickochiya <125438787@qq.com>
+Date: Sun, 15 Nov 2026 14:00:00 +0800
+Subject: [PATCH] dae: drop bundled go-mod before OpenWrt Go build
+
+dae-full-src.zip carries a pre-populated Go module cache under go-mod/.
+OpenWrt's golang-package build copies every *.go file into .go_work,
+so "go list github.com/daeuniverse/dae/..." also scans paths such as
+go-mod/github.com/davecgh/go-spew@v.../spew. Go rejects those paths
+("can only use path@version syntax with 'go get'/'go install'") and the
+build fails with "no Go files in .../.go_work/build".
+
+Remove the bundled module cache after extraction; the OpenWrt build uses
+its own GOMODCACHE and can fetch the modules normally.
+
+---
+--- a/dae/Makefile
++++ b/dae/Makefile
+@@ -33,6 +33,13 @@
+ 
+ UNZIP_CMD:=unzip -q -d $(PKG_BUILD_DIR) $(DL_DIR)/$(PKG_SOURCE)
+ 
++define Build/Prepare
++	$(call Build/Prepare/Default)
++	# OpenWrt copies every *.go file into .go_work; the bundled module
++	# cache contains path@version directories that go list rejects.
++	rm -rf $(PKG_BUILD_DIR)/go-mod
++endef
++
+ define Package/dae/Default
+   SECTION:=net
+   CATEGORY:=Network
