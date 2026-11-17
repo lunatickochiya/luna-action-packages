@@ -1,12 +1,13 @@
 include $(TOPDIR)/rules.mk
 PKG_NAME:=linkspace
-PKG_VERSION:=0.3.1
+PKG_SOURCE_TAG:=kaiplus-runtime-v1.0.16
+PKG_VERSION:=1.0.16
 PKG_RELEASE:=1
 include ./release.mk
-PKG_SOURCE:=linkspace-$(PKG_VERSION)-$(ARCH).tar.gz
-PKG_SOURCE_URL:=https://github.com/istoreos/istoreos-app-hub/releases/download/linkspace-runtime-v$(PKG_VERSION)/
-PKG_HASH:=$(LINKSPACE_HASH_$(ARCH))
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE:=linkspace-$(PKG_SOURCE_TAG)-$(ARCH).tar.gz
+PKG_SOURCE_URL:=https://github.com/istoreos/istoreos-app-hub/releases/download/linkspace-runtime-v$(PKG_SOURCE_TAG)/
+PKG_HASH:=skip
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_SOURCE_TAG)
 PKG_BUILD_PARALLEL:=1
 STRIP:=true
 RSTRIP:=:
