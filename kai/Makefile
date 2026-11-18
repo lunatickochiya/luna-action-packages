@@ -10,13 +10,12 @@ include $(TOPDIR)/rules.mk
 PKG_ARCH_kai:=$(ARCH)
 
 PKG_NAME:=kai
-PKG_SOURCE_TAG:=kaiplus-runtime-v1.0.16
-PKG_VERSION:=1.0.16
+PKG_VERSION:=0.0.28
 PKG_RELEASE:=13
-PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_SOURCE_TAG).tar.gz
-PKG_SOURCE_URL:=https://github.com/istoreos/istoreos-app-hub/releases/download/kai-runtime-v$(PKG_SOURCE_TAG)/
-PKG_HASH:=skip
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_SOURCE_TAG)
+PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://github.com/istoreos/istoreos-app-hub/releases/download/kai-runtime-v$(PKG_VERSION)/
+PKG_HASH:=93a0f7192c04b457cf12167c66ec72ed59aecc046053918fc06df7a7422bb0bd
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_VERSION)
 
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
