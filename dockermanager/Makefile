@@ -9,12 +9,13 @@ include $(TOPDIR)/rules.mk
 PKG_ARCH_DOCKERMANAGER:=$(ARCH)
 
 PKG_NAME:=dockermanager
-PKG_VERSION:=0.1.2
+PKG_SOURCE_TAG:=kaiplus-runtime-v1.0.18
+PKG_VERSION:=1.0.18
 PKG_RELEASE:=3
-PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://github.com/istoreos/istoreos-app-hub/releases/download/dockermanager-runtime-v$(PKG_VERSION)/
-PKG_HASH:=1ecaa4363b1a20a26c31a36f994e94a8064ed0de67cd612a233fc05f5026726a
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_VERSION)
+PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_SOURCE_TAG).tar.gz
+PKG_SOURCE_URL:=https://github.com/istoreos/istoreos-app-hub/releases/download/dockermanager-runtime-v$(PKG_SOURCE_TAG)/
+PKG_HASH:=skip
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_SOURCE_TAG)
 
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
