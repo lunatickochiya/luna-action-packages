@@ -10,7 +10,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE:=ks-cli-binary-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/kspeeder/docker_kspeeder/releases/download/v$(PKG_VERSION)/
-PKG_HASH:=skip
+PKG_HASH:=1ec1474d59767d2d5feb48c39217b8409fa16831bd87c7c777d5359c2ceb05d6
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/ks-cli-binary-$(PKG_VERSION)
 
