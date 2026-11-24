@@ -15,14 +15,14 @@ ARCH_HEXCODE:=
 ifeq ($(ARCH),x86_64)
 ARCH_HEXCODE=8664
 LINKEASE_RUNTIME_ARCH:=amd64
-PKG_HASH:=skip
+PKG_HASH:=f5a974187ca1c50f043459150e52195c85799673f9ebc18221e9f5d206a4fb3c
 else ifeq ($(ARCH),aarch64)
 ARCH_HEXCODE=aa64
 LINKEASE_RUNTIME_ARCH:=arm64
-PKG_HASH:=skip
+PKG_HASH:=ef4a48e999339bdd6c2a802ce1c1fbcb885ad28c7ed63315a21d4034d1e66a2c
 endif
 
-PKG_SOURCE_VERSION:=ce2cef7c430903efee8f8867afaa9b6b6d4f3a17
+PKG_SOURCE_VERSION:=$(ARCH_HEXCODE)
 PKG_SOURCE:=linkease-app-entry-runtime-$(PKG_VERSION)-linux-$(LINKEASE_RUNTIME_ARCH).tar.gz
 PKG_SOURCE_URL:=https://github.com/istoreos/istoreos-app-hub/releases/download/linkease-app-entry-runtime-v$(PKG_VERSION)/
 PKG_BUILD_DIR:=$(BUILD_DIR)/linkease-app-entry-runtime-$(PKG_VERSION)-linux-$(LINKEASE_RUNTIME_ARCH)

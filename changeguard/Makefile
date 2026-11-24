@@ -1,13 +1,12 @@
 include $(TOPDIR)/rules.mk
 PKG_NAME:=changeguard
-PKG_SOURCE_TAG:=kaiplus-runtime-v1.0.18
-PKG_VERSION:=1.0.18
+PKG_VERSION:=0.3.5
 PKG_RELEASE:=1
 include ./release.mk
-PKG_SOURCE:=changeguard-$(PKG_SOURCE_TAG)-$(ARCH).tar.gz
-PKG_SOURCE_URL:=https://github.com/istoreos/istoreos-app-hub/releases/download/changeguard-runtime-v$(PKG_SOURCE_TAG)/
-PKG_HASH:=skip
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_SOURCE_TAG)
+PKG_SOURCE:=changeguard-$(PKG_VERSION)-$(ARCH).tar.gz
+PKG_SOURCE_URL:=https://github.com/istoreos/istoreos-app-hub/releases/download/changeguard-runtime-v$(PKG_VERSION)/
+PKG_HASH:=$(CHANGEGUARD_HASH_$(ARCH))
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 STRIP:=true
 RSTRIP:=:
 include $(INCLUDE_DIR)/package.mk

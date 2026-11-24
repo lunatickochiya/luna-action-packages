@@ -9,15 +9,14 @@ include $(TOPDIR)/rules.mk
 PKG_ARCH_FASTNET:=$(ARCH)
 
 PKG_NAME:=fastnet
-PKG_SOURCE_TAG:=kaiplus-runtime-v1.0.18
-PKG_VERSION:=1.0.18
+PKG_VERSION:=0.8.10
 PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_SOURCE_TAG).tar.gz
-PKG_SOURCE_URL:=https://github.com/istoreos/istoreos-app-hub/releases/download/fastnet-runtime-v$(PKG_SOURCE_TAG)/
-PKG_HASH:=skip
+PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://github.com/istoreos/istoreos-app-hub/releases/download/fastnet-runtime-v$(PKG_VERSION)/
+PKG_HASH:=7201986d9b01b83ba6eb3fd0080916caf31a01fb26a0fcc216c53a6e6297b8ba
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_SOURCE_TAG)
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_VERSION)
 
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
