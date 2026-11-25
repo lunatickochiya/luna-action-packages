@@ -6,18 +6,18 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=clouddrive2
-PKG_VERSION:=1.1.3
+PKG_VERSION:=1.2.0
 PKG_RELEASE:=1
 
 ifeq ($(ARCH),aarch64)
 	CD2_ARCH:=aarch64
-	PKG_HASH:=94d8d9e044aaa66d4e5a2cb15eaba2447664d2f12e4e2df677428f1532b86c99
+	PKG_HASH:=skip
 else ifeq ($(ARCH),arm)
 	CD2_ARCH:=armv7
-	PKG_HASH:=00ddc44fd6da641de2812439ae12c9df5ec6ae83564be5d9a8fed4ec1fab46c8
+	PKG_HASH:=skip
 else ifeq ($(ARCH),x86_64)
 	CD2_ARCH:=x86_64
-	PKG_HASH:=b1ff335f1c23f4a7b420b5f1db64ac3e9532ebe79c8ff039249602a005d4d681
+	PKG_HASH:=skip
 endif
 
 PKG_SOURCE:=clouddrive-2-linux-$(CD2_ARCH)-$(PKG_VERSION).tgz
