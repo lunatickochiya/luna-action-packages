@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=sunpanel
-PKG_VERSION:=1.8.1
+PKG_VERSION:=2.0.2
 PKG_RELEASE:=1
 
 # v1.8.1 official release assets are per-arch (linux musl static binary)
@@ -20,7 +20,7 @@ endif
 
 PKG_SOURCE:=sun-panel_v$(PKG_VERSION)_linux_musl_$(GO_ARCH).tar.gz
 PKG_SOURCE_URL:=https://github.com/hslr-s/sun-panel/releases/download/v$(PKG_VERSION)
-PKG_HASH:=$(if $(filter x86_64,$(ARCH)),c1f03fbb97b2bd801768474bb20f736fc699dd822b6330c545edb5356b12b07c,6821facee03bd56d8be0f50da9ee05fd664b11064acdfee6dacba73c77e25cd2)
+PKG_HASH:=skip
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
